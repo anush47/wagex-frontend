@@ -16,6 +16,9 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PoliciesTab } from "./components/PoliciesTab";
+import { PoliciesService } from "@/services/policy.service";
+import { PolicySettings } from "@/types/policy";
 
 export default function CompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -27,6 +30,11 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
     const [originalData, setOriginalData] = useState<Company | null>(null);
     const [formData, setFormData] = useState<Company | null>(null);
+
+    // Policy State
+    const [originalPolicy, setOriginalPolicy] = useState<PolicySettings>({});
+    const [policySettings, setPolicySettings] = useState<PolicySettings>({});
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -47,26 +55,41 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     }, [searchParams]);
 
     useEffect(() => {
-        const fetchCompany = async () => {
+        const fetchData = async () => {
             if (!id) return;
             try {
-                const response = await CompanyService.getCompany(id);
-                // Check if response.data has a nested data property (common API wrapper pattern)
-                const companyData = (response.data as any)?.data || response.data;
+                // Fetch Company and Policy in parallel
+                const [companyRes, policyRes] = await Promise.all([
+                    CompanyService.getCompany(id),
+                    // We handle policy errors silently as 404 is expected for new companies
+                    PoliciesService.getCompanyPolicy(id).catch(() => ({ data: null }))
+                ]);
 
+                // Handle Company Data
+                const companyData = (companyRes.data as any)?.data || companyRes.data;
                 if (companyData) {
                     setOriginalData(companyData);
-                    setFormData(JSON.parse(JSON.stringify(companyData))); // Deep copy
+                    setFormData(JSON.parse(JSON.stringify(companyData)));
                 }
+
+                // Handle Policy Data
+                // policyRes structure: { data: { statusCode: 200, data: { settings: ... } } }
+                const backendResponse = (policyRes as any)?.data;
+                const policyResource = backendResponse?.data;
+                const settings = policyResource?.settings || {};
+
+                setOriginalPolicy(settings);
+                setPolicySettings(JSON.parse(JSON.stringify(settings)));
+
             } catch (error) {
-                console.error("Failed to fetch company", error);
+                console.error("Failed to fetch data", error);
                 toast.error("Failed to load company details");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCompany();
+        fetchData();
     }, [id]);
 
     const handleChange = (field: keyof Company, value: any) => {
@@ -74,27 +97,53 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         setFormData({ ...formData, [field]: value });
     };
 
-    const isDirty = JSON.stringify(originalData) !== JSON.stringify(formData);
+    const isCompanyDirty = JSON.stringify(originalData) !== JSON.stringify(formData);
+    const isPolicyDirty = JSON.stringify(originalPolicy) !== JSON.stringify(policySettings);
+    const isDirty = isCompanyDirty || isPolicyDirty;
 
     const handleSave = async () => {
         if (!formData || !id) return;
         setSaving(true);
         const toastId = toast.loading("Saving changes...");
         try {
-            // Strip system fields that the backend rejects on update
-            const { id: _id, createdAt, updatedAt, ...payload } = formData;
+            const promises = [];
 
-            const response = await CompanyService.updateCompany(id, payload as any);
-            // Check for wrapper in update response too
-            const companyData = (response.data as any)?.data || response.data;
-
-            if (companyData) {
-                setOriginalData(companyData);
-                setFormData(JSON.parse(JSON.stringify(companyData)));
-                toast.success("Changes saved successfully", { id: toastId });
+            // 1. Save Company if dirty
+            if (isCompanyDirty) {
+                const { id: _id, createdAt, updatedAt, ...payload } = formData;
+                promises.push(
+                    CompanyService.updateCompany(id, payload as any)
+                        .then(res => {
+                            const data = (res.data as any)?.data || res.data;
+                            if (data) {
+                                setOriginalData(data);
+                                setFormData(JSON.parse(JSON.stringify(data)));
+                            }
+                            return "Company details saved";
+                        })
+                );
             }
+
+            // 2. Save Policy if dirty
+            if (isPolicyDirty) {
+                promises.push(
+                    PoliciesService.saveCompanyPolicy(id, policySettings)
+                        .then(res => {
+                            const data = (res.data as any)?.data || res.data || (res as any); // fallback
+                            const newSettings = data?.settings || policySettings;
+
+                            setOriginalPolicy(newSettings);
+                            setPolicySettings(JSON.parse(JSON.stringify(newSettings)));
+                            return "Policies updated";
+                        })
+                );
+            }
+
+            await Promise.all(promises);
+            toast.success("Changes saved successfully", { id: toastId });
+
         } catch (error) {
-            console.error("Failed to update company", error);
+            console.error("Failed to update", error);
             toast.error("Failed to save changes", { id: toastId });
         } finally {
             setSaving(false);
@@ -137,7 +186,9 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         if (pendingTab) {
             setActiveTab(pendingTab);
             updateTabUrl(pendingTab);
+            updateTabUrl(pendingTab);
             setFormData(JSON.parse(JSON.stringify(originalData)));
+            setPolicySettings(JSON.parse(JSON.stringify(originalPolicy)));
             setPendingTab(null);
             setShowUnsavedDialog(false);
         }
@@ -167,6 +218,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
                 <TabsList className="w-full md:w-auto bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
                     <TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">General</TabsTrigger>
+                    <TabsTrigger value="policies" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">Policies</TabsTrigger>
                     <TabsTrigger value="files" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">Files ({formData.files?.length || 0})</TabsTrigger>
                 </TabsList>
 
@@ -175,6 +227,13 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                         formData={formData}
                         handleChange={handleChange}
                         onDelete={() => setShowDeleteDialog(true)}
+                    />
+                </TabsContent>
+
+                <TabsContent value="policies" className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
+                    <PoliciesTab
+                        settings={policySettings}
+                        onChange={setPolicySettings}
                     />
                 </TabsContent>
 
