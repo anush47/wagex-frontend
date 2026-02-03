@@ -52,14 +52,15 @@ export interface PayrollComponent {
     maxCap?: number;
 }
 
-export interface PayrollConfig {
+export interface SalaryComponentsConfig {
     components?: PayrollComponent[];
 }
 
 export interface PolicySettings {
     shifts?: ShiftsConfig;
     attendance?: any;
-    payroll?: PayrollConfig;
+    salaryComponents?: SalaryComponentsConfig;
+    payrollSettings?: any;
 }
 
 export interface Policy {

@@ -78,7 +78,15 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                 const policyResource = backendResponse?.data;
                 const settings = policyResource?.settings || {};
 
-                setOriginalPolicy(settings);
+                // MIGRATION: Handle legacy 'payroll' key from backend if it exists
+                if ((settings as any).payroll) {
+                    if (!settings.salaryComponents) {
+                        settings.salaryComponents = (settings as any).payroll;
+                    }
+                    delete (settings as any).payroll;
+                }
+
+                setOriginalPolicy(JSON.parse(JSON.stringify(settings)));
                 setPolicySettings(JSON.parse(JSON.stringify(settings)));
 
             } catch (error) {
@@ -126,12 +134,27 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
             // 2. Save Policy if dirty
             if (isPolicyDirty) {
-                promises.push(
-                    PoliciesService.saveCompanyPolicy(id, policySettings)
-                        .then(res => {
-                            const data = (res.data as any)?.data || res.data || (res as any); // fallback
-                            const newSettings = data?.settings || policySettings;
+                const payload = JSON.parse(JSON.stringify(policySettings));
+                // Ensure legacy key is removed before sending to strict backend
+                if ((payload as any).payroll) {
+                    delete (payload as any).payroll;
+                }
 
+                promises.push(
+                    PoliciesService.saveCompanyPolicy(id, payload)
+                        .then(res => {
+                            // Backend verification
+                            const data = (res.data as any)?.data || res.data;
+                            if (!data && (res as any)?.error) {
+                                throw new Error((res as any).error.message || "Policy update failed");
+                            }
+
+                            // 400s might return as data if axios is configured not to throw, check for nestjs error structure
+                            if ((data as any)?.statusCode && (data as any)?.statusCode >= 400) {
+                                throw new Error((data as any).message || "Policy update failed");
+                            }
+
+                            const newSettings = data?.settings || policySettings;
                             setOriginalPolicy(newSettings);
                             setPolicySettings(JSON.parse(JSON.stringify(newSettings)));
                             return "Policies updated";

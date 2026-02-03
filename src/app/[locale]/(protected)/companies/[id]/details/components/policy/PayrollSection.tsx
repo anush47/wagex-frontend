@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { PayrollConfig, PayrollComponent, PayrollComponentCategory, PayrollComponentType } from "@/types/policy";
+import { SalaryComponentsConfig, PayrollComponent, PayrollComponentCategory, PayrollComponentType } from "@/types/policy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconPlus, IconPencil, IconTrash, IconTrendingUp, IconTrendingDown, IconPercentage, IconCoin } from "@tabler/icons-react";
@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface PayrollSectionProps {
-    value: PayrollConfig;
-    onChange: (val: PayrollConfig) => void;
+    value: SalaryComponentsConfig;
+    onChange: (val: SalaryComponentsConfig) => void;
 }
 
 export function PayrollSection({ value, onChange }: PayrollSectionProps) {
