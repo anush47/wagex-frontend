@@ -239,10 +239,25 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-                <TabsList className="w-full md:w-auto bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
-                    <TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">General</TabsTrigger>
-                    <TabsTrigger value="policies" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">Policies</TabsTrigger>
-                    <TabsTrigger value="files" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">Files ({formData.files?.length || 0})</TabsTrigger>
+                <TabsList className="w-full md:w-auto bg-neutral-100 dark:bg-neutral-800 p-1.5 rounded-2xl h-auto">
+                    <TabsTrigger
+                        value="general"
+                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 transition-all"
+                    >
+                        General
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="policies"
+                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 transition-all"
+                    >
+                        Policies
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="files"
+                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 transition-all"
+                    >
+                        Files ({formData.files?.length || 0})
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="general" className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
