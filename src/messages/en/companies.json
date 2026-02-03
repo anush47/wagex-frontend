@@ -15,5 +15,6 @@
     "noCompanies": "No companies found",
     "createDescription": "Register a new company to start managing payroll and employees.",
     "establishNew": "Add Company",
-    "discard": "Discard"
+    "discard": "Discard",
+    "searchPlaceholder": "Search by name, address, or registration ID..."
 }

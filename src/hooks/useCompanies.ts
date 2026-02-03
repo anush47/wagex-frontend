@@ -17,6 +17,7 @@ export const useCompanies = (params: {
             }
             return response.data;
         },
+        placeholderData: (previousData) => previousData,
     });
 };
 
