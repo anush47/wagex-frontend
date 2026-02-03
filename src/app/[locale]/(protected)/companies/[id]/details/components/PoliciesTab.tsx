@@ -1,4 +1,7 @@
+"use client";
 
+import { usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { PolicySettings } from "@/types/policy";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +14,17 @@ interface PoliciesTabProps {
 }
 
 export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const currentTab = searchParams.get("policyTab") || "shifts";
+
+    const handleTabChange = (val: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("policyTab", val);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Helper to update specific section
     const updateShifts = (shifts: any) => {
@@ -29,8 +43,8 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                 </div>
             </div>
 
-            <Tabs defaultValue="shifts" className="w-full">
-                <TabsList className="bg-transparent p-0 mb-6 gap-2 flex-wrap h-auto justify-start">
+            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full flex flex-col">
+                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start pb-2">
                     <TabsTrigger
                         value="shifts"
                         className="rounded-xl px-6 py-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
@@ -56,7 +70,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="shifts" className="animate-in fade-in slide-in-from-left-4 duration-500">
+                <TabsContent value="shifts" className="mt-8 animate-in fade-in slide-in-from-left-4 duration-500">
                     <ShiftsSection
                         value={settings.shifts || { list: [] }}
                         onChange={updateShifts}
