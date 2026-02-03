@@ -1,0 +1,19 @@
+{
+    "title": "Companies",
+    "description": "Manage your registered companies and business entities.",
+    "newCompany": "New Company",
+    "details": "Company Details",
+    "name": "Company Name",
+    "namePlaceholder": "e.g. Acme Corp",
+    "regId": "Registration ID",
+    "regIdPlaceholder": "e.g. B/50139",
+    "address": "Address",
+    "addressPlaceholder": "Registered office address",
+    "startedDate": "Start Date",
+    "logo": "Company Logo",
+    "logoDescription": "Upload your company logo (PNG, JPG or SVG)",
+    "noCompanies": "No companies found",
+    "createDescription": "Register a new company to start managing payroll and employees.",
+    "establishNew": "Add Company",
+    "discard": "Discard"
+}

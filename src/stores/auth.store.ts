@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware';
 import type { User, Session } from '@supabase/supabase-js';
 import { authService } from '@/services/auth.service';
 import { logger } from '@/lib/utils/logger';
+import { backendApiClient } from '@/lib/api/client';
 import type { LoginCredentials } from '@/types/auth';
 
 /**
@@ -66,9 +67,11 @@ export const useAuthStore = create<AuthStore>()(
                             isAuthenticated: true,
                             isLoading: false,
                         });
+                        backendApiClient.setAuthToken(session.access_token);
                         logger.info('Auth initialized with existing session');
                     } else {
                         set({ ...initialState, isLoading: false });
+                        backendApiClient.setAuthToken(null);
                         logger.info('No existing session found');
                     }
                 } catch (error) {
@@ -102,6 +105,10 @@ export const useAuthStore = create<AuthStore>()(
                         isLoading: false,
                         error: null,
                     });
+
+                    if (session) {
+                        backendApiClient.setAuthToken(session.access_token);
+                    }
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
                     set({ error: errorMessage, isLoading: false });
@@ -124,6 +131,7 @@ export const useAuthStore = create<AuthStore>()(
                     }
 
                     set({ ...initialState, isLoading: false });
+                    backendApiClient.setAuthToken(null);
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Sign out failed';
                     set({ error: errorMessage, isLoading: false });
@@ -140,6 +148,8 @@ export const useAuthStore = create<AuthStore>()(
                     user,
                     isAuthenticated: !!session,
                 });
+
+                backendApiClient.setAuthToken(session?.access_token || null);
             },
 
             /**

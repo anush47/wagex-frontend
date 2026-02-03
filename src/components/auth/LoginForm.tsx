@@ -9,10 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { useRouter } from 'next/navigation';
+
 /**
  * Login form using shadcn components with theme variables
  */
 export function LoginForm() {
+    const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -27,6 +30,7 @@ export function LoginForm() {
             const credentials = loginCredentialsSchema.parse({ email, password });
             await signIn(credentials);
             logger.info('Login successful');
+            router.push('/dashboard');
         } catch (error) {
             if (error && typeof error === 'object' && 'errors' in error) {
                 const zodErrors = error as { errors: Array<{ path: string[]; message: string }> };

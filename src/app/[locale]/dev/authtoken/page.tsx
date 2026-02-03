@@ -9,13 +9,13 @@ export default function Home() {
   const { isAuthenticated, signOut, isLoading: authLoading } = useAuthStore();
 
   return (
-    <main className="min-h-screen bg-background py-12 px-4">
+    <main className="min-h-screen bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-5xl font-bold text-foreground">
+          <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 dark:from-neutral-100 dark:via-neutral-300 dark:to-neutral-100">
             WageX
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-neutral-600 dark:text-neutral-400 text-lg">
             Authentication Testing Platform
           </p>
         </div>

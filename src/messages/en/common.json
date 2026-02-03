@@ -1,0 +1,16 @@
+{
+    "dashboard": "Dashboard",
+    "companies": "Companies",
+    "employees": "Employees",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "actions": "Actions",
+    "search": "Search"
+}
