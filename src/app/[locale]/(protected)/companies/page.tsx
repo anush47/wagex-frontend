@@ -21,6 +21,7 @@ import { useCompanies } from "@/hooks/useCompanies";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
+import { StorageImage } from "@/components/ui/storage-image";
 
 export default function CompaniesPage() {
     const t = useTranslations("Companies");
@@ -165,11 +166,12 @@ export default function CompaniesPage() {
                                 <CardContent className="p-5 md:p-6 flex flex-col flex-1 space-y-4 md:space-y-6">
                                     <div className="flex justify-between items-start">
                                         <div className="h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
-                                            {company.logo ? (
-                                                <img src={company.logo} alt={company.name} className="h-7 w-7 md:h-9 md:w-9 object-contain" />
-                                            ) : (
-                                                <IconBuildingSkyscraper className="h-5 w-5 md:h-7 md:w-7 text-neutral-400" />
-                                            )}
+                                            <StorageImage
+                                                storageKey={company.logo}
+                                                alt={company.name}
+                                                className="h-7 w-7 md:h-9 md:w-9 object-contain"
+                                                fallback={<IconBuildingSkyscraper className="h-5 w-5 md:h-7 md:w-7 text-neutral-400" />}
+                                            />
                                         </div>
                                     </div>
 

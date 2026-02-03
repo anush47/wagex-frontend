@@ -1,23 +1,61 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { IconPhotoPlus, IconX, IconUpload, IconCloudUpload } from "@tabler/icons-react";
+import { useRef, useState, useEffect } from "react";
+import { IconPhotoPlus, IconX, IconUpload, IconCloudUpload, IconLoader2, IconEye } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { StorageService } from "@/services/storage.service";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
     value?: string;
+    companyId: string;
     onChange: (value: string) => void;
     className?: string;
     label?: string;
 }
 
-export function ImageUpload({ value, onChange, className, label = "Company Logo" }: ImageUploadProps) {
+export function ImageUpload({ value, companyId, onChange, className, label = "Company Logo" }: ImageUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [preview, setPreview] = useState<string | undefined>(value);
+    const [preview, setPreview] = useState<string | undefined>();
     const [isDragging, setIsDragging] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [resolving, setResolving] = useState(false);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
+    // Resolve the key to a signed URL when value changes
+    useEffect(() => {
+        const resolveUrl = async () => {
+            if (!value) {
+                setPreview(undefined);
+                return;
+            }
+
+            // If it's already a full URL or a blob, just use it
+            if (value.startsWith('http') || value.startsWith('blob:')) {
+                setPreview(value);
+                return;
+            }
+
+            // Otherwise, treat it as a key and fetch a signed URL
+            setResolving(true);
+            try {
+                const response = await StorageService.getUrl(value);
+                const actualData = (response.data as any)?.data || response.data;
+
+                if (actualData?.url) {
+                    setPreview(actualData.url);
+                }
+            } catch (error) {
+                console.error("Failed to resolve image URL", error);
+            } finally {
+                setResolving(false);
+            }
+        };
+
+        resolveUrl();
+    }, [value]);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
         let file: File | undefined;
 
         if ('files' in e.target && e.target.files) {
@@ -27,9 +65,35 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
         }
 
         if (file) {
+            setUploading(true);
             const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
-            onChange(objectUrl);
+
+            try {
+                // Real upload
+                const response = await StorageService.upload({
+                    file,
+                    companyId,
+                    folder: 'logos'
+                });
+
+                if (response.error) {
+                    toast.error(response.error.message || "Upload failed");
+                    return;
+                }
+
+                const uploadData = (response.data as any)?.data || response.data;
+
+                // Show immediate preview (optimistic/local)
+                setPreview(objectUrl);
+                // Return the key to the form
+                onChange(uploadData.key);
+                toast.success("Logo uploaded successfully");
+            } catch (error) {
+                console.error("Logo upload error:", error);
+                toast.error("Failed to upload logo");
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
@@ -60,13 +124,13 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
     return (
         <div className={cn("space-y-4", className)}>
             {label && (
-                <label className="text-sm font-semibold tracking-tight text-neutral-500 dark:text-neutral-400 uppercase ml-1">
+                <label className="text-sm font-semibold tracking-tight text-neutral-500 dark:text-neutral-400 uppercase ml-1 block mb-2">
                     {label}
                 </label>
             )}
 
             <div
-                onClick={() => !preview && fileInputRef.current?.click()}
+                onClick={() => !preview && !uploading && fileInputRef.current?.click()}
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
@@ -76,7 +140,7 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
                     isDragging
                         ? "border-primary bg-primary/5 scale-[1.02]"
                         : "border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-900",
-                    preview && "border-none"
+                    (preview || uploading || resolving) && "border-none"
                 )}
             >
                 <input
@@ -87,7 +151,14 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
                     onChange={handleFileChange}
                 />
 
-                {!preview ? (
+                {uploading || resolving ? (
+                    <div className="flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-neutral-900 absolute inset-0 z-10">
+                        <IconLoader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+                        <p className="text-sm font-bold text-neutral-500">{uploading ? "Uploading..." : "Loading logo..."}</p>
+                    </div>
+                ) : null}
+
+                {!preview && !uploading && !resolving ? (
                     <div className="flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
                         <div className="h-16 w-16 rounded-3xl bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500 ease-out">
                             <IconCloudUpload className="h-8 w-8 text-neutral-400 group-hover:text-primary transition-colors" />
@@ -97,7 +168,7 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
                             Drag & drop or <span className="text-primary font-semibold">browse</span> your brand logo
                         </p>
                     </div>
-                ) : (
+                ) : preview && !uploading && !resolving ? (
                     <div className="relative w-full h-full flex items-center justify-center bg-white dark:bg-neutral-950 p-6 min-h-[220px] transition-all duration-700 animate-in zoom-in-95">
                         <img
                             src={preview}
@@ -116,6 +187,15 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
                             </Button>
                             <Button
                                 type="button"
+                                variant="secondary"
+                                size="icon"
+                                className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all"
+                                onClick={(e) => { e.stopPropagation(); window.open(preview, '_blank'); }}
+                            >
+                                <IconEye className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                type="button"
                                 variant="destructive"
                                 size="icon"
                                 className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all"
@@ -125,7 +205,7 @@ export function ImageUpload({ value, onChange, className, label = "Company Logo"
                             </Button>
                         </div>
                     </div>
-                )}
+                ) : null}
             </div>
         </div>
     );

@@ -12,7 +12,8 @@ import { FilesTab } from "./components/FilesTab";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
-import { useRouter } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -20,17 +21,30 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     const { id } = use(params);
     const t = useTranslations("Companies");
     const common = useTranslations("Common");
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const router = useRouter();
 
     const [originalData, setOriginalData] = useState<Company | null>(null);
     const [formData, setFormData] = useState<Company | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState("general");
+
+    // Initialize tab from URL or default to general
+    const initialTab = searchParams.get("tab") || "general";
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [pendingTab, setPendingTab] = useState<string | null>(null);
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const router = useRouter();
+
+    // Sync activeTab with URL search params
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab && tab !== activeTab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const fetchCompany = async () => {
@@ -103,21 +117,27 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         }
     };
 
+    const updateTabUrl = (tab: string) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set("tab", tab);
+        router.replace(`${pathname}?${params.toString()}`);
+    };
+
     const handleTabChange = (value: string) => {
         if (isDirty) {
             setPendingTab(value);
             setShowUnsavedDialog(true);
         } else {
             setActiveTab(value);
+            updateTabUrl(value);
         }
     };
 
     const confirmTabChange = () => {
         if (pendingTab) {
             setActiveTab(pendingTab);
-            setFormData(JSON.parse(JSON.stringify(originalData))); // Reset changes on tab switch if confirmed? 
-            // OR: keep changes? The user request said "no need to handle context between tabs if there is any unsaved change then just show a warning dialog... so we can have seperate files for tabs to keep the code clean"
-            // This implies we should probably discard changes or force save. Discarding is safer behavior for "Warning: Unsaved changes".
+            updateTabUrl(pendingTab);
+            setFormData(JSON.parse(JSON.stringify(originalData)));
             setPendingTab(null);
             setShowUnsavedDialog(false);
         }

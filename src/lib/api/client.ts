@@ -64,18 +64,27 @@ class ApiClient {
         endpoint: string,
         config: RequestConfig = {}
     ): Promise<ApiResponse<T>> {
-        const { params, headers, ...restConfig } = config;
+        const { params, headers: configHeaders, ...restConfig } = config;
         const url = this.buildURL(endpoint, params);
+
+        // Merge headers properly. If configHeaders is provided, it should take precedence.
+        // Special care for properties we want to OMIT (set as undefined in configHeaders)
+        const mergedHeaders = {
+            ...this.defaultHeaders,
+            ...configHeaders,
+        };
+
+        // Filter out any undefined headers (this allows us to omit Content-Type in postRaw)
+        const finalHeaders = Object.fromEntries(
+            Object.entries(mergedHeaders).filter(([_, v]) => v !== undefined)
+        );
 
         try {
             logger.debug('API Request', { url, method: config.method || 'GET' });
 
             const response = await fetch(url, {
                 ...restConfig,
-                headers: {
-                    ...this.defaultHeaders,
-                    ...headers,
-                },
+                headers: finalHeaders,
             });
 
             const data = await response.json();
@@ -137,6 +146,27 @@ class ApiClient {
             ...config,
             method: 'PUT',
             body: JSON.stringify(body),
+        });
+    }
+
+    /**
+     * POST request for raw data (like FormData)
+     */
+    async postRaw<T>(
+        endpoint: string,
+        body: FormData,
+        config: RequestConfig = {}
+    ): Promise<ApiResponse<T>> {
+        const { headers, ...restConfig } = config;
+
+        return this.request<T>(endpoint, {
+            ...restConfig,
+            method: 'POST',
+            body,
+            headers: {
+                ...headers,
+                'Content-Type': undefined, // Explicitly omit to let fetch/browser handle it for FormData
+            },
         });
     }
 

@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Company } from "@/types/company";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconBuildingSkyscraper, IconMail, IconMapPin, IconCalendar, IconId } from "@tabler/icons-react";
+import { CompanyService } from "@/services/company.service";
 import { ImageUpload } from "@/components/ui/image-upload"; // Assuming this component exists or we'll create/mock it
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -160,8 +161,9 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                             <CardContent className="p-8">
                                 <ImageUpload
                                     label="Company Logo"
-                                    value={formData.logo || ""}
-                                    onChange={(url) => handleChange("logo", url)}
+                                    companyId={formData.id}
+                                    value={formData.logo}
+                                    onChange={(key) => handleChange("logo", key)}
                                 />
                             </CardContent>
                         </Card>

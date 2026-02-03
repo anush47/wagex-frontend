@@ -2,6 +2,7 @@ export interface CompanyFile {
     key: string;
     name: string;
     url: string;
+    size?: string;
 }
 
 export interface Company {
