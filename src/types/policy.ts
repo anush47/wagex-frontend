@@ -6,6 +6,17 @@ export enum ShiftSelectionPolicy {
     EMPLOYEE_ROSTER = 'EMPLOYEE_ROSTER',
 }
 
+export enum PayrollComponentType {
+    FLAT_AMOUNT = 'FLAT_AMOUNT',
+    PERCENTAGE_BASIC = 'PERCENTAGE_BASIC',
+    PERCENTAGE_GROSS = 'PERCENTAGE_GROSS',
+}
+
+export enum PayrollComponentCategory {
+    ADDITION = 'ADDITION',
+    DEDUCTION = 'DEDUCTION'
+}
+
 export interface Shift {
     id: string;
     name: string;
@@ -29,10 +40,26 @@ export interface ShiftsConfig {
     selectionPolicy?: ShiftSelectionPolicy;
 }
 
+export interface PayrollComponent {
+    id: string;
+    name: string;
+    category: PayrollComponentCategory;
+    type: PayrollComponentType;
+    value: number;
+    isStatutory?: boolean;
+    affectsTotalEarnings?: boolean;
+    minCap?: number;
+    maxCap?: number;
+}
+
+export interface PayrollConfig {
+    components?: PayrollComponent[];
+}
+
 export interface PolicySettings {
     shifts?: ShiftsConfig;
     attendance?: any;
-    payroll?: any;
+    payroll?: PayrollConfig;
 }
 
 export interface Policy {

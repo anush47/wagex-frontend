@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconClock, IconCalendarStats, IconCoin, IconSettings } from "@tabler/icons-react";
 import { ShiftsSection } from "./policy/ShiftsSection";
+import { PayrollSection } from "./policy/PayrollSection";
 
 interface PoliciesTabProps {
     settings: PolicySettings;
@@ -29,6 +30,10 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
     // Helper to update specific section
     const updateShifts = (shifts: any) => {
         onChange({ ...settings, shifts });
+    };
+
+    const updatePayroll = (payroll: any) => {
+        onChange({ ...settings, payroll });
     };
 
     return (
@@ -62,8 +67,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     </TabsTrigger>
                     <TabsTrigger
                         value="payroll"
-                        disabled
-                        className="rounded-xl px-6 py-3 opacity-50 cursor-not-allowed bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                        className="rounded-xl px-6 py-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
                     >
                         <IconCoin className="w-4 h-4 mr-2" />
                         Payroll Defaults
@@ -74,6 +78,13 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     <ShiftsSection
                         value={settings.shifts || { list: [] }}
                         onChange={updateShifts}
+                    />
+                </TabsContent>
+
+                <TabsContent value="payroll" className="mt-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                    <PayrollSection
+                        value={settings.payroll || { components: [] }}
+                        onChange={updatePayroll}
                     />
                 </TabsContent>
             </Tabs>
