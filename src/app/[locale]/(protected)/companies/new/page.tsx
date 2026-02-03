@@ -8,12 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { companySchema, type CompanyFormValues } from "@/schemas/company.schema";
 import { LabelInputContainer } from "@/components/ui/form-elements";
-import { IconArrowLeft, IconMapPin, IconInfoCircle } from "@tabler/icons-react";
+import { IconArrowLeft, IconMapPin, IconInfoCircle, IconCalendar } from "@tabler/icons-react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useCreateCompany } from "@/hooks/useCompanies";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function NewCompanyPage() {
     const router = useRouter();
@@ -40,11 +45,14 @@ export default function NewCompanyPage() {
     });
 
     const onSubmit = async (data: CompanyFormValues) => {
+        const toastId = toast.loading("Establishing new company...");
         try {
             await createCompany(data);
+            toast.success("Company established successfully!", { id: toastId });
             router.push("/companies");
         } catch (error) {
-            // Error handled by mutation hook
+            console.error("Failed to create company", error);
+            toast.error("Failed to establish company", { id: toastId });
         }
     };
 
@@ -116,12 +124,35 @@ export default function NewCompanyPage() {
 
                                         <LabelInputContainer>
                                             <Label htmlFor="startedDate" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">{t("startedDate")}</Label>
-                                            <Input
-                                                id="startedDate"
-                                                type="date"
-                                                {...register("startedDate")}
-                                                className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-xl md:rounded-2xl px-4 md:px-6 font-bold shadow-inner"
-                                            />
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className={cn(
+                                                            "w-full h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-xl md:rounded-2xl px-4 md:px-6 text-left font-medium shadow-inner hover:bg-neutral-100 dark:hover:bg-neutral-800 text-base md:text-lg",
+                                                            !watch("startedDate") && "text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {watch("startedDate") ? (
+                                                            format(new Date(watch("startedDate")), "PPP")
+                                                        ) : (
+                                                            <span className="text-base text-neutral-400 font-normal">Pick a date</span>
+                                                        )}
+                                                        <IconCalendar className="ml-auto h-5 w-5 opacity-50" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={watch("startedDate") ? new Date(watch("startedDate")) : undefined}
+                                                        onSelect={(date) => setValue("startedDate", date ? date.toISOString() : "")}
+                                                        disabled={(date) =>
+                                                            date > new Date() || date < new Date("1900-01-01")
+                                                        }
+                                                        initialFocus
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
                                             {errors.startedDate && (
                                                 <p className="text-destructive text-[10px] md:text-xs font-bold mt-1 md:mt-2 ml-1 md:ml-2">{errors.startedDate.message}</p>
                                             )}

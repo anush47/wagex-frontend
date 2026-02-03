@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import React, { useState, createContext, useContext } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { IconMenu2, IconX, IconChevronRight } from "@tabler/icons-react";
-import { Link } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 
 interface Links {
     label: string;
@@ -163,6 +163,7 @@ export const MobileSidebar = ({
     );
 };
 
+
 export const SidebarLink = ({
     link,
     className,
@@ -172,23 +173,34 @@ export const SidebarLink = ({
     className?: string;
 }) => {
     const { open, animate } = useSidebar();
+    const pathname = usePathname();
+    const isActive = pathname === link.href;
+
     return (
         <Link
             href={link.href as any}
             className={cn(
-                "flex items-center justify-start gap-2  group/sidebar py-2",
+                "flex items-center justify-start gap-2 group/sidebar py-2 px-2 rounded-lg transition-all",
+                isActive
+                    ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary font-medium"
+                    : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
                 className
             )}
             {...props}
         >
-            {link.icon}
+            <div className={cn("shrink-0", isActive ? "text-primary" : "")}>
+                {link.icon}
+            </div>
 
             <motion.span
                 animate={{
                     display: animate ? (open ? "inline-block" : "none") : "inline-block",
                     opacity: animate ? (open ? 1 : 0) : 1,
                 }}
-                className="text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+                className={cn(
+                    "text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0",
+                    isActive ? "text-primary dark:text-primary font-medium" : "text-neutral-700 dark:text-neutral-200"
+                )}
             >
                 {link.label}
             </motion.span>
