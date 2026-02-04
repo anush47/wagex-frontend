@@ -9,6 +9,7 @@ import { IconClock, IconCalendarStats, IconCoin, IconSettings, IconCalendarTime 
 import { ShiftsSection } from "./policy/ShiftsSection";
 import { PayrollSection } from "./policy/PayrollSection";
 import { PayrollSettingsTab } from "./policy/PayrollSettingsTab";
+import { WorkingDaysTab } from "./policy/WorkingDaysTab";
 
 interface PoliciesTabProps {
     settings: PolicySettings;
@@ -37,6 +38,10 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
         onChange({ ...settings, salaryComponents });
     };
 
+    const updateWorkingDays = (workingDays: any) => {
+        onChange({ ...settings, workingDays });
+    };
+
     const updatePayrollConfiguration = (payrollConfiguration: any) => {
         onChange({ ...settings, payrollConfiguration });
     };
@@ -61,6 +66,14 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     >
                         <IconClock className="w-4 h-4 mr-2" />
                         Shifts & Hours
+                    </TabsTrigger>
+
+                    <TabsTrigger
+                        value="working-days"
+                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
+                    >
+                        <IconCalendarStats className="w-4 h-4 mr-2" />
+                        Working Days
                     </TabsTrigger>
 
                     <TabsTrigger
@@ -107,6 +120,13 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     <PayrollSettingsTab
                         value={settings.payrollConfiguration}
                         onChange={updatePayrollConfiguration}
+                    />
+                </TabsContent>
+
+                <TabsContent value="working-days" className="mt-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                    <WorkingDaysTab
+                        value={settings.workingDays}
+                        onChange={updateWorkingDays}
                     />
                 </TabsContent>
             </Tabs>

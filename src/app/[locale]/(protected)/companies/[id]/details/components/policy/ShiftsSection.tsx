@@ -119,102 +119,109 @@ export function ShiftsSection({ value, onChange }: ShiftsSectionProps) {
             </div>
 
             {/* Shifts List */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-black">All Shifts</h3>
-                    <Button onClick={handleOpenAdd} className="bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90">
-                        <IconPlus className="w-4 h-4 mr-2" />
-                        Add Shift
-                    </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {shifts.map((shift) => {
-                        const isDefault = value.defaultShiftId === shift.id;
-                        return (
-                            <div
-                                key={shift.id}
-                                className={cn(
-                                    "group relative p-6 rounded-3xl transition-all duration-300 border-2",
-                                    isDefault
-                                        ? "bg-card border-primary/20 shadow-xl shadow-primary/5"
-                                        : "bg-card/50 border-border hover:border-foreground/10"
-                                )}
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn(
-                                            "h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-lg",
-                                            isDefault ? "bg-primary shadow-primary/30" : "bg-muted text-muted-foreground"
-                                        )}>
-                                            <IconClock className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-lg leading-tight">{shift.name}</h4>
-                                            {isDefault && <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded ml-[-1px]">Default</span>}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" onClick={() => handleOpenEdit(shift)}>
-                                            <IconPencil className="h-5 w-5 text-muted-foreground" />
-                                        </Button>
-                                        <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl hover:text-red-500 hover:bg-red-50" onClick={() => handleDeleteShift(shift.id)}>
-                                            <IconTrash className="h-5 w-5" />
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-5">
-                                    <div className="flex items-center justify-between p-5 bg-muted/50 rounded-3xl">
-                                        <div className="text-center flex-1 border-r border-border">
-                                            <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1">Clock In</span>
-                                            <span className="text-2xl font-black font-mono tracking-tighter">
-                                                {new Date(`1970-01-01T${shift.startTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                        <div className="text-center flex-1">
-                                            <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1">Clock Out</span>
-                                            <span className="text-2xl font-black font-mono tracking-tighter">
-                                                {new Date(`1970-01-01T${shift.endTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Small Info Grid for Limits */}
-                                    {(shift.minStartTime || shift.maxOutTime) && (
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {shift.minStartTime && (
-                                                <div className="text-center p-2 rounded-xl bg-green-500/5 border border-green-500/10">
-                                                    <span className="text-[9px] font-bold uppercase text-green-600/70 block">Earliest In</span>
-                                                    <span className="text-xs font-black font-mono text-green-700 dark:text-green-500">{shift.minStartTime}</span>
-                                                </div>
-                                            )}
-                                            {shift.maxOutTime && (
-                                                <div className="text-center p-2 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                                                    <span className="text-[9px] font-bold uppercase text-orange-600/70 block">Latest Out</span>
-                                                    <span className="text-xs font-black font-mono text-orange-700 dark:text-orange-500">{shift.maxOutTime}</span>
-                                                </div>
-                                            )}
-                                        </div>
+            {/* All Shifts List */}
+            <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <IconClock className="w-5 h-5" />
+                            <span className="text-xs font-bold uppercase tracking-widest">All Shifts</span>
+                        </div>
+                        <Button onClick={handleOpenAdd} size="sm" className="bg-primary text-primary-foreground rounded-xl font-bold h-8 text-xs hover:bg-primary/90">
+                            <IconPlus className="w-3.5 h-3.5 mr-1.5" />
+                            Add Shift
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {shifts.map((shift) => {
+                            const isDefault = value.defaultShiftId === shift.id;
+                            return (
+                                <div
+                                    key={shift.id}
+                                    className={cn(
+                                        "group relative p-6 rounded-3xl transition-all duration-300 border-2",
+                                        isDefault
+                                            ? "bg-card border-primary/20 shadow-xl shadow-primary/5"
+                                            : "bg-card/50 border-border hover:border-foreground/10"
                                     )}
-
-                                    <div className="grid grid-cols-2 gap-3 text-xs font-bold text-muted-foreground pt-2 px-2">
-                                        <div className="flex justify-between items-center bg-background p-2 rounded-lg border border-border">
-                                            <span>Break</span>
-                                            <span className="text-foreground bg-muted px-2 py-0.5 rounded-md">{shift.breakTime}m</span>
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn(
+                                                "h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-lg",
+                                                isDefault ? "bg-primary shadow-primary/30" : "bg-muted text-muted-foreground"
+                                            )}>
+                                                <IconClock className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-lg leading-tight">{shift.name}</h4>
+                                                {isDefault && <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded ml-[-1px]">Default</span>}
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between items-center bg-background p-2 rounded-lg border border-border">
-                                            <span>Grace</span>
-                                            <span className="text-foreground bg-muted px-2 py-0.5 rounded-md">{shift.gracePeriodLate}m</span>
+
+                                        <div className="flex gap-1">
+                                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" onClick={() => handleOpenEdit(shift)}>
+                                                <IconPencil className="h-5 w-5 text-muted-foreground" />
+                                            </Button>
+                                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl hover:text-red-500 hover:bg-red-50" onClick={() => handleDeleteShift(shift.id)}>
+                                                <IconTrash className="h-5 w-5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-5">
+                                        <div className="flex items-center justify-between p-5 bg-muted/50 rounded-3xl">
+                                            <div className="text-center flex-1 border-r border-border">
+                                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1">Clock In</span>
+                                                <span className="text-2xl font-black font-mono tracking-tighter">
+                                                    {new Date(`1970-01-01T${shift.startTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <div className="text-center flex-1">
+                                                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1">Clock Out</span>
+                                                <span className="text-2xl font-black font-mono tracking-tighter">
+                                                    {new Date(`1970-01-01T${shift.endTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Small Info Grid for Limits */}
+                                        {(shift.minStartTime || shift.maxOutTime) && (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {shift.minStartTime && (
+                                                    <div className="text-center p-2 rounded-xl bg-green-500/5 border border-green-500/10">
+                                                        <span className="text-[9px] font-bold uppercase text-green-600/70 block">Earliest In</span>
+                                                        <span className="text-xs font-black font-mono text-green-700 dark:text-green-500">{shift.minStartTime}</span>
+                                                    </div>
+                                                )}
+                                                {shift.maxOutTime && (
+                                                    <div className="text-center p-2 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                                                        <span className="text-[9px] font-bold uppercase text-orange-600/70 block">Latest Out</span>
+                                                        <span className="text-xs font-black font-mono text-orange-700 dark:text-orange-500">{shift.maxOutTime}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="grid grid-cols-2 gap-3 text-xs font-bold text-muted-foreground pt-2 px-2">
+                                            <div className="flex justify-between items-center bg-background p-2 rounded-lg border border-border">
+                                                <span>Break</span>
+                                                <span className="text-foreground bg-muted px-2 py-0.5 rounded-md">{shift.breakTime}m</span>
+                                            </div>
+                                            <div className="flex justify-between items-center bg-background p-2 rounded-lg border border-border">
+                                                <span>Grace</span>
+                                                <span className="text-foreground bg-muted px-2 py-0.5 rounded-md">{shift.gracePeriodLate}m</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
+                            )
+                        })}
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

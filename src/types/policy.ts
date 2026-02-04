@@ -102,6 +102,28 @@ export interface PolicySettings {
     attendance?: any;
     salaryComponents?: SalaryComponentsConfig;
     payrollConfiguration?: PayrollSettingsConfig;
+    workingDays?: WorkingDaysConfig;
+}
+
+export enum WorkDayType {
+    FULL = 'FULL',
+    HALF = 'HALF',
+    OFF = 'OFF'
+}
+
+export enum HalfDayShift {
+    FIRST = 'FIRST',
+    LAST = 'LAST'
+}
+
+export interface DailyWorkConfig {
+    type: WorkDayType;
+    halfDayShift?: HalfDayShift;
+}
+
+export interface WorkingDaysConfig {
+    defaultPattern?: Record<string, DailyWorkConfig>;
+    isDynamic?: boolean;
 }
 
 export interface Policy {

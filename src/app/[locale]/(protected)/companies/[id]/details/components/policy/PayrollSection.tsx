@@ -55,24 +55,28 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
 
     const renderComponentCard = (comp: PayrollComponent) => {
         const isPercentage = comp.type !== PayrollComponentType.FLAT_AMOUNT;
+        const isAddition = comp.category === PayrollComponentCategory.ADDITION;
+
+        // Format value: add comma separators
+        const formattedValue = new Intl.NumberFormat('en-US').format(comp.value);
 
         return (
-            <div key={comp.id} className="group relative flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-foreground/10 transition-all">
+            <div key={comp.id} className="group relative flex items-center justify-between p-4 bg-muted/30 border border-transparent rounded-2xl hover:bg-card hover:border-border hover:shadow-sm transition-all duration-200">
                 <div className="flex items-center gap-4">
                     <div className={cn(
-                        "h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-inner",
-                        comp.category === PayrollComponentCategory.ADDITION
-                            ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                            : "bg-red-500/10 text-red-600 dark:text-red-400"
+                        "h-12 w-12 rounded-2xl flex items-center justify-center text-sm font-bold shadow-sm transition-colors",
+                        isAddition
+                            ? "bg-green-500/10 text-green-600 dark:text-green-400 group-hover:bg-green-500/20"
+                            : "bg-red-500/10 text-red-600 dark:text-red-400 group-hover:bg-red-500/20"
                     )}>
-                        {isPercentage ? <IconPercentage className="w-5 h-5" /> : <IconCoin className="w-5 h-5" />}
+                        {isPercentage ? <IconPercentage className="w-6 h-6" /> : <IconCoin className="w-6 h-6" />}
                     </div>
                     <div>
-                        <h4 className="font-bold text-base leading-tight flex items-center gap-2">
+                        <h4 className="font-bold text-base leading-tight flex items-center gap-2 text-foreground">
                             {comp.name}
-                            {comp.isStatutory && <Badge variant="secondary" className="text-[9px] px-1.5 h-4">Statutory</Badge>}
+                            {comp.isStatutory && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-background border-border">Statutory</Badge>}
                         </h4>
-                        <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                        <p className="text-xs text-muted-foreground font-medium mt-1">
                             {comp.type === PayrollComponentType.FLAT_AMOUNT
                                 ? `Fixed Amount`
                                 : comp.type === PayrollComponentType.PERCENTAGE_BASIC
@@ -82,17 +86,20 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="text-right mr-2">
-                        <span className="block text-lg font-black font-mono tracking-tight">
-                            {comp.value}{isPercentage ? '%' : ''}
+                <div className="flex items-center gap-6">
+                    <div className={cn(
+                        "text-right mr-2 font-mono tracking-tight",
+                        isAddition ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                    )}>
+                        <span className="block text-xl font-black">
+                            {isAddition ? '+' : '-'}{formattedValue}{isPercentage ? '%' : ''}
                         </span>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => openEditDialog(comp)}>
+                    <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-background" onClick={() => openEditDialog(comp)}>
                             <IconPencil className="h-4 w-4 text-muted-foreground" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg hover:text-red-500 hover:bg-red-50" onClick={() => handleDeleteComponent(comp.id)}>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10" onClick={() => handleDeleteComponent(comp.id)}>
                             <IconTrash className="h-4 w-4" />
                         </Button>
                     </div>
@@ -111,58 +118,60 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                 onSave={handleSaveComponent}
             />
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Additions Column */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                                <IconTrendingUp className="w-4 h-4" />
+                <Card className="border-none shadow-none bg-muted/50 rounded-3xl h-full">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                                    <IconTrendingUp className="w-4 h-4" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Additions</span>
                             </div>
-                            <h3 className="text-xl font-black">Additions</h3>
+                            <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.ADDITION)} className="bg-primary text-primary-foreground rounded-xl font-bold h-8 text-xs hover:bg-primary/90">
+                                <IconPlus className="w-3.5 h-3.5 mr-1.5" />
+                                Add
+                            </Button>
                         </div>
-                        <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.ADDITION)} className="bg-primary text-primary-foreground rounded-xl font-bold h-9 hover:bg-primary/90">
-                            <IconPlus className="w-3.5 h-3.5 mr-1.5" />
-                            Add New
-                        </Button>
-                    </div>
-
-                    <div className="space-y-3">
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                         {additions.length === 0 && (
-                            <div className="p-8 border-2 border-dashed border-border rounded-3xl text-center text-muted-foreground flex flex-col items-center gap-2">
+                            <div className="p-8 border-2 border-dashed border-border/50 rounded-3xl text-center text-muted-foreground flex flex-col items-center gap-2 bg-background/50">
                                 <IconCoin className="w-8 h-8 opacity-20" />
                                 <span className="text-sm font-bold">No additions configured</span>
                             </div>
                         )}
                         {additions.map(renderComponentCard)}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Deductions Column */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
-                                <IconTrendingDown className="w-4 h-4" />
+                <Card className="border-none shadow-none bg-muted/50 rounded-3xl h-full">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+                                    <IconTrendingDown className="w-4 h-4" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Deductions</span>
                             </div>
-                            <h3 className="text-xl font-black">Deductions</h3>
+                            <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.DEDUCTION)} className="bg-primary text-primary-foreground rounded-xl font-bold h-8 text-xs hover:bg-primary/90">
+                                <IconPlus className="w-3.5 h-3.5 mr-1.5" />
+                                Add
+                            </Button>
                         </div>
-                        <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.DEDUCTION)} className="bg-primary text-primary-foreground rounded-xl font-bold h-9 hover:bg-primary/90">
-                            <IconPlus className="w-3.5 h-3.5 mr-1.5" />
-                            Add New
-                        </Button>
-                    </div>
-
-                    <div className="space-y-3">
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                         {deductions.length === 0 && (
-                            <div className="p-8 border-2 border-dashed border-border rounded-3xl text-center text-muted-foreground flex flex-col items-center gap-2">
+                            <div className="p-8 border-2 border-dashed border-border/50 rounded-3xl text-center text-muted-foreground flex flex-col items-center gap-2 bg-background/50">
                                 <IconCoin className="w-8 h-8 opacity-20" />
                                 <span className="text-sm font-bold">No deductions configured</span>
                             </div>
                         )}
                         {deductions.map(renderComponentCard)}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
