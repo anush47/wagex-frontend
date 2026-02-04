@@ -151,7 +151,8 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                                 </p>
                             </div>
                             <Switch
-                                checked={formData.user?.active !== false}
+                                // Use the local form state first, fall back to the nested user record
+                                checked={(formData as any).active !== undefined ? (formData as any).active : formData.user?.active !== false}
                                 onCheckedChange={(c) => onChange('active', c)}
                             />
                         </div>

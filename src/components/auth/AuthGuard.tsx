@@ -20,51 +20,56 @@ export function AuthGuard({ children }: AuthGuardProps) {
         }
     }, [isAuthenticated, isLoading, router]);
 
+    // Strict Access Control for protected routes
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            const path = window.location.pathname;
+            const isRestrictedPage = path.includes('/restricted');
+
+            // 1. Check for missing profile
+            if (!user) {
+                logger.warn("Authenticated user missing profile, redirecting to registration");
+                router.replace("/register?step=profile");
+                return;
+            }
+
+            // 2. Check for inactive account
+            if (user.active === false && !isRestrictedPage) {
+                logger.warn("Inactive user attempted to access portal, redirecting to restricted page");
+                router.replace("/restricted");
+                return;
+            }
+
+            // 3. Prevent active users from seeing the restricted page
+            if (user.active !== false && isRestrictedPage) {
+                router.replace(user.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
+                return;
+            }
+
+            // 4. Role-based portal protection
+            const isEmployerPortal = path.includes('/employer-portal');
+            const isEmployeePortal = path.includes('/employee-portal');
+
+            if (user.role === 'EMPLOYEE' && isEmployerPortal) {
+                logger.warn("Employee attempted to access employer portal, redirecting", { userId: user.id });
+                router.replace("/employee-portal/dashboard");
+            } else if ((user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) {
+                logger.warn("Employer/Admin attempted to access employee portal, redirecting", { userId: user.id });
+                router.replace("/employer-portal/dashboard");
+            }
+        }
+    }, [user, isAuthenticated, isLoading, router]);
+
+    // BLOCKING: Don't render children until we're sure the state is settled and correct
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
+            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-neutral-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
     }
 
-    if (!isAuthenticated) {
-        return null;
-    }
-
-    // Strict Access Control for protected routes
-    if (isAuthenticated && !user && !isLoading) {
-        // Authenticated in Supabase but no profile in backend - Needs registration
-        logger.warn("Authenticated user missing profile, redirecting to registration");
-        router.replace("/register?step=profile");
-        return null;
-    }
-
-    if (user && user.active === false) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-6 text-center">
-                <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-10 shadow-2xl">
-                    <div className="h-20 w-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                            <path d="M12 9v4" />
-                            <path d="M12 16v.01" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-black uppercase tracking-tight mb-3">Access Denied</h1>
-                    <p className="text-neutral-500 font-medium mb-8">
-                        Your account is currently inactive. Please contact your administrator to activate your account.
-                    </p>
-                    <button
-                        onClick={() => signOut()}
-                        className="w-full py-4 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all"
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    if (!isAuthenticated) return null;
 
     return <>{children}</>;
 }

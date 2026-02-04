@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IconLogin, IconLoader2, IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { motion } from "motion/react";
 import { Link } from "@/i18n/routing";
 import { Role } from "@/types/user";
 
@@ -60,18 +61,8 @@ export default function LoginPage() {
         }
     };
 
-    // Use a separate effect to handle redirection once the user is loaded in the store
-    useEffect(() => {
-        if (storeUser) {
-            logger.info("Sign in successful, handling redirect", { role: storeUser.role, active: storeUser.active });
-
-            if (storeUser.role === 'EMPLOYEE') {
-                router.push("/employee-portal/dashboard");
-            } else {
-                router.push("/employer-portal/dashboard");
-            }
-        }
-    }, [storeUser, router]);
+    // We no longer need the local redirection Effect here as GuestGuard and AuthGuard 
+    // provide the centralized and robust routing once the session/user is set in store.
 
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,20 +91,32 @@ export default function LoginPage() {
             <Card className="w-full max-w-md border border-neutral-200 dark:border-neutral-800 shadow-2xl shadow-primary/5 bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
                 <CardContent className="p-10 space-y-8">
                     {/* Header */}
-                    <div className="space-y-3 text-center">
+                    <div className="space-y-6 text-center">
                         <div className="flex justify-center">
-                            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                                <IconLogin className="h-8 w-8 text-primary" />
-                            </div>
+                            <Link
+                                href="/"
+                                className="font-normal flex space-x-3 items-center text-2xl text-black py-1 relative z-20 group"
+                            >
+                                <div className="h-8 w-10 bg-black dark:bg-white rounded-br-2xl rounded-tr-md rounded-tl-2xl rounded-bl-md flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-500" />
+                                <motion.span
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="font-black text-black dark:text-white whitespace-pre tracking-tighter uppercase italic"
+                                >
+                                    WageX
+                                </motion.span>
+                            </Link>
                         </div>
-                        <h1 className="text-3xl font-black tracking-tight uppercase">
-                            {needsRegistration ? "Complete Your Profile" : "Sign In"}
-                        </h1>
-                        <p className="text-neutral-500 font-medium text-sm">
-                            {needsRegistration
-                                ? "We need a bit more information to complete your registration."
-                                : "Welcome back! Enter your credentials to continue."}
-                        </p>
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-black tracking-tight uppercase">
+                                {needsRegistration ? "Complete Your Profile" : "Sign In"}
+                            </h1>
+                            <p className="text-neutral-500 font-medium text-sm">
+                                {needsRegistration
+                                    ? "We need a bit more information to complete your registration."
+                                    : "Welcome back! Enter your credentials to continue."}
+                            </p>
+                        </div>
                     </div>
 
                     {/* Error Alert */}
