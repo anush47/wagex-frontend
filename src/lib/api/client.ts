@@ -95,7 +95,12 @@ class ApiClient {
                     statusCode: response.status,
                     error: data.error,
                 };
-                logger.error('API Error', error);
+
+                // Don't log expected registration-required flow as an error
+                if (!(response.status === 403 && data.message === 'User registration required')) {
+                    logger.error('API Error', error);
+                }
+
                 return { error };
             }
 
