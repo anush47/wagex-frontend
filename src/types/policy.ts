@@ -103,6 +103,7 @@ export interface PolicySettings {
     salaryComponents?: SalaryComponentsConfig;
     payrollConfiguration?: PayrollSettingsConfig;
     workingDays?: WorkingDaysConfig;
+    attendance?: AttendanceConfig;
 }
 
 export enum WorkDayType {
@@ -126,6 +127,62 @@ export interface WorkingDaysConfig {
     isDynamic?: boolean;
     workingCalendar?: string;
     payrollCalendar?: string;
+}
+
+// Attendance Types
+export enum GeofencingEnforcement {
+    STRICT = 'STRICT',
+    FLAG_ONLY = 'FLAG_ONLY',
+    NONE = 'NONE'
+}
+
+export enum ApprovalPolicyMode {
+    AUTO_APPROVE = 'AUTO_APPROVE',
+    REQUIRE_APPROVAL_ALL = 'REQUIRE_APPROVAL_ALL',
+    REQUIRE_APPROVAL_EXCEPTIONS = 'REQUIRE_APPROVAL_EXCEPTIONS'
+}
+
+export interface GeoZone {
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    radius: number;
+    address: string;
+}
+
+export interface GeofencingConfig {
+    enabled: boolean;
+    enforcement: GeofencingEnforcement;
+    zones: GeoZone[];
+}
+
+export interface ExceptionTriggers {
+    outsideZone: boolean;
+    deviceMismatch: boolean;
+    unrecognizedIp?: boolean;
+}
+
+export interface ApprovalPolicyConfig {
+    mode: ApprovalPolicyMode;
+    exceptionTriggers: ExceptionTriggers;
+}
+
+export interface CompanyApiKey {
+    id: string;
+    name: string;
+    key: string;
+    createdAt: string;
+    lastUsedAt?: string;
+}
+
+export interface AttendanceConfig {
+    allowSelfCheckIn: boolean;
+    requireLocation: boolean;
+    requireDeviceInfo: boolean;
+    geofencing: GeofencingConfig;
+    approvalPolicy: ApprovalPolicyConfig;
+    apiKeys: CompanyApiKey[];
 }
 
 export interface Policy {

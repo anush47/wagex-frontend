@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 interface ImageUploadProps {
     value?: string;
-    companyId: string;
+    companyId?: string;
     onChange: (value: string) => void;
     className?: string;
     label?: string;
@@ -72,7 +72,7 @@ export function ImageUpload({ value, companyId, onChange, className, label = "Co
                 // Real upload
                 const response = await StorageService.upload({
                     file,
-                    companyId,
+                    companyId: companyId || 'temp', // Fallback for new company creation
                     folder: 'logos'
                 });
 
