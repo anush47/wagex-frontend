@@ -15,7 +15,8 @@ import {
     IconFiles,
     IconLoader2,
     IconArrowLeft,
-    IconChevronRight
+    IconChevronRight,
+    IconUserBolt
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 // We will create these components or reuse existing ones
 import { EmployeeGeneralTab } from "./components/EmployeeGeneralTab";
 import { EmployeePoliciesTab } from "./components/EmployeePoliciesTab";
+import { EmployeeAccountTab } from "./components/EmployeeAccountTab";
 import { FilesTab } from "../details/components/FilesTab";
 
 export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: string, employeeId: string }> }) {
@@ -108,7 +110,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             const promises = [];
 
             if (isEmployeeDirty && employeeForm) {
-                const { id: _id, createdAt, updatedAt, company, ...payload } = employeeForm as any;
+                const { id: _id, createdAt, updatedAt, company, userId, ...payload } = employeeForm as any;
                 promises.push(EmployeeService.updateEmployee(employeeId, payload));
             }
 
@@ -203,6 +205,13 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                         Identity
                     </TabsTrigger>
                     <TabsTrigger
+                        value="account"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
+                    >
+                        <IconUserBolt className="w-4 h-4" />
+                        Account
+                    </TabsTrigger>
+                    <TabsTrigger
                         value="policies"
                         className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
@@ -225,6 +234,15 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     <EmployeeGeneralTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
+                    />
+                </TabsContent>
+
+                <TabsContent value="account" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <EmployeeAccountTab
+                        formData={employeeForm}
+                        onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
+                        onSave={handleSave}
+                        loading={saving}
                     />
                 </TabsContent>
 

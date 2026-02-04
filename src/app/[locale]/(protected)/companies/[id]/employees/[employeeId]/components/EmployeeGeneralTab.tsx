@@ -104,24 +104,13 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Phone Number</Label>
-                                <Input
-                                    value={formData.phone || ""}
-                                    onChange={e => onChange('phone', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Email Address</Label>
-                                <Input
-                                    value={formData.email || ""}
-                                    onChange={e => onChange('email', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                    placeholder="name@company.com"
-                                />
-                            </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Phone Number</Label>
+                            <Input
+                                value={formData.phone || ""}
+                                onChange={e => onChange('phone', e.target.value)}
+                                className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                            />
                         </div>
 
                         <div className="space-y-2">

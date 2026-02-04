@@ -49,6 +49,13 @@ export const EmployeeService = {
     },
 
     /**
+     * Provision user account for employee
+     */
+    async provisionUser(id: string, companyId?: string): Promise<ApiResponse<any>> {
+        return backendApiClient.post<any>(`/employees/${id}/provision-user`, { companyId });
+    },
+
+    /**
      * Delete employee
      */
     async deleteEmployee(id: string): Promise<ApiResponse<void>> {
