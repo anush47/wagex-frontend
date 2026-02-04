@@ -16,9 +16,10 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import {
-    IconChartBar,
     IconUsers,
-    IconArrowLeft
+    IconArrowLeft,
+    IconSitemap,
+    IconChartBar
 } from "@tabler/icons-react";
 import { CompanyService } from "@/services/company.service";
 import { Company } from "@/types/company";
@@ -121,6 +122,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             href: `/employer-portal/companies/${companyId}/employees`,
             icon: (
                 <IconUsers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            ),
+        },
+        {
+            label: "Departments", // TODO: Add translation key
+            href: `/employer-portal/companies/${companyId}/departments`,
+            icon: (
+                <IconSitemap className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
         {

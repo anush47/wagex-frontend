@@ -25,6 +25,7 @@ export interface Employee {
     employmentType: EmploymentType;
     companyId: string;
     managerId?: string;
+    departmentId?: string;
     userId?: string;
     // Optional joined data
     company?: {

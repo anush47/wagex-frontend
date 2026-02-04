@@ -155,6 +155,21 @@ class ApiClient {
     }
 
     /**
+     * PATCH request
+     */
+    async patch<T>(
+        endpoint: string,
+        body?: unknown,
+        config?: RequestConfig
+    ): Promise<ApiResponse<T>> {
+        return this.request<T>(endpoint, {
+            ...config,
+            method: 'PATCH',
+            body: JSON.stringify(body),
+        });
+    }
+
+    /**
      * POST request for raw data (like FormData)
      */
     async postRaw<T>(

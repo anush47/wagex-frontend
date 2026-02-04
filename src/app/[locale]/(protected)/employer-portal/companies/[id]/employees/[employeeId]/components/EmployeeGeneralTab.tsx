@@ -21,9 +21,11 @@ import { ImageUpload } from "@/components/ui/image-upload";
 interface EmployeeGeneralTabProps {
     formData: Employee;
     onChange: (field: keyof Employee, value: any) => void;
+    departments?: any[];
+    potentialManagers?: Employee[];
 }
 
-export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabProps) {
+export function EmployeeGeneralTab({ formData, onChange, departments = [], potentialManagers = [] }: EmployeeGeneralTabProps) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
@@ -169,6 +171,48 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
                 <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
                     <CardContent className="p-10 space-y-10">
                         <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600">
+                                <IconBriefcase className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-2xl font-black tracking-tight uppercase">Placement & Role</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Department</Label>
+                                <Select value={formData.departmentId || "unassigned"} onValueChange={v => onChange('departmentId', v === "unassigned" ? null : v)}>
+                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                        <SelectValue placeholder="Select Department" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                                        {departments?.map(dept => (
+                                            <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Reporting Manager</Label>
+                                <Select value={formData.managerId || "unassigned"} onValueChange={v => onChange('managerId', v === "unassigned" ? null : v)}>
+                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                        <SelectValue placeholder="Select Manager" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                        <SelectItem value="unassigned">No Manager</SelectItem>
+                                        {potentialManagers?.map(mgr => (
+                                            <SelectItem key={mgr.id} value={mgr.id}>{mgr.nameWithInitials} ({mgr.designation})</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
+                    <CardContent className="p-10 space-y-10">
+                        <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                                 <IconCurrencyDollar className="h-6 w-6" />
                             </div>
@@ -240,7 +284,6 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
                             description="profile photo"
                             alt="Employee Identity"
                             companyId={formData.companyId}
-                            employeeId={formData.id}
                             value={formData.photo}
                             onChange={(key) => onChange('photo', key)}
                         />

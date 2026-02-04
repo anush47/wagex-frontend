@@ -31,6 +31,7 @@ import { EmployeePoliciesTab } from "./components/EmployeePoliciesTab";
 import { EmployeeAccountTab } from "./components/EmployeeAccountTab";
 import { EmployeeFilesTab } from "./components/EmployeeFilesTab";
 import { StorageService } from "@/services/storage.service";
+import { DepartmentService } from "@/services/department.service";
 
 export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: string, employeeId: string }> }) {
     const { id: companyId, employeeId } = use(params);
@@ -95,6 +96,31 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             setLoading(false);
         }
     };
+
+    // Options
+    const [departments, setDepartments] = useState<any[]>([]);
+    const [potentialManagers, setPotentialManagers] = useState<Employee[]>([]);
+
+    useEffect(() => {
+        const fetchOptions = async () => {
+            try {
+                const [deptRes, empRes] = await Promise.all([
+                    DepartmentService.getAll(companyId),
+                    EmployeeService.getEmployees({ companyId }) // Fixed method name
+                ]);
+                // Handle departments data extraction
+                const deptPayload = (deptRes.data as any)?.data || deptRes.data;
+                setDepartments(Array.isArray(deptPayload) ? deptPayload : []);
+                const payload = (empRes.data as any)?.data || empRes.data;
+                const allEmps = Array.isArray(payload) ? payload : (payload?.data && Array.isArray(payload.data) ? payload.data : []);
+                // Filter out self as potential manager
+                setPotentialManagers(allEmps.filter((e: Employee) => e.id !== employeeId));
+            } catch (error) {
+                console.error("Failed to fetch options", error);
+            }
+        };
+        if (companyId) fetchOptions();
+    }, [companyId, employeeId]);
 
     useEffect(() => {
         fetchData();
@@ -294,6 +320,8 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     <EmployeeGeneralTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
+                        departments={departments}
+                        potentialManagers={potentialManagers}
                     />
                 </TabsContent>
 

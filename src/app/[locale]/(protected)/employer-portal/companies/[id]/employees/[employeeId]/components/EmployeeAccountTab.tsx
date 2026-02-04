@@ -81,7 +81,6 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
             }
             toast.success("User access removed successfully");
             onChange('userId', null);
-            onChange('active', true); // Reset active state for next provisioning
         } catch (error: any) {
             toast.error(error.message || "An error occurred");
         } finally {
@@ -153,7 +152,7 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                             <Switch
                                 // Use the local form state first, fall back to the nested user record
                                 checked={(formData as any).active !== undefined ? (formData as any).active : formData.user?.active !== false}
-                                onCheckedChange={(c) => onChange('active', c)}
+                                onCheckedChange={(c) => onChange('active' as any, c)}
                             />
                         </div>
                     )}
