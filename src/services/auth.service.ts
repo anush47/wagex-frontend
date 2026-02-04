@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { backendApiClient } from '@/lib/api/client';
 import { logger } from '@/lib/utils/logger';
-import type { LoginCredentials } from '@/types/auth';
+import type { LoginCredentials, UserProfile } from '@/types/user';
 import type { Session, User } from '@supabase/supabase-js';
 
 /**
@@ -10,6 +10,7 @@ import type { Session, User } from '@supabase/supabase-js';
 export class AuthService {
     async signIn(credentials: LoginCredentials): Promise<{
         user: User | null;
+        profile: UserProfile | null;
         session: Session | null;
         error: Error | null;
     }> {
@@ -24,7 +25,7 @@ export class AuthService {
 
             if (error) {
                 logger.error('Sign in failed', error);
-                return { user: null, session: null, error };
+                return { user: null, profile: null, session: null, error };
             }
 
             if (data.session) {
@@ -32,28 +33,44 @@ export class AuthService {
                 backendApiClient.setAuthToken(data.session.access_token);
                 logger.info('Sign in successful', { userId: data.user?.id });
 
-                // Check if user exists in backend DB by trying to get current user
-                const profileResponse = await backendApiClient.get('/users/me');
+                // Fetch backend profile data
+                const profileResult = await this.getProfile();
 
-                if (profileResponse.error) {
+                if (profileResult.error) {
                     // Check if this is the expected "registration required" response
-                    if (profileResponse.error.statusCode === 403 && profileResponse.error.message === 'User registration required') {
+                    if (profileResult.error.statusCode === 403 && profileResult.error.message === 'User registration required') {
                         logger.info('User exists in Supabase but not in backend DB. Needs registration.');
-                        return { user: data.user, session: data.session, error: new Error('REGISTRATION_REQUIRED') };
+                        return { user: data.user, profile: null, session: data.session, error: new Error('REGISTRATION_REQUIRED') };
                     }
+
+                    // Handle inactive user error (401)
+                    if (profileResult.error.statusCode === 401 && profileResult.error.message === 'User inactive') {
+                        logger.warn('Inactive user attempted login', { userId: data.user?.id });
+                        // We return the session so the user is "logged in" in Supabase, 
+                        // but we will mark them as inactive in the store to trigger the restricted UI.
+                        return {
+                            user: data.user,
+                            profile: { id: data.user.id, email: data.user.email!, active: false, role: 'EMPLOYEE' as any },
+                            session: data.session,
+                            error: null
+                        };
+                    }
+
                     // For other errors, return them
-                    logger.error('Failed to fetch user profile', profileResponse.error);
-                    return { user: null, session: null, error: new Error(profileResponse.error.message || 'Failed to verify user') };
+                    logger.error('Failed to fetch user profile', profileResult.error);
+                    return { user: null, profile: null, session: null, error: new Error(profileResult.error.message || 'Failed to verify user') };
                 }
 
                 logger.info('User profile found in backend DB');
+                return { user: data.user, profile: profileResult.data || null, session: data.session, error: null };
             }
 
-            return { user: data.user, session: data.session, error: null };
+            return { user: data.user, profile: null, session: data.session, error: null };
         } catch (error) {
             logger.error('Sign in error', error);
             return {
                 user: null,
+                profile: null,
                 session: null,
                 error: error instanceof Error ? error : new Error('Unknown error'),
             };
@@ -168,11 +185,18 @@ export class AuthService {
     }
 
     /**
-     * Get current access token
+     * Fetch user profile from backend
      */
-    getAccessToken(): string | null {
-        // This will be called from the store
-        return null; // Placeholder - will be implemented in the store
+    async getProfile(): Promise<{ data: UserProfile | null; error: any | null }> {
+        try {
+            const response = await backendApiClient.get<UserProfile>('/users/me');
+            if (response.error) {
+                return { data: null, error: response.error };
+            }
+            return { data: response.data || null, error: null };
+        } catch (error) {
+            return { data: null, error: { message: 'Failed to fetch profile', statusCode: 500 } };
+        }
     }
 }
 

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
+import { useAuthStore } from "@/stores/auth.store";
+import { logger } from "@/lib/utils/logger";
 import { authService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +16,7 @@ import { Role } from "@/types/user";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { signIn, user: storeUser } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [needsRegistration, setNeedsRegistration] = useState(false);
@@ -37,32 +40,38 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const { user, session, error: signInError } = await authService.signIn(formData);
+            await signIn(formData);
 
-            if (signInError) {
-                if (signInError.message === "REGISTRATION_REQUIRED") {
-                    // User exists in Supabase but not in backend DB - show profile form
-                    setNeedsRegistration(true);
-                    setLoading(false);
-                    return;
-                }
-                setError(signInError.message || "Failed to sign in");
+            // Get the user from the store *after* successful sign in
+            // Wait, we can also get it from the store state if we use a selector or just the reactive hook
+            // But since we are in an async handler, we might need the latest state.
+            // Actually, in Zustand, we can just use the storeUser from the hook if it's reactive.
+        } catch (signInError: any) {
+            if (signInError.message === "REGISTRATION_REQUIRED") {
+                setNeedsRegistration(true);
                 setLoading(false);
                 return;
             }
-
-            // Only redirect if we have user, session, AND no errors
-            if (user && session) {
-                // Successful login
-                router.push("/companies");
-            }
-        } catch (err: any) {
-            setError(err.message || "An unexpected error occurred");
+            setError(signInError.message || "Failed to sign in");
             setLoading(false);
+            return;
         } finally {
             setLoading(false);
         }
     };
+
+    // Use a separate effect to handle redirection once the user is loaded in the store
+    useEffect(() => {
+        if (storeUser) {
+            logger.info("Sign in successful, handling redirect", { role: storeUser.role, active: storeUser.active });
+
+            if (storeUser.role === 'EMPLOYEE') {
+                router.push("/employee-portal/dashboard");
+            } else {
+                router.push("/employer-portal/dashboard");
+            }
+        }
+    }, [storeUser, router]);
 
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -77,8 +86,8 @@ export default function LoginPage() {
                 return;
             }
 
-            // Registration complete, redirect to companies
-            router.push("/companies");
+            // Registration complete, redirect to dashboard
+            router.push("/employer-portal/dashboard");
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred");
         } finally {

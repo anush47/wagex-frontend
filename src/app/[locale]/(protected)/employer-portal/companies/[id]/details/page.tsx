@@ -180,7 +180,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         try {
             await CompanyService.deleteCompany(id);
             toast.success("Company deleted successfully", { id: toastId });
-            router.push("/companies");
+            router.push("/employer-portal/companies");
         } catch (error) {
             console.error("Failed to delete company", error);
             toast.error("Failed to delete company", { id: toastId });

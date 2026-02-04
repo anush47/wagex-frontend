@@ -9,10 +9,20 @@ export interface LoginCredentials {
     password: string;
 }
 
+export interface UserProfile {
+    id: string;
+    email: string;
+    role: Role;
+    active: boolean;
+    nameWithInitials?: string;
+    fullName?: string;
+    address?: string;
+    phone?: string;
+}
+
 export interface RegisterData {
     nameWithInitials: string;
     fullName: string;
     address?: string;
     phone?: string;
-    role: Role;
 }

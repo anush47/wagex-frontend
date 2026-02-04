@@ -32,11 +32,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
         return null;
     }
 
-    // Strict Access Control
+    // Strict Access Control for protected routes
+    if (isAuthenticated && !user && !isLoading) {
+        // Authenticated in Supabase but no profile in backend - Needs registration
+        logger.warn("Authenticated user missing profile, redirecting to registration");
+        router.replace("/register?step=profile");
+        return null;
+    }
+
     if (user && user.active === false) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-6">
-                <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-10 text-center shadow-2xl">
+            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-6 text-center">
+                <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-10 shadow-2xl">
                     <div className="h-20 w-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
@@ -46,7 +53,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                     </div>
                     <h1 className="text-2xl font-black uppercase tracking-tight mb-3">Access Denied</h1>
                     <p className="text-neutral-500 font-medium mb-8">
-                        Your account has been disabled. Please contact your administrator for assistance.
+                        Your account is currently inactive. Please contact your administrator to activate your account.
                     </p>
                     <button
                         onClick={() => signOut()}

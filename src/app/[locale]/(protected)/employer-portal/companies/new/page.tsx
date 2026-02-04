@@ -49,7 +49,7 @@ export default function NewCompanyPage() {
         try {
             await createCompany(data);
             toast.success("Company established successfully!", { id: toastId });
-            router.push("/companies");
+            router.push("/employer-portal/companies");
         } catch (error) {
             console.error("Failed to create company", error);
             toast.error("Failed to establish company", { id: toastId });

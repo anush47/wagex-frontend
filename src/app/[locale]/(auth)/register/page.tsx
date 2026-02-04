@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IconUserPlus, IconLoader2, IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { useAuthStore } from "@/stores/auth.store";
+import { logger } from "@/lib/utils/logger";
 import { Link } from "@/i18n/routing";
 import { Role } from "@/types/user";
 
@@ -17,6 +19,7 @@ export default function RegisterPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentStep = (searchParams.get("step") as "auth" | "profile") || "auth";
+    const { fetchProfile } = useAuthStore();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -40,6 +43,14 @@ export default function RegisterPage() {
         const checkSession = async () => {
             try {
                 const session = await authService.getSession();
+
+                if (!session && currentStep === "profile") {
+                    // Unauthenticated user trying to access profile step
+                    logger.warn("Unauthenticated attempt to access profile step, redirecting to auth step");
+                    router.replace("/register?step=auth");
+                    return;
+                }
+
                 if (session) {
                     // User is already authenticated (signed up via Supabase)
                     // Redirect to profile step if not already there
@@ -102,7 +113,10 @@ export default function RegisterPage() {
                 return;
             }
 
-            // Registration complete, redirect to companies (or employer portal directly if companies logic redirects)
+            // Registration complete, refresh the store profile
+            await fetchProfile();
+
+            // Then redirect to companies
             router.push("/employer-portal/companies");
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred");
