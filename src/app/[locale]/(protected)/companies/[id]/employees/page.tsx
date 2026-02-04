@@ -95,7 +95,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                 <Link href={`/companies/${companyId}/employees/new`}>
                     <Button className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                         <IconPlus className="mr-2 h-5 w-5" />
-                        Add New Employee
+                        Add Employee
                     </Button>
                 </Link>
             </div>
@@ -179,10 +179,10 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                                             <div className="flex items-start justify-between">
                                                 <div className="flex gap-4">
                                                     <div className="h-14 w-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xl font-black text-neutral-400 group-hover:scale-110 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-500">
-                                                        {emp.name.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()}
+                                                        {emp.nameWithInitials?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase() || "??"}
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <h3 className="font-black text-lg tracking-tight line-clamp-1">{emp.name}</h3>
+                                                        <h3 className="font-black text-lg tracking-tight line-clamp-1">{emp.nameWithInitials || "Unnamed Employee"}</h3>
                                                         <div className="flex items-center gap-2">
                                                             <Badge variant="outline" className="h-5 rounded-lg font-mono text-[9px] uppercase tracking-tighter border-neutral-200 dark:border-neutral-800">
                                                                 ID: {emp.employeeNo}
@@ -200,10 +200,10 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-1">
-                                                    <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Department/Role</p>
-                                                    <div className="flex items-center gap-1.5 font-bold text-xs">
-                                                        <IconBriefcase className="h-3 w-3 text-neutral-300" />
-                                                        <span>{emp.employmentType}</span>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Designation / Role</p>
+                                                    <div className="flex items-center gap-1.5 font-bold text-xs truncate max-w-full">
+                                                        <IconBriefcase className="h-3 w-3 text-neutral-300 flex-shrink-0" />
+                                                        <span className="truncate">{emp.designation || emp.employmentType}</span>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1">

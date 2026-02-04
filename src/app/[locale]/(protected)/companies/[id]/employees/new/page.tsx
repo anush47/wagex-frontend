@@ -25,8 +25,16 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
 
     // Form State
     const [formData, setFormData] = useState({
-        name: "",
-        employeeNo: "",
+        nameWithInitials: "",
+        fullName: "",
+        designation: "",
+        employeeNo: 0,
+        nic: "",
+        joinedDate: new Date().toISOString().split('T')[0],
+        resignedDate: "",
+        remark: "",
+        address: "",
+        phone: "",
         email: "",
         gender: Gender.MALE,
         employmentType: EmploymentType.PERMANENT,
@@ -53,7 +61,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
     };
 
     return (
-        <div className="w-full max-w-3xl mx-auto py-10 space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <div className="w-full max-w-4xl mx-auto py-10 space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
             {/* Breadcrumb / Back */}
             <Link
                 href={`/companies/${companyId}/employees`}
@@ -62,7 +70,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
                 <div className="h-8 w-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center transition-transform group-hover:-translate-x-1">
                     <IconArrowLeft className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-bold uppercase tracking-widest pt-0.5">Back to Workforce</span>
+                <span className="text-sm font-bold uppercase tracking-widest pt-0.5">Back to Employees</span>
             </Link>
 
             <div className="space-y-2">
@@ -70,15 +78,15 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
                     <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                         <IconUserPlus className="h-7 w-7" />
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase">Onboard Personnel</h1>
+                    <h1 className="text-4xl font-black tracking-tight uppercase">Add Employee</h1>
                 </div>
                 <p className="text-neutral-500 font-medium text-lg max-w-xl leading-relaxed">
-                    Set up a new staff member's profile and initial employment parameters.
+                    Add a new employee to your company's workforce strategy.
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
-                <Card className="border border-neutral-100 dark:border-neutral-800 shadow-2xl shadow-primary/5 bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-2xl shadow-primary/5 bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
                     <CardContent className="p-8 md:p-12 space-y-10">
                         {/* Section 1: Identity */}
                         <div className="space-y-6">
@@ -89,35 +97,112 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Full Legal Name</Label>
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Name with Initials</Label>
                                     <Input
                                         required
-                                        placeholder="e.g. Johnathan S. Doe"
+                                        placeholder="e.g. J. Doe"
                                         className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                        value={formData.name}
-                                        onChange={e => updateField('name', e.target.value)}
+                                        value={formData.nameWithInitials}
+                                        onChange={e => updateField('nameWithInitials', e.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Member ID (Emp No)</Label>
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Full Legal Name</Label>
                                     <Input
                                         required
-                                        placeholder="e.g. EMP-1042"
+                                        placeholder="e.g. Johnathan Samuel Doe"
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        value={formData.fullName}
+                                        onChange={e => updateField('fullName', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">NIC Number</Label>
+                                    <Input
+                                        required
+                                        placeholder="e.g. 199512345678"
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        value={formData.nic}
+                                        onChange={e => updateField('nic', e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Designation</Label>
+                                    <Input
+                                        placeholder="e.g. Senior Software Engineer"
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        value={formData.designation}
+                                        onChange={e => updateField('designation', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Joined Date</Label>
+                                    <Input
+                                        type="date"
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        value={formData.joinedDate}
+                                        onChange={e => updateField('joinedDate', e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Member ID (Number)</Label>
+                                    <Input
+                                        required
+                                        type="number"
+                                        placeholder="1001"
                                         className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-black font-mono text-base text-primary shadow-inner"
-                                        value={formData.employeeNo}
-                                        onChange={e => updateField('employeeNo', e.target.value.toUpperCase())}
+                                        value={formData.employeeNo || ""}
+                                        onChange={e => updateField('employeeNo', parseInt(e.target.value) || 0)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Phone Number</Label>
+                                    <Input
+                                        placeholder="+94 77 XXX XXXX"
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        value={formData.phone}
+                                        onChange={e => updateField('phone', e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Professional Email</Label>
+                                    <Input
+                                        type="email"
+                                        placeholder="john@company.com"
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        value={formData.email}
+                                        onChange={e => updateField('email', e.target.value)}
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Professional Email</Label>
+                                <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Home Address</Label>
                                 <Input
-                                    type="email"
-                                    placeholder="john@company.com"
+                                    placeholder="No. 123, Street name, City"
                                     className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                    value={formData.email}
-                                    onChange={e => updateField('email', e.target.value)}
+                                    value={formData.address}
+                                    onChange={e => updateField('address', e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Remarks / Special Notes</Label>
+                                <textarea
+                                    rows={4}
+                                    placeholder="Add any additional notes about the employee..."
+                                    className="w-full bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl p-6 font-medium text-base shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                                    value={formData.remark}
+                                    onChange={e => updateField('remark', e.target.value)}
                                 />
                             </div>
                         </div>
@@ -200,7 +285,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
                         {submitting ? "Processing..." : (
                             <div className="flex items-center gap-2">
                                 <IconCheck className="h-5 w-5" />
-                                Initialize Personnel
+                                Create Employee
                             </div>
                         )}
                     </Button>

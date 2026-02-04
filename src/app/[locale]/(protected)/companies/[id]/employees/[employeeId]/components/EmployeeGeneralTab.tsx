@@ -37,30 +37,110 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Full Legal Name</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Name with Initials</Label>
                                 <Input
-                                    value={formData.name}
-                                    onChange={e => onChange('name', e.target.value)}
+                                    value={formData.nameWithInitials}
+                                    onChange={e => onChange('nameWithInitials', e.target.value)}
                                     className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner focus:ring-2 focus:ring-primary/20 transition-all"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Member Number</Label>
                                 <Input
-                                    value={formData.employeeNo}
-                                    onChange={e => onChange('employeeNo', e.target.value.toUpperCase())}
+                                    type="number"
+                                    value={formData.employeeNo || ""}
+                                    onChange={e => onChange('employeeNo', parseInt(e.target.value) || 0)}
                                     className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-black font-mono text-base text-primary shadow-inner"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Email Address</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Full Legal Name</Label>
                             <Input
-                                value={formData.email || ""}
-                                onChange={e => onChange('email', e.target.value)}
+                                value={formData.fullName}
+                                onChange={e => onChange('fullName', e.target.value)}
                                 className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                placeholder="name@company.com"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">NIC Number</Label>
+                                <Input
+                                    value={formData.nic || ""}
+                                    onChange={e => onChange('nic', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Designation</Label>
+                                <Input
+                                    value={formData.designation || ""}
+                                    onChange={e => onChange('designation', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Joined Date</Label>
+                                <Input
+                                    type="date"
+                                    value={formData.joinedDate ? new Date(formData.joinedDate).toISOString().split('T')[0] : ""}
+                                    onChange={e => onChange('joinedDate', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Resigned Date</Label>
+                                <Input
+                                    type="date"
+                                    value={formData.resignedDate ? new Date(formData.resignedDate).toISOString().split('T')[0] : ""}
+                                    onChange={e => onChange('resignedDate', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Phone Number</Label>
+                                <Input
+                                    value={formData.phone || ""}
+                                    onChange={e => onChange('phone', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Email Address</Label>
+                                <Input
+                                    value={formData.email || ""}
+                                    onChange={e => onChange('email', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    placeholder="name@company.com"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Home Address</Label>
+                            <Input
+                                value={formData.address || ""}
+                                onChange={e => onChange('address', e.target.value)}
+                                className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Remarks / Special Notes</Label>
+                            <textarea
+                                rows={4}
+                                value={formData.remark || ""}
+                                onChange={e => onChange('remark', e.target.value)}
+                                className="w-full bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl p-6 font-medium text-base shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                                placeholder="Add any additional notes about the employee..."
                             />
                         </div>
 
@@ -141,6 +221,7 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
                             <SelectContent className="rounded-xl">
                                 <SelectItem value={EmployeeStatus.ACTIVE}>Active</SelectItem>
                                 <SelectItem value={EmployeeStatus.INACTIVE}>Inactive</SelectItem>
+                                <SelectItem value={EmployeeStatus.SUSPENDED}>Suspended</SelectItem>
                             </SelectContent>
                         </Select>
 

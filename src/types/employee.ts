@@ -2,13 +2,22 @@ import { EmploymentType, Gender } from "./policy";
 
 export enum EmployeeStatus {
     ACTIVE = 'ACTIVE',
-    INACTIVE = 'INACTIVE'
+    INACTIVE = 'INACTIVE',
+    SUSPENDED = 'SUSPENDED'
 }
 
 export interface Employee {
     id: string;
-    employeeNo: string;
-    name: string;
+    employeeNo: number;
+    nic: string;
+    nameWithInitials: string;
+    fullName: string;
+    designation?: string;
+    joinedDate: string;
+    resignedDate?: string;
+    remark?: string;
+    address?: string;
+    phone?: string;
     email?: string;
     basicSalary: number;
     status: EmployeeStatus;

@@ -24,7 +24,7 @@ export function DataLoadingOverlay({ isLoading, message }: DataLoadingOverlayPro
                     <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-neutral-200 dark:border-neutral-800">
                         <IconLoader2 className="h-6 w-6 animate-spin text-primary" />
                         <span className="text-sm font-bold text-neutral-600 dark:text-neutral-300">
-                            {message || t("searching") || "Searching..."}
+                            {message || t("loading") || "Loading..."}
                         </span>
                     </div>
                 </motion.div>
