@@ -93,7 +93,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                     </p>
                 </div>
 
-                <Link href={`/companies/${companyId}/employees/new`}>
+                <Link href={`/employer-portal/companies/${companyId}/employees/new`}>
                     <Button className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                         <IconPlus className="mr-2 h-5 w-5" />
                         Add Employee
@@ -174,7 +174,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                         loading && "blur-[1px]"
                     )}>
                         {employees.map(emp => (
-                            <Link key={emp.id} href={`/companies/${companyId}/employees/${emp.id}`}>
+                            <Link key={emp.id} href={`/employer-portal/companies/${companyId}/employees/${emp.id}`}>
                                 <Card className="group border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-2xl hover:shadow-primary/5 bg-white dark:bg-neutral-900 rounded-[2rem] overflow-hidden transition-all duration-300 hover:border-primary/20">
                                     <CardContent className="p-0">
                                         <div className="p-6 space-y-6">

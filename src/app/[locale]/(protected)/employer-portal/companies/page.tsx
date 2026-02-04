@@ -186,12 +186,12 @@ export default function CompaniesPage() {
                                     </div>
 
                                     <div className="flex gap-2.5 pt-2 mt-auto">
-                                        <Link href={`/companies/${company.id}/employees`} className="flex-1">
+                                        <Link href={`/employer-portal/companies/${company.id}/employees`} className="flex-1">
                                             <Button variant="outline" className="w-full h-10 md:h-12 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-bold border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-all">
                                                 {common("employees")}
                                             </Button>
                                         </Link>
-                                        <Link href={`/companies/${company.id}`} className="flex-1">
+                                        <Link href={`/employer-portal/companies/${company.id}`} className="flex-1">
                                             <Button className="w-full h-10 md:h-12 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-bold bg-neutral-900 text-white dark:bg-white dark:text-black transition-all group/btn">
                                                 {common("actions")}
                                                 <IconArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-1 md:ml-1.5 group-hover/btn:translate-x-1 transition-transform" />

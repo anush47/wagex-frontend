@@ -36,10 +36,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }, []);
 
     // Check if we are in a company details context
-    // Pattern: /companies/[id] where id is not 'new'
-    const isCompanyContext = pathname.startsWith('/companies/') &&
+    // Pattern: /employer-portal/companies/[id] where id is not 'new'
+    const isCompanyContext = pathname.startsWith('/employer-portal/companies/') &&
         !pathname.endsWith('/companies/new') &&
-        pathname.split('/').length > 2;
+        pathname.split('/').length > 3;
 
     const companyId = params?.id as string;
 

@@ -53,7 +53,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
             // Remove status from the payload as it's not in CreateEmployeeDto
             const { status, ...employeeData } = formData;
             await EmployeeService.createEmployee(employeeData);
-            router.push(`/companies/${companyId}/employees`);
+            router.push(`/employer-portal/companies/${companyId}/employees`);
         } catch (error) {
             console.error("Failed to create employee", error);
         } finally {
@@ -65,7 +65,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
         <div className="w-full max-w-4xl mx-auto py-10 space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
             {/* Breadcrumb / Back */}
             <Link
-                href={`/companies/${companyId}/employees`}
+                href={`/employer-portal/companies/${companyId}/employees`}
                 className="flex items-center gap-2 text-neutral-400 hover:text-foreground transition-colors group group-hover:-translate-x-1"
             >
                 <div className="h-8 w-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center transition-transform group-hover:-translate-x-1">
@@ -263,7 +263,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
                         type="button"
                         variant="ghost"
                         className="rounded-2xl h-14 px-8 font-bold text-sm uppercase tracking-widest hover:bg-neutral-100"
-                        onClick={() => router.push(`/companies/${companyId}/employees`)}
+                        onClick={() => router.push(`/employer-portal/companies/${companyId}/employees`)}
                         disabled={submitting}
                     >
                         Discard

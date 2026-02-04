@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconBuildingSkyscraper, IconUsers, IconCalendarStats, IconArrowUpRight } from "@tabler/icons-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 
 export default function DashboardPage() {
     const t = useTranslations("Common");
@@ -98,14 +99,18 @@ export default function DashboardPage() {
                         <CardTitle className="text-xl font-black tracking-tight">Quick Links</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Button variant="outline" className="w-full h-14 rounded-2xl justify-start gap-3 font-bold border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 transition-all text-muted-foreground hover:text-foreground">
-                            <IconBuildingSkyscraper className="h-5 w-5" />
-                            Add Company
-                        </Button>
-                        <Button variant="outline" className="w-full h-14 rounded-2xl justify-start gap-3 font-bold border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 transition-all text-muted-foreground hover:text-foreground">
-                            <IconUsers className="h-5 w-5" />
-                            Import Employees
-                        </Button>
+                        <Link href="/employer-portal/companies/new">
+                            <Button variant="outline" className="w-full h-14 rounded-2xl justify-start gap-3 font-bold border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 transition-all text-muted-foreground hover:text-foreground">
+                                <IconBuildingSkyscraper className="h-5 w-5" />
+                                Add Company
+                            </Button>
+                        </Link>
+                        <Link href="/employer-portal/companies">
+                            <Button variant="outline" className="w-full h-14 rounded-2xl justify-start gap-3 font-bold border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 transition-all text-muted-foreground hover:text-foreground">
+                                <IconUsers className="h-5 w-5" />
+                                Import Employees
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>
