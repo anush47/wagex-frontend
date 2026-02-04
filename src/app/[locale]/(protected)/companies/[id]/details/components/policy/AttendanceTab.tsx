@@ -8,17 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { IconMapPin, IconDeviceMobile, IconUserCheck, IconKey, IconTrash, IconPlus, IconMap, IconCircleCheck, IconAlertTriangle } from "@tabler/icons-react";
+import { IconMapPin, IconDeviceMobile, IconUserCheck, IconKey, IconTrash, IconPlus, IconMap, IconCircleCheck, IconAlertTriangle, IconCopy } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 import dynamic from 'next/dynamic';
 
-// Moved Map logic to a separate component to avoid SSR/Hook issues
-const AttendanceMap = dynamic(() => import('./AttendanceMap'), {
+const AttendanceMap = dynamic(() => import("./AttendanceMap"), {
     ssr: false,
-    loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-2xl" />
+    loading: () => <div className="h-full w-full bg-muted animate-pulse rounded-2xl" />
 });
 
 interface AttendanceTabProps {
@@ -51,6 +50,7 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
     const [searchQuery, setSearchQuery] = useState("");
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isAddingMode, setIsAddingMode] = useState(false);
     const [mapCenter, setMapCenter] = useState<[number, number]>([6.9271, 79.8612]);
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
@@ -60,7 +60,7 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
     // Debounce search suggestions
     useEffect(() => {
         const timer = setTimeout(async () => {
-            if (searchQuery.length > 2 && showSuggestions) {
+            if (searchQuery.length > 2 && showSuggestions && isAddingMode) {
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
                     const data = await response.json();
@@ -74,7 +74,7 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchQuery, showSuggestions]);
+    }, [searchQuery, showSuggestions, isAddingMode]);
 
     const resolveAddress = async (lat: number, lng: number) => {
         setIsResolvingAddress(true);
@@ -93,6 +93,7 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
     };
 
     const handleLocationSelect = (lat: number, lng: number) => {
+        if (!isAddingMode) return;
         setSelectedLocation({ lat, lng });
         resolveAddress(lat, lng);
         // Note: We don't update userLocation here, as clicking map selects a *target* zone, not necessarily changing "my" location.
@@ -119,16 +120,21 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
             };
 
             onChange([...zones, newZone]);
-            setSelectedLocation(null);
-            setSelectedName("");
-            setSearchQuery("");
-            setSuggestions([]);
-            setShowSuggestions(false);
+            resetSelection();
             toast.success("Zone added successfully");
         } catch (error) {
             console.error("Error creating zone:", error);
             toast.error("Failed to add zone");
         }
+    };
+
+    const resetSelection = () => {
+        setSelectedLocation(null);
+        setSelectedName("");
+        setSearchQuery("");
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setIsAddingMode(false);
     };
 
     const handleSuggestionClick = (suggestion: any) => {
@@ -151,7 +157,7 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
 
     // Legacy Enter key support if needed, but dropdown is preferred
     const handleManualSearch = async () => {
-        if (!searchQuery) return;
+        if (!searchQuery || !isAddingMode) return;
         // Reuse the first suggestion logic if available, or fetch fresh
         if (suggestions.length > 0) {
             handleSuggestionClick(suggestions[0]);
@@ -201,78 +207,89 @@ function ZoneEditor({ zones, onChange }: { zones: GeoZone[], onChange: (zones: G
 
     return (
         <div className="space-y-4">
-            <div className="relative h-[450px] w-full rounded-2xl overflow-hidden border border-border">
-                {/* Controls Container - Top (Search) */}
-                <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col gap-2 pointer-events-none">
-                    <div className="flex gap-2 max-w-md shadow-2xl pointer-events-auto relative">
-                        <div className="flex-1 relative">
-                            <Input
-                                value={searchQuery}
-                                onChange={handleSearchInput}
-                                onFocus={() => setShowSuggestions(true)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
-                                placeholder="Search location..."
-                                className="bg-background/95 backdrop-blur-md border-border h-11 pl-4 pr-10 rounded-xl w-full text-sm shadow-sm"
-                            />
-                            <Button
-                                onClick={handleManualSearch}
-                                size="sm"
-                                variant="ghost"
-                                className="absolute right-1 top-1 h-9 w-9 text-muted-foreground hover:text-primary"
-                            >
-                                <IconMapPin className="h-4 w-4" />
-                            </Button>
+            <div className="relative h-[450px] w-full rounded-2xl overflow-hidden border border-border group">
+                {/* Mode: Selection Active */}
+                {isAddingMode && (
+                    <>
+                        {/* Overlay to indicate adding mode */}
+                        <div className="absolute inset-x-0 top-0 h-1 z-[1001] bg-primary animate-pulse" />
 
-                            {/* Suggestions Dropdown */}
-                            {showSuggestions && suggestions.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-md border border-border rounded-xl shadow-xl overflow-hidden z-[1001] max-h-60 overflow-y-auto">
-                                    {suggestions.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => handleSuggestionClick(item)}
-                                            className="px-4 py-3 hover:bg-muted/50 cursor-pointer text-sm border-b border-border/50 last:border-none transition-colors"
-                                        >
-                                            <p className="font-medium truncate">{item.display_name.split(',')[0]}</p>
-                                            <p className="text-xs text-muted-foreground truncate">{item.display_name}</p>
+                        {/* Controls Container - Top (Search) */}
+                        <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col gap-2 pointer-events-none animate-in fade-in slide-in-from-top-4">
+                            <div className="flex gap-2 max-w-md shadow-2xl pointer-events-auto relative">
+                                <div className="flex-1 relative">
+                                    <Input
+                                        value={searchQuery}
+                                        onChange={handleSearchInput}
+                                        onFocus={() => setShowSuggestions(true)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
+                                        placeholder="Search location to add..."
+                                        className="bg-background/95 backdrop-blur-md border-border h-11 pl-4 pr-10 rounded-xl w-full text-sm shadow-sm"
+                                        autoFocus
+                                    />
+                                    <Button onClick={handleManualSearch} size="sm" variant="ghost" className="absolute right-1 top-1 h-9 w-9">
+                                        <IconMapPin className="h-4 w-4" />
+                                    </Button>
+
+                                    {showSuggestions && suggestions.length > 0 && (
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-md border border-border rounded-xl shadow-xl overflow-hidden z-[1001] max-h-60 overflow-y-auto">
+                                            {suggestions.map((item, index) => (
+                                                <div key={index} onClick={() => handleSuggestionClick(item)} className="px-4 py-3 hover:bg-muted/50 cursor-pointer text-sm border-b border-border/50 last:border-none">
+                                                    <p className="font-medium truncate">{item.display_name.split(',')[0]}</p>
+                                                    <p className="text-xs text-muted-foreground truncate">{item.display_name}</p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
+                                </div>
+                                <Button onClick={() => resetSelection()} size="icon" variant="destructive" className="h-11 w-11 rounded-xl shadow-lg" title="Cancel">
+                                    <IconTrash className="h-5 w-5" />
+                                </Button>
+                            </div>
+                            <div className="bg-primary/10 text-primary self-start px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm border border-primary/20 pointer-events-auto">
+                                🖱️ Click on map to place zone
+                            </div>
+                        </div>
+
+                        {/* Controls Container - Bottom Right (Add Action) */}
+                        <div className="absolute bottom-4 right-4 z-[1000] pointer-events-none">
+                            {selectedLocation && (
+                                <div className="animate-in fade-in slide-in-from-bottom-2 pointer-events-auto bg-background/95 backdrop-blur-md p-2 rounded-xl shadow-2xl border border-border flex gap-2 items-center">
+                                    <Input
+                                        value={selectedName}
+                                        onChange={(e) => setSelectedName(e.target.value)}
+                                        placeholder="Name this zone"
+                                        className="h-9 text-sm bg-transparent border-none focus-visible:ring-0 px-2 w-40"
+                                        disabled={isResolvingAddress}
+                                    />
+                                    <Button onClick={handleAddZone} size="sm" className="h-9 rounded-lg px-4 gap-2 whitespace-nowrap" disabled={isResolvingAddress}>
+                                        <IconPlus className="h-4 w-4" />
+                                        Add
+                                    </Button>
                                 </div>
                             )}
                         </div>
+                    </>
+                )}
+
+                {/* Mode: Read-Only (Normal) */}
+                {!isAddingMode && (
+                    <div className="absolute bottom-4 right-4 z-[1000] animate-in fade-in slide-in-from-bottom-4">
                         <Button
-                            onClick={handleCurrentLocation}
-                            size="icon"
-                            variant="secondary"
-                            className="h-11 w-11 rounded-xl shadow-lg bg-background/95 backdrop-blur-md hover:bg-background border border-border"
-                            title="Locate Me (Show reference dot)"
+                            onClick={() => setIsAddingMode(true)}
+                            className="h-12 px-6 rounded-2xl shadow-2xl gap-2 font-bold text-sm bg-primary hover:bg-primary/90 transition-all border-none"
                         >
-                            <IconDeviceMobile className="h-5 w-5" />
+                            <IconPlus className="h-5 w-5" />
+                            Add New Zone
                         </Button>
                     </div>
-                </div>
+                )}
 
-                {/* Controls Container - Bottom Right (Add Action) */}
-                <div className="absolute bottom-4 right-4 z-[1000] pointer-events-none">
-                    {selectedLocation && (
-                        <div className="animate-in fade-in slide-in-from-bottom-2 pointer-events-auto bg-background/95 backdrop-blur-md p-2 rounded-xl shadow-2xl border border-border flex gap-2 items-center">
-                            <Input
-                                value={selectedName}
-                                onChange={(e) => setSelectedName(e.target.value)}
-                                placeholder="Name this zone"
-                                className="h-9 text-sm bg-transparent border-none focus-visible:ring-0 px-2 w-40"
-                                disabled={isResolvingAddress}
-                            />
-                            <Button
-                                onClick={handleAddZone}
-                                size="sm"
-                                className="h-9 rounded-lg px-4 gap-2 whitespace-nowrap"
-                                disabled={isResolvingAddress}
-                            >
-                                <IconPlus className="h-4 w-4" />
-                                Add
-                            </Button>
-                        </div>
-                    )}
+                {/* Always Visible Localize Me (Only in corner) */}
+                <div className="absolute top-4 right-4 z-[1000]">
+                    <Button onClick={handleCurrentLocation} size="icon" variant="secondary" className="h-10 w-10 rounded-xl shadow-lg bg-background/95 backdrop-blur-md hover:bg-background border border-border" title="Locate Me">
+                        <IconDeviceMobile className="h-5 w-5" />
+                    </Button>
                 </div>
 
                 <div className="h-full w-full z-0">
@@ -350,6 +367,28 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
         });
     };
 
+    const [showManualKeyInput, setShowManualKeyInput] = useState(false);
+    const [manualKeyName, setManualKeyName] = useState("");
+    const [manualKeyValue, setManualKeyValue] = useState("");
+
+    const handleAddManualKey = () => {
+        if (!manualKeyName || !manualKeyValue) return;
+
+        const newKey = {
+            id: uuidv4(),
+            name: manualKeyName,
+            key: manualKeyValue,
+            createdAt: new Date().toISOString()
+        };
+
+        handleUpdate({ apiKeys: [...config.apiKeys, newKey] });
+
+        setManualKeyName("");
+        setManualKeyValue("");
+        setShowManualKeyInput(false);
+        toast.success("API Key added");
+    };
+
     const generateApiKey = () => {
         const newKey = {
             id: uuidv4(),
@@ -363,6 +402,12 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
 
     const deleteApiKey = (id: string) => {
         handleUpdate({ apiKeys: config.apiKeys.filter(k => k.id !== id) });
+    };
+
+    const updateApiKeyName = (id: string, name: string) => {
+        handleUpdate({
+            apiKeys: config.apiKeys.map(k => k.id === id ? { ...k, name } : k)
+        });
     };
 
     return (
@@ -553,15 +598,32 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
                     {config.apiKeys.length > 0 ? (
                         <div className="grid gap-3">
                             {config.apiKeys.map(apiKey => (
-                                <div key={apiKey.id} className="flex items-center justify-between p-3 bg-background rounded-xl shadow-sm">
-                                    <div className="space-y-1">
+                                <div key={apiKey.id} className="flex items-start justify-between p-3 bg-background rounded-xl shadow-sm gap-4">
+                                    <div className="flex-1 space-y-2">
+                                        <Input
+                                            value={apiKey.name}
+                                            onChange={(e) => updateApiKeyName(apiKey.id, e.target.value)}
+                                            className="h-8 font-semibold text-sm border-transparent hover:border-border focus:border-primary px-0 bg-transparent"
+                                            placeholder="Key Name (e.g. Lobby Tablet)"
+                                        />
                                         <div className="flex items-center gap-2">
-                                            <span className="font-mono text-sm font-bold tracking-tight">{apiKey.key}</span>
+                                            <code className="bg-muted px-2 py-1 rounded text-xs font-mono text-muted-foreground">{apiKey.key}</code>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-muted-foreground hover:text-primary"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(apiKey.key);
+                                                    toast.success("API Key copied to clipboard");
+                                                }}
+                                                title="Copy API Key"
+                                            >
+                                                <IconCopy className="h-3 w-3" />
+                                            </Button>
                                             <Badge variant="secondary" className="text-[10px] uppercase font-bold">Active</Badge>
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Generated {new Date(apiKey.createdAt).toLocaleDateString()}</p>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-destructive/10" onClick={() => deleteApiKey(apiKey.id)}>
+                                    <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-destructive/10 -mt-1 -mr-1" onClick={() => deleteApiKey(apiKey.id)}>
                                         <IconTrash className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -573,10 +635,49 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
                         </div>
                     )}
 
-                    <Button onClick={generateApiKey} variant="outline" className="w-full h-11 rounded-xl border-dashed border-2 hover:bg-background hover:border-solid hover:border-primary/50 transition-all">
-                        <IconPlus className="h-4 w-4 mr-2" />
-                        Generate New Key
-                    </Button>
+                    {/* Manual Key Entry Form */}
+                    {showManualKeyInput ? (
+                        <div className="bg-background/50 border border-dashed border-primary/30 p-4 rounded-xl space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-primary">Add Existing Key</h4>
+                                <Button variant="ghost" size="sm" onClick={() => setShowManualKeyInput(false)} className="h-6 text-xs hover:bg-transparent text-muted-foreground hover:text-foreground">Cancel</Button>
+                            </div>
+                            <div className="space-y-2">
+                                <Input
+                                    placeholder="Device Name (e.g. Warehouse Tablet)"
+                                    value={manualKeyName}
+                                    onChange={(e) => setManualKeyName(e.target.value)}
+                                    className="bg-background"
+                                />
+                                <Input
+                                    placeholder="API Key Value (wk_...)"
+                                    value={manualKeyValue}
+                                    onChange={(e) => setManualKeyValue(e.target.value)}
+                                    className="font-mono text-sm bg-background"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-1">
+                                <Button
+                                    size="sm"
+                                    onClick={handleAddManualKey}
+                                    disabled={!manualKeyName || !manualKeyValue}
+                                >
+                                    Add Key
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button onClick={generateApiKey} variant="outline" className="h-11 rounded-xl border-dashed border-2 hover:bg-background hover:border-solid hover:border-primary/50 transition-all">
+                                <IconPlus className="h-4 w-4 mr-2" />
+                                Generate New
+                            </Button>
+                            <Button onClick={() => setShowManualKeyInput(true)} variant="outline" className="h-11 rounded-xl border-dashed border-2 hover:bg-background hover:border-solid hover:border-primary/50 transition-all">
+                                <IconKey className="h-4 w-4 mr-2" />
+                                Add Existing
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

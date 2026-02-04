@@ -118,13 +118,32 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   .maplibregl-popup-content {
-    @apply bg-transparent! shadow-none! p-0! rounded-none!;
+    @apply !bg-transparent !shadow-none !p-0 !rounded-none;
   }
+
   .maplibregl-popup-tip {
-    @apply hidden!;
+    @apply !hidden;
+  }
+
+  .zone-label-tooltip {
+    @apply !bg-background/90 !backdrop-blur-sm !border !border-border !px-2 !py-0.5 !rounded-full !shadow-lg !text-[10px] !font-bold !text-primary !whitespace-nowrap;
+  }
+
+  /* Hide the tooltip arrow/tip */
+  .leaflet-tooltip-left:before,
+  .leaflet-tooltip-right:before,
+  .leaflet-tooltip-top:before,
+  .leaflet-tooltip-bottom:before {
+    display: none !important;
+  }
+
+  .leaflet-tooltip {
+    @apply !border-none !bg-transparent !shadow-none;
   }
 }
