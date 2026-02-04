@@ -124,6 +124,8 @@ export interface DailyWorkConfig {
 export interface WorkingDaysConfig {
     defaultPattern?: Record<string, DailyWorkConfig>;
     isDynamic?: boolean;
+    workingCalendar?: string;
+    payrollCalendar?: string;
 }
 
 export interface Policy {

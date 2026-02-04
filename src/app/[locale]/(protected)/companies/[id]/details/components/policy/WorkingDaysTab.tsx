@@ -13,6 +13,34 @@ interface WorkingDaysTabProps {
     onChange: (val: WorkingDaysConfig) => void;
 }
 
+const CalendarSelect = ({
+    label,
+    value,
+    onChange,
+    description
+}: {
+    label: string,
+    value: string,
+    onChange: (val: string) => void,
+    description: string
+}) => (
+    <div className="space-y-2">
+        <Label className="text-sm font-bold">{label}</Label>
+        <Select
+            value={value}
+            onValueChange={onChange}
+        >
+            <SelectTrigger className="bg-background border-none h-11 rounded-xl">
+                <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="sl_default">Sri Lanka Default Calendar</SelectItem>
+            </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">{description}</p>
+    </div>
+);
+
 const DAYS_OF_WEEK = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 const DEFAULT_DAY_CONFIG: DailyWorkConfig = {
@@ -146,6 +174,33 @@ export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
                     </CardContent>
                 </Card>
 
+                {/* Regional Settings */}
+                <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <IconCalendar className="w-5 h-5" />
+                            <span className="text-xs font-bold uppercase tracking-widest">Regional Settings</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <CalendarSelect
+                                label="Working Calendar"
+                                value={config.workingCalendar || "sl_default"}
+                                onChange={(v) => handleConfigChange({ ...config, workingCalendar: v })}
+                                description="Determines holidays for working."
+                            />
+
+                            <CalendarSelect
+                                label="Payroll Calendar"
+                                value={config.payrollCalendar || "sl_default"}
+                                onChange={(v) => handleConfigChange({ ...config, payrollCalendar: v })}
+                                description="Determines holidays for payroll calculation."
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Dynamic Config */}
                 <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -163,7 +218,7 @@ export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
                         </div>
                     </CardHeader>
                     {config.isDynamic && (
-                        <CardContent className="animate-in fade-in slide-in-from-top-4">
+                        <CardContent className="animate-in fade-in slide-in-from-top-4 space-y-6">
                             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-3 text-xs text-primary/80 leading-relaxed">
                                 <IconInfoCircle className="w-5 h-5 flex-shrink-0" />
                                 <span>
