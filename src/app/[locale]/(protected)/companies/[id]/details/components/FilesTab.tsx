@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Company, CompanyFile } from "@/types/company";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IconFile, IconX, IconEye, IconFileText, IconCheck, IconPencil, IconCheck as IconTick, IconPlus, IconCloudUpload, IconLoader2 } from "@tabler/icons-react";
+import { IconFile, IconX, IconEye, IconFileText, IconCheck, IconPencil, IconCheck as IconTick, IconPlus, IconCloudUpload, IconLoader2, IconSearch } from "@tabler/icons-react";
 import { CompanyService } from "@/services/company.service";
 import { StorageService } from "@/services/storage.service";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,12 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
     const [tempName, setTempName] = useState("");
     const [showUpload, setShowUpload] = useState(false);
     const [viewingKeys, setViewingKeys] = useState<Set<string>>(new Set());
+
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredFiles = files.filter(f =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const removeFile = (keyToRemove: string) => {
         const updatedFiles = files.filter(f => f.key !== keyToRemove);
@@ -108,35 +114,47 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
             </AnimatePresence>
 
             {/* Files List Card */}
-            <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_16px_40px_rgb(0,0,0,0.3)] bg-white dark:bg-neutral-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden">
-                <CardHeader className="p-8 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <Card className="border-none shadow-none bg-muted/50 rounded-[2rem] overflow-hidden">
+                <CardHeader className="p-8 pb-4 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-600 shadow-inner">
                             <IconFile className="h-6 w-6" />
                         </div>
                         <div className="space-y-0.5">
-                            <CardTitle className="text-2xl font-black tracking-tight">Active Documents</CardTitle>
-                            <p className="text-sm text-neutral-500 font-medium">{files.length} {files.length === 1 ? 'file' : 'files'} securely stored</p>
+                            <CardTitle className="text-2xl font-black tracking-tight text-foreground">Active Documents</CardTitle>
+                            <p className="text-sm text-muted-foreground font-medium">{filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found</p>
                         </div>
                     </div>
 
-                    {!showUpload && (
-                        <Button
-                            onClick={() => setShowUpload(true)}
-                            size="lg"
-                            className="h-14 px-8 rounded-2xl bg-neutral-900 text-white dark:bg-white dark:text-black font-black shadow-xl hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 gap-2 group shrink-0"
-                        >
-                            <IconPlus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-500" />
-                            Upload Document
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-3 w-full xl:w-auto">
+                        <div className="relative flex-1 xl:w-64">
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search files..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9 bg-background border-transparent shadow-sm focus:border-primary/20 h-11 rounded-xl"
+                            />
+                        </div>
+
+                        {!showUpload && (
+                            <Button
+                                onClick={() => setShowUpload(true)}
+                                size="lg"
+                                className="h-11 px-5 rounded-xl bg-primary text-primary-foreground font-bold shadow-md hover:bg-primary/90 active:scale-95 transition-all duration-300 gap-2 shrink-0"
+                            >
+                                <IconPlus className="h-5 w-5" />
+                                <span className="hidden sm:inline">Upload</span>
+                            </Button>
+                        )}
+                    </div>
                 </CardHeader>
 
                 <CardContent className="p-8">
-                    {files.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredFiles.length > 0 ? (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <AnimatePresence mode="popLayout">
-                                {files.map((file) => (
+                                {filteredFiles.map((file) => (
                                     <motion.div
                                         key={file.key}
                                         layout
@@ -144,11 +162,11 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         transition={{ duration: 0.3 }}
-                                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50 hover:bg-white dark:hover:bg-neutral-800 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:shadow-xl transition-all duration-300 group gap-4"
+                                        className="group relative flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-lg transition-all duration-300 gap-4"
                                     >
                                         <div className="flex items-center gap-4 overflow-hidden w-full">
-                                            <div className="h-14 w-14 rounded-2xl bg-white dark:bg-neutral-900 flex items-center justify-center shrink-0 text-amber-500 shadow-sm transition-transform group-hover:scale-110">
-                                                <IconFileText className="h-7 w-7" />
+                                            <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center shrink-0 text-amber-500 shadow-inner transition-transform group-hover:scale-105">
+                                                <IconFileText className="h-6 w-6" />
                                             </div>
                                             <div className="flex-1 overflow-hidden">
                                                 {editingKey === file.key ? (
@@ -156,13 +174,12 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                                         <Input
                                                             value={tempName}
                                                             onChange={(e) => setTempName(e.target.value)}
-                                                            className="h-10 text-base font-bold bg-white dark:bg-neutral-900 rounded-xl border-primary/20"
+                                                            className="h-10 text-base font-bold bg-background rounded-xl border-primary/20"
                                                             autoFocus
                                                             onKeyDown={(e) => e.key === 'Enter' && saveName(file.key)}
                                                         />
                                                         <Button
                                                             size="icon"
-                                                            variant="default"
                                                             className="h-10 w-10 shrink-0 rounded-xl"
                                                             onClick={() => saveName(file.key)}
                                                         >
@@ -171,26 +188,29 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-0.5">
-                                                        <p className="font-bold text-base text-neutral-900 dark:text-neutral-100 truncate group-hover:text-primary transition-colors pr-2">
-                                                            {file.name}
-                                                        </p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="flex items-center gap-1 text-[10px] font-black uppercase text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded-md">
+                                                        <p className="font-bold text-base text-foreground truncate">{file.name}</p>
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
                                                                 <IconCheck className="h-3 w-3" />
                                                                 Ready
                                                             </span>
-                                                            <span className="text-[10px] font-bold text-neutral-400">{file.size || "Unknown size"}</span>
+                                                            {file.size && (
+                                                                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                                                    {file.size}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex gap-1.5 ml-auto sm:ml-0">
+
+                                        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-border pt-3 sm:pt-0 mt-2 sm:mt-0">
                                             {editingKey !== file.key && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 rounded-xl text-neutral-400 hover:text-primary hover:bg-primary/10 transition-all active:scale-95"
+                                                    className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                     onClick={() => startEditing(file)}
                                                 >
                                                     <IconPencil className="h-5 w-5" />
@@ -199,7 +219,7 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-10 w-10 rounded-xl text-neutral-400 hover:text-primary hover:bg-primary/10 transition-all active:scale-95"
+                                                className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                 onClick={() => handleView(file)}
                                                 disabled={viewingKeys.has(file.key)}
                                             >
@@ -212,7 +232,7 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-10 w-10 rounded-xl text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-95"
+                                                className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                 onClick={() => removeFile(file.key)}
                                             >
                                                 <IconX className="h-5 w-5" />
@@ -223,16 +243,16 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                             </AnimatePresence>
                         </div>
                     ) : (
-                        <div className="py-20 text-center border-2 border-dashed border-neutral-100 dark:border-neutral-800 rounded-[2.5rem] bg-neutral-50/20 dark:bg-neutral-900/10 transition-all">
-                            <div className="mx-auto h-20 w-20 rounded-[2rem] bg-white dark:bg-neutral-800 shadow-sm flex items-center justify-center text-neutral-200 mb-6 font-black scale-110">
+                        <div className="py-16 text-center border-2 border-dashed border-border rounded-[2rem] bg-card/50">
+                            <div className="mx-auto h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center text-muted-foreground/30 mb-6 scale-110">
                                 <IconFile className="h-10 w-10" />
                             </div>
-                            <h3 className="text-xl font-black text-neutral-900 dark:text-white mb-2">No documents found</h3>
-                            <p className="text-sm text-neutral-400 font-medium mb-10 max-w-sm mx-auto">Upload important company documents, licenses, or tax forms to keep them organized.</p>
+                            <h3 className="text-xl font-black text-foreground mb-2">No documents found</h3>
+                            <p className="text-sm text-muted-foreground font-medium mb-8 max-w-sm mx-auto">Upload important company documents, licenses, or tax forms.</p>
                             {!showUpload && (
                                 <Button
                                     onClick={() => setShowUpload(true)}
-                                    className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300"
+                                    className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg hover:bg-primary/90 transition-all"
                                 >
                                     Upload First Document
                                 </Button>
