@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import { StorageImage } from "@/components/ui/storage-image";
+import { DataLoadingOverlay } from "@/components/ui/data-loading-overlay";
 
 export default function CompaniesPage() {
     const t = useTranslations("Companies");
@@ -111,21 +112,7 @@ export default function CompaniesPage() {
 
             {/* Companies Grid */}
             <div className="relative min-h-[400px]">
-                <AnimatePresence>
-                    {isFetching && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-x-0 top-0 bottom-0 z-10 flex items-center justify-center bg-white/40 dark:bg-neutral-950/40 backdrop-blur-[2px] rounded-[2rem] transition-all duration-300"
-                        >
-                            <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-neutral-100 dark:border-neutral-800">
-                                <IconLoader2 className="h-6 w-6 animate-spin text-primary" />
-                                <span className="text-sm font-bold text-neutral-600 dark:text-neutral-300">Searching...</span>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <DataLoadingOverlay isLoading={isFetching} />
 
                 {companies.length === 0 ? (
                     <motion.div
@@ -162,7 +149,7 @@ export default function CompaniesPage() {
                         isFetching && "blur-[1px]"
                     )}>
                         {companies.map((company: any) => (
-                            <Card key={company.id} className="group flex flex-col h-full border-none shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.22)] bg-white dark:bg-neutral-900/40 backdrop-blur-xl rounded-[1.5rem] md:rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-1">
+                            <Card key={company.id} className="group flex flex-col h-full border border-neutral-200 dark:border-neutral-800 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.22)] bg-white dark:bg-neutral-900/40 backdrop-blur-xl rounded-[1.5rem] md:rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-1">
                                 <CardContent className="p-5 md:p-6 flex flex-col flex-1 space-y-4 md:space-y-6">
                                     <div className="flex justify-between items-start">
                                         <div className="h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">

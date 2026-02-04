@@ -154,7 +154,7 @@ export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
-                <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <IconCalendar className="w-5 h-5" />
@@ -175,7 +175,7 @@ export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
                 </Card>
 
                 {/* Regional Settings */}
-                <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <IconCalendar className="w-5 h-5" />
@@ -202,7 +202,7 @@ export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
                 </Card>
 
                 {/* Dynamic Config */}
-                <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <IconInfoCircle className="w-5 h-5" />

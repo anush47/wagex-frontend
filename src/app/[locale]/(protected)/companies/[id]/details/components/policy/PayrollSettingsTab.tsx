@@ -65,7 +65,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                 {/* Left Column */}
                 <div className="space-y-6">
                     {/* 1. Cycle & Timing Card */}
-                    <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                         <CardHeader className="pb-2">
                             <div className="flex items-center gap-2 text-neutral-500">
                                 <IconCalendarTime className="w-5 h-5" />
@@ -164,7 +164,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                     </Card>
 
                     {/* 3. Deduction Rules Card */}
-                    <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                         <CardHeader className="pb-2">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <IconAlertCircle className="w-5 h-5" />
@@ -277,7 +277,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                 {/* Right Column */}
                 <div className="space-y-6">
                     {/* 2. Calculation Logic Card */}
-                    <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+                    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                         <CardHeader className="pb-2">
                             <div className="flex items-center gap-2 text-neutral-500">
                                 <IconCalculator className="w-5 h-5" />

@@ -413,7 +413,7 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {/* Access Rules */}
-            <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+            <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <IconDeviceMobile className="w-5 h-5" />
@@ -458,7 +458,7 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
             </Card>
 
             {/* Geofencing */}
-            <Card className="border-none shadow-none bg-muted/50 rounded-3xl overflow-hidden">
+            <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl overflow-hidden">
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -506,7 +506,7 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
             </Card>
 
             {/* Approval Workflow */}
-            <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+            <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <IconCircleCheck className="w-5 h-5" />
@@ -586,7 +586,7 @@ export function AttendanceTab({ value, onChange }: AttendanceTabProps) {
             </Card>
 
             {/* API Keys */}
-            <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+            <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <IconKey className="w-5 h-5" />

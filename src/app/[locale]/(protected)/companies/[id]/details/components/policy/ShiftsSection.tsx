@@ -69,7 +69,7 @@ export function ShiftsSection({ value, onChange }: ShiftsSectionProps) {
 
             <div className="flex flex-col md:flex-row gap-6">
                 {/* Configuration Card */}
-                <Card className="flex-1 border-none shadow-none bg-muted/50 rounded-3xl">
+                <Card className="flex-1 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <IconSettings className="w-5 h-5" />
@@ -120,7 +120,7 @@ export function ShiftsSection({ value, onChange }: ShiftsSectionProps) {
 
             {/* Shifts List */}
             {/* All Shifts List */}
-            <Card className="border-none shadow-none bg-muted/50 rounded-3xl">
+            <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -143,8 +143,8 @@ export function ShiftsSection({ value, onChange }: ShiftsSectionProps) {
                                     className={cn(
                                         "group relative p-6 rounded-3xl transition-all duration-300 border-2",
                                         isDefault
-                                            ? "bg-card border-primary/20 shadow-xl shadow-primary/5"
-                                            : "bg-card/50 border-border hover:border-foreground/10"
+                                            ? "bg-card border-primary/20 shadow-xl shadow-primary/5 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10"
+                                            : "bg-card/50 border-border hover:border-foreground/10 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5"
                                     )}
                                 >
                                     <div className="flex justify-between items-start mb-4">

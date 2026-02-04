@@ -82,7 +82,7 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
 
 
             {/* Leave Types List */}
-            <Card className="border-none shadow-none bg-muted/50 rounded-[2rem]">
+            <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-[2rem]">
                 <CardHeader className="pb-3 border-b border-border/40 mb-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-neutral-500">
@@ -100,7 +100,7 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
                         {leaveTypes.map((leave) => (
                             <div
                                 key={leave.id}
-                                className="group relative p-5 rounded-2xl transition-all duration-300 border-2 bg-card/50 border-border hover:border-foreground/10 hover:shadow-xl hover:shadow-primary/5"
+                                className="group relative p-5 rounded-2xl transition-all duration-300 border-2 bg-card/50 border-border hover:border-foreground/10 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
                             >
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-2.5">

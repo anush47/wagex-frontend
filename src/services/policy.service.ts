@@ -35,5 +35,23 @@ export const PoliciesService = {
         return backendApiClient.patch<Policy>(`/policies/${id}?companyId=${companyId}`, {
             settings
         });
+    },
+
+    /**
+     * Get effective policy for an employee (merged default + override)
+     */
+    async getEffectivePolicy(employeeId: string): Promise<ApiResponse<any>> {
+        return backendApiClient.get<any>(`/policies/effective/${employeeId}`);
+    },
+
+    /**
+     * Save/Create employee specific override
+     */
+    async saveEmployeePolicy(companyId: string, employeeId: string, settings: PolicySettings): Promise<ApiResponse<Policy>> {
+        return backendApiClient.post<Policy>('/policies', {
+            companyId,
+            employeeId,
+            settings
+        });
     }
 };

@@ -65,3 +65,16 @@ export interface ApiResponse<T> {
     data?: T;
     error?: ApiError;
 }
+
+/**
+ * Paginated response structure
+ */
+export interface PaginatedResponse<T> {
+    data: T[];
+    meta: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}

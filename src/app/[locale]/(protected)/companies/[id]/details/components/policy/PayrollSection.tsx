@@ -61,7 +61,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
         const formattedValue = new Intl.NumberFormat('en-US').format(comp.value);
 
         return (
-            <div key={comp.id} className="group relative flex items-center justify-between p-4 bg-muted/30 border border-transparent rounded-2xl hover:bg-card hover:border-border hover:shadow-sm transition-all duration-200">
+            <div key={comp.id} className="group relative flex items-center justify-between p-4 bg-muted/30 border border-transparent rounded-2xl hover:bg-card hover:border-border hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-center gap-4">
                     <div className={cn(
                         "h-12 w-12 rounded-2xl flex items-center justify-center text-sm font-bold shadow-sm transition-colors",
@@ -120,7 +120,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Additions Column */}
-                <Card className="border-none shadow-none bg-muted/50 rounded-3xl h-full">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl h-full">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                 </Card>
 
                 {/* Deductions Column */}
-                <Card className="border-none shadow-none bg-muted/50 rounded-3xl h-full">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl h-full">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
