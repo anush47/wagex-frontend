@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LeaveType, AccrualFrequency, EncashmentType, PolicyGenderTarget, EmploymentType } from "@/types/policy";
+import { LeaveType, AccrualFrequency, EncashmentType, EmploymentType, Gender } from "@/types/policy";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -39,12 +39,15 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
             <DialogContent className="max-w-[95vw] md:max-w-5xl lg:max-w-5xl max-h-[95vh] overflow-y-auto rounded-3xl md:rounded-[2rem] p-0 gap-0 border-none shadow-2xl">
                 <DialogHeader className="p-5 md:p-6 pb-4 border-b border-border/40">
                     <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <div
+                            className="h-10 w-10 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg"
+                            style={{ backgroundColor: editingLeave.color || 'var(--primary)' }}
+                        >
                             <IconCalendarStar className="h-5 w-5" />
                         </div>
                         <div>
                             <DialogTitle className="text-lg md:text-xl font-bold tracking-tight flex items-center gap-2.5">
-                                {initialData?.name ? "Policy Configuration" : "New Leave Category"}
+                                {initialData?.name ? "Leave Type Configuration" : "New Leave Type"}
                                 <Badge variant="secondary" className="font-mono text-[9px] uppercase tracking-wider h-4 px-1.5 opacity-70">
                                     {editingLeave.code || "NEW"}
                                 </Badge>
@@ -60,8 +63,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                     {/* TOP SECTION: Identity & Eligibility */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-1.5 sm:col-span-1">
                                     <Label className="text-xs font-bold text-neutral-500 ml-1">Official Name</Label>
                                     <Input
                                         placeholder="e.g. Annual Leave"
@@ -70,7 +73,7 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         className="h-11 bg-muted/40 border-none rounded-xl px-4 font-bold text-sm shadow-sm"
                                     />
                                 </div>
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 sm:col-span-1">
                                     <Label className="text-xs font-bold text-neutral-500 ml-1">System Code</Label>
                                     <Input
                                         placeholder="e.g. AL"
@@ -78,6 +81,22 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         onChange={e => updateField('code', e.target.value.toUpperCase())}
                                         className="h-11 bg-muted/40 border-none rounded-xl px-4 font-black font-mono text-sm text-primary shadow-sm"
                                     />
+                                </div>
+                                <div className="space-y-1.5 sm:col-span-1">
+                                    <Label className="text-xs font-bold text-neutral-500 ml-1">Theme Color</Label>
+                                    <div className="flex flex-wrap gap-2 p-2 bg-muted/40 rounded-xl h-11 items-center justify-around">
+                                        {['#3b82f6', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#6366f1'].map((c) => (
+                                            <button
+                                                key={c}
+                                                onClick={() => updateField('color', c)}
+                                                className={cn(
+                                                    "w-5 h-5 rounded-full transition-all hover:scale-125",
+                                                    editingLeave.color === c ? "ring-2 ring-offset-2 ring-primary" : "opacity-70 hover:opacity-100"
+                                                )}
+                                                style={{ backgroundColor: c }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
@@ -90,26 +109,32 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-neutral-600">Gender Target</Label>
                                         <div className="flex gap-1.5">
-                                            {[PolicyGenderTarget.ALL, PolicyGenderTarget.MALE, PolicyGenderTarget.FEMALE].map((gender) => (
-                                                <Button
-                                                    key={gender}
-                                                    variant={editingLeave.applicableGender === gender ? "default" : "secondary"}
-                                                    size="sm"
-                                                    className={cn(
-                                                        "flex-1 h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider",
-                                                        editingLeave.applicableGender === gender ? "shadow-md shadow-primary/20" : "bg-background border border-border/50"
-                                                    )}
-                                                    onClick={() => updateField('applicableGender', gender)}
-                                                >
-                                                    {gender === PolicyGenderTarget.ALL ? "All" : gender}
-                                                </Button>
-                                            ))}
+                                            {[Gender.MALE, Gender.FEMALE].map((gender) => {
+                                                const selected = editingLeave.applicableGenders.includes(gender);
+                                                return (
+                                                    <Button
+                                                        key={gender}
+                                                        variant={selected ? "default" : "secondary"}
+                                                        size="sm"
+                                                        className={cn(
+                                                            "flex-1 h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider",
+                                                            selected ? "shadow-md shadow-primary/20" : "bg-background border border-border/50 text-neutral-400"
+                                                        )}
+                                                        onClick={() => {
+                                                            const current = editingLeave.applicableGenders;
+                                                            updateField('applicableGenders', selected ? current.filter(g => g !== gender) : [...current, gender]);
+                                                        }}
+                                                    >
+                                                        {gender}
+                                                    </Button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-neutral-600">Employment Types</Label>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {[EmploymentType.PROBATION, EmploymentType.CONTRACT, EmploymentType.PERMANENT].map((type) => {
+                                            {[EmploymentType.PROBATION, EmploymentType.CONTRACT, EmploymentType.PERMANENT, EmploymentType.INTERN, EmploymentType.TEMPORARY].map((type) => {
                                                 const selected = editingLeave.applicableEmploymentTypes.includes(type);
                                                 return (
                                                     <Button
@@ -143,7 +168,13 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                             </div>
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-bold text-neutral-600">Annual Allowance (Days)</Label>
+                                    <Label className="text-xs font-bold text-neutral-600">
+                                        {editingLeave.accrualFrequency === AccrualFrequency.YEARLY ? "Annual" :
+                                            editingLeave.accrualFrequency === AccrualFrequency.MONTHLY ? "Monthly" :
+                                                editingLeave.accrualFrequency === AccrualFrequency.WEEKLY ? "Weekly" :
+                                                    editingLeave.accrualFrequency === AccrualFrequency.QUARTERLY ? "Quarterly" :
+                                                        editingLeave.accrualFrequency === AccrualFrequency.HALF_YEARLY ? "Half-Yearly" : "Base"} Allowance (Days)
+                                    </Label>
                                     <Input
                                         type="number"
                                         value={editingLeave.baseAmount}
@@ -161,12 +192,28 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl">
+                                            <SelectItem value={AccrualFrequency.WEEKLY}>Weekly</SelectItem>
                                             <SelectItem value={AccrualFrequency.MONTHLY}>Monthly</SelectItem>
+                                            <SelectItem value={AccrualFrequency.QUARTERLY}>Quarterly</SelectItem>
+                                            <SelectItem value={AccrualFrequency.HALF_YEARLY}>Half Yearly</SelectItem>
                                             <SelectItem value={AccrualFrequency.YEARLY}>Yearly</SelectItem>
                                             <SelectItem value={AccrualFrequency.CUSTOM}>Custom Duration</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {editingLeave.accrualFrequency === AccrualFrequency.CUSTOM && (
+                                    <div className="space-y-1.5 pt-2 border-t border-border/20 animate-in fade-in slide-in-from-top-1">
+                                        <Label className="text-xs font-bold text-amber-600">Cycle Duration (Days)</Label>
+                                        <Input
+                                            type="number"
+                                            value={editingLeave.customFrequencyDays || ""}
+                                            onChange={e => updateField('customFrequencyDays', parseInt(e.target.value) || 0)}
+                                            className="h-9 bg-background/50 border-none rounded-lg text-center font-bold text-xs"
+                                            placeholder="e.g. 45"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -250,7 +297,7 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                 <span className="text-[10px] font-bold uppercase tracking-widest">Constraints & Verification</span>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="p-4 bg-background rounded-xl shadow-sm border border-transparent space-y-2">
                                     <div className="flex items-center gap-2 text-neutral-400">
                                         <IconAlertCircle className="w-3.5 h-3.5" />
@@ -277,12 +324,25 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         placeholder="None"
                                     />
                                 </div>
+                                <div className="p-4 bg-background rounded-xl shadow-sm border border-transparent space-y-2">
+                                    <div className="flex items-center gap-2 text-neutral-400">
+                                        <IconClock className="w-3.5 h-3.5" />
+                                        <Label className="text-[10px] font-bold uppercase">Min Notice (Days)</Label>
+                                    </div>
+                                    <Input
+                                        type="number"
+                                        className="h-9 w-full bg-muted/40 border-none rounded-lg font-bold text-sm px-3"
+                                        value={editingLeave.minNoticeDays || ""}
+                                        onChange={e => updateField('minNoticeDays', parseInt(e.target.value) || undefined)}
+                                        placeholder="None"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-4 pt-2 border-t border-border/50">
                                 <div className="flex items-center justify-between p-3.5 bg-background rounded-xl shadow-sm border border-transparent">
                                     <div className="space-y-0.5">
-                                        <Label className="text-sm font-bold block text-neutral-700 underline decoration-indigo-500/20 underline-offset-4 decoration-2">Supporting Documents</Label>
+                                        <Label className="text-sm font-bold block text-neutral-700">Supporting Documents</Label>
                                         <p className="text-[10px] text-muted-foreground">Require medical/legal proof uploads.</p>
                                     </div>
                                     <Switch
@@ -337,23 +397,22 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                         </div>
 
                         {/* Financials (Encashment) */}
-                        <div className="p-5 bg-emerald-500/5 rounded-3xl border border-emerald-500/10 space-y-4 transition-all">
+                        <div className="p-5 bg-muted/30 rounded-3xl border border-border/50 space-y-4 transition-all">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-emerald-600">
+                                <div className="flex items-center gap-2 text-neutral-500">
                                     <IconCoin className="w-4 h-4" />
                                     <span className="text-[10px] font-bold uppercase tracking-widest">Encashment Engine</span>
                                 </div>
                                 <Switch
                                     checked={editingLeave.isEncashable}
                                     onCheckedChange={v => updateField('isEncashable', v)}
-                                    className="data-[state=active]:bg-emerald-600"
                                 />
                             </div>
                             {editingLeave.isEncashable && (
                                 <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold text-emerald-700/70 ml-1">Calculation Logic</Label>
+                                            <Label className="text-[10px] font-bold text-neutral-400 ml-1">Calculation Logic</Label>
                                             <Select
                                                 value={editingLeave.encashmentType || EncashmentType.MULTIPLIER_BASED}
                                                 onValueChange={v => updateField('encashmentType', v as EncashmentType)}
@@ -368,12 +427,12 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                             </Select>
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold text-emerald-700/70 ml-1">
+                                            <Label className="text-[10px] font-bold text-neutral-400 ml-1">
                                                 {editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? "Daily Rate (LKR)" : "Multiplier (x)"}
                                             </Label>
                                             <Input
                                                 type="number"
-                                                className="h-9 bg-background border-none rounded-xl font-black text-xs px-3 text-emerald-600"
+                                                className="h-9 bg-background border-none rounded-xl font-black text-xs px-3"
                                                 value={editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? editingLeave.fixedAmount : editingLeave.encashmentMultiplier}
                                                 onChange={e => updateField(editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? 'fixedAmount' : 'encashmentMultiplier', parseFloat(e.target.value) || 0)}
                                             />
@@ -391,7 +450,7 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                             Cancel
                         </Button>
                         <Button className="rounded-xl px-14 h-11 font-bold text-xs shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" onClick={() => onSave(editingLeave)}>
-                            Confirm & Save Policy
+                            Confirm & Save Leave Type
                         </Button>
                     </div>
                 </DialogFooter>

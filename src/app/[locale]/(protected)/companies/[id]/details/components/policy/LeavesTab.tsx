@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LeavesConfig, LeaveType, AccrualFrequency, PolicyGenderTarget, EmploymentType } from "@/types/policy";
+import { LeavesConfig, LeaveType, AccrualFrequency, EmploymentType, Gender } from "@/types/policy";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IconTrash, IconPlus, IconCalendar, IconCoin, IconEdit, IconCheck, IconCalendarStar, IconSettings } from "@tabler/icons-react";
@@ -19,7 +19,7 @@ const DEFAULT_LEAVE: LeaveType = {
     id: "",
     name: "",
     code: "",
-    applicableGender: PolicyGenderTarget.ALL,
+    applicableGenders: [Gender.MALE, Gender.FEMALE],
     applicableEmploymentTypes: [EmploymentType.PERMANENT],
     requiresApproval: true,
     isShortLeave: false,
@@ -80,22 +80,6 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
                 onSave={handleSave}
             />
 
-            {/* Header & Global Config Placeholder */}
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                <Card className="border-none shadow-none bg-muted/50 rounded-[2rem]">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2 text-neutral-500">
-                            <IconSettings className="w-4 h-4" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">System Overview</span>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="pb-6">
-                        <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
-                            Define your company's leave policies including base accruals, verification rules, and encashment logic. Policies are automatically mapped to employees based on gender and employment type.
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
 
             {/* Leave Types List */}
             <Card className="border-none shadow-none bg-muted/50 rounded-[2rem]">
@@ -103,11 +87,11 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-neutral-500">
                             <IconCalendar className="w-4 h-4" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Defined Policies</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Define Leave Types</span>
                         </div>
                         <Button onClick={handleAdd} size="sm" className="bg-primary text-primary-foreground rounded-lg font-bold h-8 px-4 text-[10px] uppercase tracking-wider hover:bg-primary/90 shadow-md shadow-primary/20">
                             <IconPlus className="w-3 h-3 mr-1.5" />
-                            New Category
+                            New Leave Type
                         </Button>
                     </div>
                 </CardHeader>
@@ -120,7 +104,13 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
                             >
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="h-9 w-9 rounded-lg flex items-center justify-center text-white bg-primary shadow-lg shadow-primary/30">
+                                        <div
+                                            className="h-9 w-9 rounded-lg flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110"
+                                            style={{
+                                                backgroundColor: leave.color || 'var(--primary)',
+                                                boxShadow: leave.color ? `0 10px 15px -3px ${leave.color}40` : undefined
+                                            }}
+                                        >
                                             <span className="font-black text-[10px]">{leave.code}</span>
                                         </div>
                                         <div>
@@ -157,9 +147,17 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
 
                                     <div className="space-y-2.5">
                                         <div className="flex flex-wrap gap-1">
-                                            <Badge variant="outline" className="text-[8px] uppercase font-black tracking-tight border-border bg-background h-4 px-1.5 opacity-60">
-                                                {leave.applicableGender === PolicyGenderTarget.ALL ? "Everyone" : leave.applicableGender}
-                                            </Badge>
+                                            {leave.applicableGenders.length === Object.keys(Gender).length ? (
+                                                <Badge variant="outline" className="text-[8px] uppercase font-black tracking-tight border-border bg-background h-4 px-1.5 opacity-60">
+                                                    Everyone
+                                                </Badge>
+                                            ) : (
+                                                leave.applicableGenders.map(gender => (
+                                                    <Badge key={gender} variant="outline" className="text-[8px] uppercase font-black tracking-tight border-border bg-background h-4 px-1.5 opacity-60">
+                                                        {gender}
+                                                    </Badge>
+                                                ))
+                                            )}
                                             {leave.applicableEmploymentTypes.map(type => (
                                                 <Badge key={type} variant="outline" className="text-[8px] uppercase font-black tracking-tight border-border bg-background h-4 px-1.5 opacity-60">{type}</Badge>
                                             ))}
@@ -193,11 +191,11 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
                                 <div className="h-24 w-24 rounded-3xl bg-primary/5 flex items-center justify-center mb-6">
                                     <IconCalendarStar className="h-12 w-12 text-primary/30" />
                                 </div>
-                                <h4 className="text-xl font-bold mb-2">No Leave Policies Defined</h4>
+                                <h4 className="text-xl font-bold mb-2">No Leave Types Defined</h4>
                                 <p className="text-muted-foreground text-sm mb-8 max-w-sm text-center leading-relaxed font-medium">Create policies for Annual, Sick, or Medical leaves to start tracking employee balances automatically.</p>
                                 <Button onClick={handleAdd} className="rounded-2xl px-10 py-7 h-auto font-black text-base shadow-2xl shadow-primary/30 transition-all hover:scale-105">
                                     <IconPlus className="mr-2 h-6 w-6" />
-                                    Create First Policy
+                                    Create First Leave Type
                                 </Button>
                             </div>
                         )}

@@ -44,11 +44,6 @@ export enum EncashmentType {
     FIXED_AMOUNT = 'FIXED_AMOUNT'
 }
 
-export enum PolicyGenderTarget {
-    MALE = 'MALE',
-    FEMALE = 'FEMALE',
-    ALL = 'ALL'
-}
 
 export interface Shift {
     id: string;
@@ -222,7 +217,8 @@ export interface LeaveType {
     id: string;
     name: string;
     code: string;
-    applicableGender: PolicyGenderTarget;
+    color?: string;
+    applicableGenders: Gender[];
     applicableEmploymentTypes: EmploymentType[];
     requiresApproval: boolean;
     approvalRequiredIfConsecutiveMoreThan?: number;
@@ -238,6 +234,7 @@ export interface LeaveType {
 
     // Rules
     minDelayBetweenRequestsDays?: number;
+    minNoticeDays?: number;
     canApplyBackdated?: boolean;
     maxConsecutiveDays?: number;
     requireDocuments?: boolean;
