@@ -239,22 +239,22 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-                <TabsList className="w-full md:w-auto bg-neutral-100 dark:bg-neutral-800 p-1.5 rounded-2xl h-auto">
+                <TabsList className="w-full md:w-auto bg-muted p-1.5 rounded-2xl h-auto">
                     <TabsTrigger
                         value="general"
-                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 transition-all"
+                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
                     >
                         General
                     </TabsTrigger>
                     <TabsTrigger
                         value="policies"
-                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 transition-all"
+                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
                     >
                         Policies
                     </TabsTrigger>
                     <TabsTrigger
                         value="files"
-                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 transition-all"
+                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
                     >
                         Files ({formData.files?.length || 0})
                     </TabsTrigger>

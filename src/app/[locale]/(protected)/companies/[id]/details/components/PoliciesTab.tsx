@@ -44,12 +44,12 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4 mb-2">
-                <div className="h-12 w-12 rounded-3xl bg-purple-500/10 flex items-center justify-center text-purple-600 shadow-inner">
+                <div className="h-12 w-12 rounded-3xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
                     <IconSettings className="h-6 w-6" />
                 </div>
                 <div>
                     <h3 className="text-2xl font-black tracking-tight">Policy Configuration</h3>
-                    <p className="text-sm text-neutral-500">Manage automation rules for attendance and payroll.</p>
+                    <p className="text-sm text-muted-foreground">Manage automation rules for attendance and payroll.</p>
                 </div>
             </div>
 
@@ -57,7 +57,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                 <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start pb-2">
                     <TabsTrigger
                         value="shifts"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconClock className="w-4 h-4 mr-2" />
                         Shifts & Hours
@@ -65,7 +65,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
 
                     <TabsTrigger
                         value="salary-components"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconCoin className="w-4 h-4 mr-2" />
                         Salary Components
@@ -73,7 +73,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
 
                     <TabsTrigger
                         value="payroll-settings"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-neutral-900 data-[state=active]:text-white data-[state=active]:dark:bg-white data-[state=active]:dark:text-neutral-900 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconCalendarTime className="w-4 h-4 mr-2" />
                         Payroll Settings
@@ -82,7 +82,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     <TabsTrigger
                         value="attendance"
                         disabled
-                        className="rounded-xl px-6 py-3 opacity-50 cursor-not-allowed bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                        className="rounded-xl px-6 py-3 opacity-50 cursor-not-allowed bg-card border border-border"
                     >
                         <IconCalendarStats className="w-4 h-4 mr-2" />
                         Attendance Rules

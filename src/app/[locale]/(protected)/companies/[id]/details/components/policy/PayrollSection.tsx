@@ -57,7 +57,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
         const isPercentage = comp.type !== PayrollComponentType.FLAT_AMOUNT;
 
         return (
-            <div key={comp.id} className="group relative flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all">
+            <div key={comp.id} className="group relative flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-foreground/10 transition-all">
                 <div className="flex items-center gap-4">
                     <div className={cn(
                         "h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-inner",
@@ -72,7 +72,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                             {comp.name}
                             {comp.isStatutory && <Badge variant="secondary" className="text-[9px] px-1.5 h-4">Statutory</Badge>}
                         </h4>
-                        <p className="text-xs text-neutral-500 font-medium mt-0.5">
+                        <p className="text-xs text-muted-foreground font-medium mt-0.5">
                             {comp.type === PayrollComponentType.FLAT_AMOUNT
                                 ? `Fixed Amount`
                                 : comp.type === PayrollComponentType.PERCENTAGE_BASIC
@@ -90,7 +90,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => openEditDialog(comp)}>
-                            <IconPencil className="h-4 w-4 text-neutral-500" />
+                            <IconPencil className="h-4 w-4 text-muted-foreground" />
                         </Button>
                         <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg hover:text-red-500 hover:bg-red-50" onClick={() => handleDeleteComponent(comp.id)}>
                             <IconTrash className="h-4 w-4" />
@@ -121,7 +121,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                             </div>
                             <h3 className="text-xl font-black">Additions</h3>
                         </div>
-                        <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.ADDITION)} className="bg-neutral-900 dark:bg-white text-white dark:text-black rounded-xl font-bold h-9">
+                        <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.ADDITION)} className="bg-primary text-primary-foreground rounded-xl font-bold h-9 hover:bg-primary/90">
                             <IconPlus className="w-3.5 h-3.5 mr-1.5" />
                             Add New
                         </Button>
@@ -129,7 +129,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
 
                     <div className="space-y-3">
                         {additions.length === 0 && (
-                            <div className="p-8 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-3xl text-center text-neutral-400 flex flex-col items-center gap-2">
+                            <div className="p-8 border-2 border-dashed border-border rounded-3xl text-center text-muted-foreground flex flex-col items-center gap-2">
                                 <IconCoin className="w-8 h-8 opacity-20" />
                                 <span className="text-sm font-bold">No additions configured</span>
                             </div>
@@ -147,7 +147,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                             </div>
                             <h3 className="text-xl font-black">Deductions</h3>
                         </div>
-                        <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.DEDUCTION)} className="bg-neutral-900 dark:bg-white text-white dark:text-black rounded-xl font-bold h-9">
+                        <Button size="sm" onClick={() => openAddDialog(PayrollComponentCategory.DEDUCTION)} className="bg-primary text-primary-foreground rounded-xl font-bold h-9 hover:bg-primary/90">
                             <IconPlus className="w-3.5 h-3.5 mr-1.5" />
                             Add New
                         </Button>
@@ -155,7 +155,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
 
                     <div className="space-y-3">
                         {deductions.length === 0 && (
-                            <div className="p-8 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-3xl text-center text-neutral-400 flex flex-col items-center gap-2">
+                            <div className="p-8 border-2 border-dashed border-border rounded-3xl text-center text-muted-foreground flex flex-col items-center gap-2">
                                 <IconCoin className="w-8 h-8 opacity-20" />
                                 <span className="text-sm font-bold">No deductions configured</span>
                             </div>
