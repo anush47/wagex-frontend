@@ -190,9 +190,12 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
                             <div className="relative">
                                 <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-neutral-300">LKR</span>
                                 <Input
-                                    type="number"
-                                    value={formData.basicSalary}
-                                    onChange={e => onChange('basicSalary', parseFloat(e.target.value) || 0)}
+                                    type="text"
+                                    value={formData.basicSalary?.toLocaleString() || '0'}
+                                    onChange={e => {
+                                        const value = e.target.value.replace(/,/g, '');
+                                        onChange('basicSalary', parseFloat(value) || 0);
+                                    }}
                                     className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-black text-xl shadow-inner text-emerald-600"
                                 />
                             </div>

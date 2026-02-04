@@ -15,12 +15,12 @@ import {
     IconCircleXFilled,
     IconAlertCircle
 } from "@tabler/icons-react";
-import { ShiftsSection } from "../../details/components/policy/ShiftsSection";
-import { PayrollSection } from "../../details/components/policy/PayrollSection";
-import { PayrollSettingsTab } from "../../details/components/policy/PayrollSettingsTab";
-import { WorkingDaysTab } from "../../details/components/policy/WorkingDaysTab";
-import { AttendanceTab } from "../../details/components/policy/AttendanceTab";
-import { LeavesTab } from "../../details/components/policy/LeavesTab";
+import { ShiftsSection } from "../../../details/components/policy/ShiftsSection";
+import { PayrollSection } from "../../../details/components/policy/PayrollSection";
+import { PayrollSettingsTab } from "../../../details/components/policy/PayrollSettingsTab";
+import { WorkingDaysTab } from "../../../details/components/policy/WorkingDaysTab";
+import { AttendanceTab } from "../../../details/components/policy/AttendanceTab";
+import { LeavesTab } from "../../../details/components/policy/LeavesTab";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export function EmployeePoliciesTab({ effective, override, onOverrideChange, sou
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
-    const isOverridden = (key: string) => source?.[key] === 'EMPLOYEE';
+    const isOverridden = (key: string) => source?.overriddenFields?.includes(key) || false;
 
     const getOverrideWarning = (key: string) => {
         if (isOverridden(key)) {
@@ -60,7 +60,7 @@ export function EmployeePoliciesTab({ effective, override, onOverrideChange, sou
             );
         }
         return (
-            <div className="flex items-center gap-2 p-4 mb-6 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-emerald-600 dark:text-emerald-400 opacity-60">
+            <div className="flex items-center gap-2 p-4 mb-6 bg-muted/50 border border-muted rounded-2xl text-muted-foreground opacity-60">
                 <IconCircleCheckFilled className="w-5 h-5 flex-shrink-0" />
                 <div className="text-xs font-bold leading-tight">
                     <span className="uppercase block text-[10px] opacity-70 mb-0.5">Inherited from Company</span>
@@ -101,28 +101,27 @@ export function EmployeePoliciesTab({ effective, override, onOverrideChange, sou
             </div>
 
             <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full flex flex-col gap-10">
-                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4">
+                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
                     {[
-                        { id: 'shifts', icon: IconClock, label: 'Shifts' },
-                        { id: 'working-days', icon: IconCalendarStats, label: 'Work Days' },
-                        { id: 'salary-components', icon: IconCoin, label: 'Salary' },
-                        { id: 'payroll-settings', icon: IconCalendarTime, label: 'Payroll' },
-                        { id: 'attendance', icon: IconCalendarStats, label: 'Attendance' },
-                        { id: 'leaves', icon: IconCalendarStar, label: 'Leaves' },
+                        { id: 'shifts', icon: IconClock, label: 'Shifts', field: 'shifts' },
+                        { id: 'working-days', icon: IconCalendarStats, label: 'Work Days', field: 'workingDays' },
+                        { id: 'salary-components', icon: IconCoin, label: 'Salary', field: 'salaryComponents' },
+                        { id: 'payroll-settings', icon: IconCalendarTime, label: 'Payroll', field: 'payrollConfiguration' },
+                        { id: 'attendance', icon: IconCalendarStats, label: 'Attendance', field: 'attendance' },
+                        { id: 'leaves', icon: IconCalendarStar, label: 'Leaves', field: 'leaves' },
                     ].map((tab) => (
                         <TabsTrigger
                             key={tab.id}
                             value={tab.id}
                             className={cn(
-                                "rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-transparent",
-                                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20",
-                                "bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500",
-                                isOverridden(tab.id) && "border-orange-500/30 text-orange-600 dark:text-orange-400"
+                                "rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800",
+                                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary",
+                                "bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                             )}
                         >
                             <tab.icon className="w-4 h-4" />
                             {tab.label}
-                            {isOverridden(tab.id) && <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
+                            {isOverridden(tab.field) && <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />}
                         </TabsTrigger>
                     ))}
                 </TabsList>
@@ -147,7 +146,7 @@ export function EmployeePoliciesTab({ effective, override, onOverrideChange, sou
                     <TabsContent value="salary-components" className="m-0 focus-visible:ring-0">
                         {getOverrideWarning('salaryComponents')}
                         <PayrollSection
-                            value={effective.salaryComponents}
+                            value={effective.salaryComponents || { components: [] }}
                             onChange={(val) => updateOverride('salaryComponents', val)}
                         />
                     </TabsContent>

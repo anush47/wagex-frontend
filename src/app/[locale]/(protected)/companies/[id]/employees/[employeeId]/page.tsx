@@ -157,20 +157,20 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
 
             {/* Minimal Breadcrumb */}
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
-                <Link href={`/companies/${companyId}/employees`} className="hover:text-primary transition-colors">Workforce</Link>
+                <Link href={`/companies/${companyId}/employees`} className="hover:text-primary transition-colors">Employees</Link>
                 <IconChevronRight className="h-3 w-3" />
-                <span className="text-neutral-900 dark:text-white">{employeeForm.name}</span>
+                <span className="text-neutral-900 dark:text-white">{employeeForm.nameWithInitials}</span>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-4">
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-16 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-2xl font-black text-neutral-400">
-                            {employeeForm.name.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()}
+                            {employeeForm.nameWithInitials?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase">{employeeForm.name}</h1>
+                                <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase">{employeeForm.nameWithInitials}</h1>
                                 <Badge className={cn(
                                     "h-6 rounded-lg text-[10px] uppercase tracking-tighter px-2 border-none font-bold",
                                     employeeForm.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-600" : "bg-neutral-100 text-neutral-400"
@@ -194,19 +194,19 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-10">
-                <TabsList className="w-full bg-neutral-100 dark:bg-neutral-900 p-1.5 rounded-[1.5rem] h-auto flex flex-wrap gap-1">
+                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
                     <TabsTrigger
                         value="general"
-                        className="rounded-[1.2rem] px-8 py-3 text-sm font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:text-primary data-[state=active]:shadow-xl shadow-primary/5 transition-all flex-1 min-w-fit"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
-                        <IconUser className="w-4 h-4 mr-2" />
+                        <IconUser className="w-4 h-4" />
                         Identity
                     </TabsTrigger>
                     <TabsTrigger
                         value="policies"
-                        className="rounded-[1.2rem] px-8 py-3 text-sm font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:text-primary data-[state=active]:shadow-xl shadow-primary/5 transition-all flex-1 min-w-fit"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
-                        <IconSettings className="w-4 h-4 mr-2" />
+                        <IconSettings className="w-4 h-4" />
                         Policy Rules
                         {policySource?.isOverridden && (
                             <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
@@ -214,9 +214,9 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     </TabsTrigger>
                     <TabsTrigger
                         value="files"
-                        className="rounded-[1.2rem] px-8 py-3 text-sm font-black uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:text-primary data-[state=active]:shadow-xl shadow-primary/5 transition-all flex-1 min-w-fit"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
-                        <IconFiles className="w-4 h-4 mr-2" />
+                        <IconFiles className="w-4 h-4" />
                         Documents
                     </TabsTrigger>
                 </TabsList>
@@ -245,33 +245,30 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                 </TabsContent>
             </Tabs>
 
-            {/* Floating Save Button */}
+            {/* Save Button - Bottom Right */}
             <AnimatePresence>
                 {isDirty && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-8 right-8 z-50"
                     >
                         <Button
                             onClick={handleSave}
                             disabled={saving}
                             size="lg"
-                            className="rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] px-10 h-16 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:scale-105 active:scale-95 transition-all text-sm font-black uppercase tracking-[0.2em]"
+                            className="rounded-full shadow-2xl px-8 h-14 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all text-base font-bold"
                         >
                             {saving ? (
                                 <>
-                                    <IconLoader2 className="mr-3 h-5 w-5 animate-spin" />
-                                    Synchronizing...
+                                    <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Saving...
                                 </>
                             ) : (
                                 <>
-                                    <IconDeviceFloppy className="mr-3 h-6 w-6" />
-                                    Commit Changes
-                                    <div className="ml-4 pl-4 border-l border-white/20 dark:border-black/20 text-[10px] opacity-60">
-                                        UNSAVED
-                                    </div>
+                                    <IconDeviceFloppy className="mr-2 h-5 w-5" />
+                                    Save Changes
                                 </>
                             )}
                         </Button>

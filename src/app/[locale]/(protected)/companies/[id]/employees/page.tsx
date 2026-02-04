@@ -89,7 +89,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                         <h1 className="text-3xl font-black tracking-tight uppercase">Employees</h1>
                     </div>
                     <p className="text-neutral-500 font-medium text-sm">
-                        Manage your workforce, roles, and employment configurations.
+                        Manage your employees, roles, and employment configurations.
                     </p>
                 </div>
 

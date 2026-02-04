@@ -35,7 +35,6 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
         remark: "",
         address: "",
         phone: "",
-        email: "",
         gender: Gender.MALE,
         employmentType: EmploymentType.PERMANENT,
         basicSalary: 0,
@@ -51,8 +50,8 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
         e.preventDefault();
         setSubmitting(true);
         try {
-            // Remove email and status from the payload as they're not in CreateEmployeeDto
-            const { email, status, ...employeeData } = formData;
+            // Remove status from the payload as it's not in CreateEmployeeDto
+            const { status, ...employeeData } = formData;
             await EmployeeService.createEmployee(employeeData);
             router.push(`/companies/${companyId}/employees`);
         } catch (error) {
@@ -173,16 +172,6 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
                                         className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
                                         value={formData.phone}
                                         onChange={e => updateField('phone', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">Professional Email</Label>
-                                    <Input
-                                        type="email"
-                                        placeholder="john@company.com"
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                        value={formData.email}
-                                        onChange={e => updateField('email', e.target.value)}
                                     />
                                 </div>
                             </div>

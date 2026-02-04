@@ -9,6 +9,7 @@ interface Links {
     label: string;
     href: string;
     icon: React.JSX.Element | React.ReactNode;
+    exactMatch?: boolean;
 }
 
 interface SidebarContextProps {
@@ -174,7 +175,9 @@ export const SidebarLink = ({
 }) => {
     const { open, animate } = useSidebar();
     const pathname = usePathname();
-    const isActive = pathname === link.href;
+    const isActive = link.exactMatch
+        ? pathname === link.href
+        : (pathname === link.href || pathname?.startsWith(`${link.href}/`));
 
     return (
         <Link

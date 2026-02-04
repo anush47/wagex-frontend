@@ -78,6 +78,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {
             label: "Overview", // TODO: Add translation key
             href: `/companies/${companyId}`,
+            exactMatch: true,
             icon: (
                 <IconChartBar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
@@ -106,6 +107,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {
             label: t("back"),
             href: "/companies",
+            exactMatch: true,
             icon: (
                 <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),

@@ -239,22 +239,22 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-                <TabsList className="w-full bg-muted p-1 rounded-xl h-auto flex flex-wrap gap-1">
+                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
                     <TabsTrigger
                         value="general"
-                        className="rounded-lg px-4 py-2 text-sm md:text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex-1 min-w-fit"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
                         General
                     </TabsTrigger>
                     <TabsTrigger
                         value="policies"
-                        className="rounded-lg px-4 py-2 text-sm md:text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex-1 min-w-fit"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
                         Policies
                     </TabsTrigger>
                     <TabsTrigger
                         value="files"
-                        className="rounded-lg px-4 py-2 text-sm md:text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex-1 min-w-fit"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
                         Files ({formData.files?.length || 0})
                     </TabsTrigger>
