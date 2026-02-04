@@ -61,7 +61,7 @@ export default function NewCompanyPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 mb-8 md:mb-16">
                 <div className="space-y-3 md:space-y-4">
                     <Link
-                        href="/companies"
+                        href="/employer-portal/companies"
                         className="group inline-flex items-center text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-400 hover:text-primary transition-all duration-300"
                     >
                         <IconArrowLeft className="h-3 w-3 md:h-4 md:w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -207,7 +207,7 @@ export default function NewCompanyPage() {
                             >
                                 {isPending ? common("save") + "..." : t("establishNew")}
                             </Button>
-                            <Link href="/companies" className="block w-full">
+                            <Link href="/employer-portal/companies" className="block w-full">
                                 <Button
                                     type="button"
                                     variant="outline"

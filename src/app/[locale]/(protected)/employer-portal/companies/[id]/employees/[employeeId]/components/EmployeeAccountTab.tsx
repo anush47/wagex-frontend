@@ -182,11 +182,6 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                                 </Button>
                             )}
                         </div>
-                        {isLinked && (
-                            <p className="text-xs text-neutral-500 ml-1 font-medium">
-                                To update email for a linked account, unlink the account first or update via profile settings.
-                            </p>
-                        )}
                     </div>
 
                 </CardContent>

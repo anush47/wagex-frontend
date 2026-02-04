@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { EmployeeGeneralTab } from "./components/EmployeeGeneralTab";
 import { EmployeePoliciesTab } from "./components/EmployeePoliciesTab";
 import { EmployeeAccountTab } from "./components/EmployeeAccountTab";
-import { FilesTab } from "../details/components/FilesTab";
+import { FilesTab } from "../../details/components/FilesTab";
 
 export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: string, employeeId: string }> }) {
     const { id: companyId, employeeId } = use(params);
@@ -159,7 +159,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
 
             {/* Minimal Breadcrumb */}
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
-                <Link href={`/companies/${companyId}/employees`} className="hover:text-primary transition-colors">Employees</Link>
+                <Link href={`/employer-portal/companies/${companyId}/employees`} className="hover:text-primary transition-colors">Employees</Link>
                 <IconChevronRight className="h-3 w-3" />
                 <span className="text-neutral-900 dark:text-white">{employeeForm.nameWithInitials}</span>
             </div>

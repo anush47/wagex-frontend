@@ -83,7 +83,7 @@ export default function CompaniesPage() {
                         {t("description")}
                     </p>
                 </div>
-                <Link href="/companies/new" className="w-full md:w-auto">
+                <Link href="/employer-portal/companies/new" className="w-full md:w-auto">
                     <Button className="w-full md:w-auto h-11 md:h-12 px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-black shadow-lg hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 gap-2">
                         <IconPlus className="h-4 w-4 md:h-5 md:w-5" />
                         {t("establishNew")}
