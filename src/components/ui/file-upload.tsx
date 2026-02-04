@@ -13,11 +13,12 @@ import { StorageService } from "@/services/storage.service";
 interface FileUploadProps {
     onUpload: (file: CompanyFile) => void;
     companyId: string;
+    employeeId?: string;
     folder?: string;
     className?: string;
 }
 
-export function FileUpload({ onUpload, companyId, folder = "general", className }: FileUploadProps) {
+export function FileUpload({ onUpload, companyId, employeeId, folder = "general", className }: FileUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -57,6 +58,7 @@ export function FileUpload({ onUpload, companyId, folder = "general", className 
             const response = await StorageService.upload({
                 file: fileToUpload,
                 companyId,
+                employeeId,
                 folder,
                 customFilename: nameToUse
             });

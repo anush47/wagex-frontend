@@ -86,7 +86,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         ] : []),
         {
             label: t("profile"),
-            href: "/profile",
+            href: user?.role === 'EMPLOYEE' ? "/employee-portal/profile" : "/profile",
             icon: (
                 <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
@@ -181,7 +181,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         <SidebarLink
                             link={{
                                 label: user?.email || "User",
-                                href: "/profile",
+                                href: user?.role === 'EMPLOYEE' ? "/employee-portal/profile" : "/profile",
                                 icon: (
                                     <div className="h-7 w-7 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold text-neutral-500 dark:text-neutral-300">
                                         {user?.email?.[0]?.toUpperCase() || "U"}

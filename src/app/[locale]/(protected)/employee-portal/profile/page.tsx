@@ -1,0 +1,275 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { EmployeeService } from "@/services/employee.service";
+import { Employee } from "@/types/employee";
+import { useTranslations } from "next-intl";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import {
+    IconDeviceFloppy,
+    IconUser,
+    IconFiles,
+    IconLoader2
+} from "@tabler/icons-react";
+import { toast } from "sonner";
+import { AnimatePresence, motion } from "motion/react";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { EmployeeGeneralTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeGeneralTab";
+import { EmployeeFilesTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeFilesTab";
+import { StorageService } from "@/services/storage.service";
+
+export default function EmployeeProfilePage() {
+    const t = useTranslations("Common");
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    // Employee Data
+    const [originalEmployee, setOriginalEmployee] = useState<Employee | null>(null);
+    const [employeeForm, setEmployeeForm] = useState<Employee | null>(null);
+
+    // Tab State
+    const initialTab = searchParams.get("tab") || "general";
+    const [activeTab, setActiveTab] = useState(initialTab);
+
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab && tab !== activeTab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
+
+    const fetchData = async (silent = false) => {
+        if (!silent) setLoading(true);
+        try {
+            const response = await EmployeeService.getMe();
+            const empData = (response.data as any)?.data || response.data;
+            if (empData) {
+                setOriginalEmployee(empData);
+                setEmployeeForm(JSON.parse(JSON.stringify(empData)));
+            }
+        } catch (error) {
+            console.error("Failed to fetch employee details", error);
+            toast.error("Failed to load your profile");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const canonicalStringify = (obj: any): string => {
+        if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+        if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
+        return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
+    };
+
+    const isDirty = canonicalStringify(originalEmployee) !== canonicalStringify(employeeForm);
+    const canSelfEdit = employeeForm?.canSelfEdit ?? true;
+
+    const handleSave = async () => {
+        if (!canSelfEdit) {
+            toast.error("You do not have permission to edit your details.");
+            return;
+        }
+
+        setSaving(true);
+        const toastId = toast.loading("Updating your profile...");
+        try {
+            if (employeeForm && originalEmployee) {
+                // Only allow updating certain fields when self-editing
+                // For now, we'll send the whole modified object, backend controller
+                // needs to be updated to handle employee self-update too.
+                // WE SHOULD ADD A SELF-UPDATE ENDPOINT OR ALLOW EMPLOYEES TO PATCH CERTAIN FIELDS.
+
+                // Let's assume for now the employer update endpoint works if we permit the role.
+                const {
+                    id: _id,
+                    createdAt,
+                    updatedAt,
+                    company,
+                    user,
+                    userId,
+                    employeeNo, // Read-only
+                    basicSalary, // Read-only for employee
+                    status, // Read-only for employee
+                    ...payload
+                } = employeeForm as any;
+
+                await EmployeeService.updateEmployee(originalEmployee.id, payload);
+                toast.success("Profile updated successfully", { id: toastId });
+                fetchData(true);
+            }
+        } catch (error) {
+            console.error("Failed to save", error);
+            toast.error("Update failed", { id: toastId });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        const params = new URLSearchParams(window.location.search);
+        params.set("tab", value);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    if (loading) {
+        return (
+            <div className="w-full max-w-7xl mx-auto py-10 space-y-8 animate-pulse">
+                <div className="h-20 w-full bg-neutral-100 dark:bg-neutral-900/50 rounded-[2.5rem]" />
+                <div className="grid grid-cols-3 gap-6">
+                    <div className="h-32 bg-neutral-50 dark:bg-neutral-900/30 rounded-[2rem]" />
+                    <div className="h-32 bg-neutral-50 dark:bg-neutral-900/30 rounded-[2rem]" />
+                    <div className="h-32 bg-neutral-50 dark:bg-neutral-900/30 rounded-[2rem]" />
+                </div>
+            </div>
+        );
+    }
+
+    if (!employeeForm) return <div className="p-20 text-center font-bold">Profile not found</div>;
+
+    return (
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 relative pb-24">
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-neutral-900 p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                <div className="flex items-center gap-6">
+                    <EmployeeAvatar photo={employeeForm.photo} name={employeeForm.nameWithInitials} />
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-3xl font-black tracking-tighter uppercase">{employeeForm.nameWithInitials}</h1>
+                            <Badge className={cn(
+                                "h-6 rounded-lg text-[10px] uppercase tracking-tighter px-2 border-none font-bold",
+                                employeeForm.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-600 shadow-sm" : "bg-neutral-100 text-neutral-400"
+                            )}>
+                                {employeeForm.status}
+                            </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-neutral-500 font-bold text-xs uppercase tracking-widest">
+                            <span className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md">
+                                ID: <span className="text-primary font-black">{employeeForm.employeeNo}</span>
+                            </span>
+                            <span>{employeeForm.designation}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {!canSelfEdit && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20">
+                        <span className="text-xs font-black uppercase tracking-widest">Read Only Mode</span>
+                    </div>
+                )}
+            </div>
+
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-10">
+                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
+                    <TabsTrigger
+                        value="general"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
+                    >
+                        <IconUser className="w-4 h-4" />
+                        Personal Details
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="files"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
+                    >
+                        <IconFiles className="w-4 h-4" />
+                        My Documents
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="general" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {/* Reusing the tab, but we should make sure it doesn't allow editing read-only fields if not employer */}
+                    {/* For now, the component handles state, we just need to ensure the save button reflects permissions */}
+                    <EmployeeGeneralTab
+                        formData={employeeForm}
+                        onChange={(field, value) => {
+                            if (!canSelfEdit) return;
+                            // Prevent self-editing of critical fields
+                            if (['employeeNo', 'basicSalary', 'status', 'joinedDate', 'resignedDate'].includes(field as string)) return;
+                            setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null);
+                        }}
+                    />
+                </TabsContent>
+
+                <TabsContent value="files" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <EmployeeFilesTab
+                        formData={employeeForm}
+                        handleChange={(field, value) => {
+                            if (!canSelfEdit) return;
+                            setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null);
+                        }}
+                        disabled={!canSelfEdit}
+                    />
+                </TabsContent>
+            </Tabs>
+
+            {/* Save Button */}
+            <AnimatePresence>
+                {isDirty && canSelfEdit && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-8 right-8 z-50"
+                    >
+                        <Button
+                            onClick={handleSave}
+                            disabled={saving}
+                            size="lg"
+                            className="rounded-full shadow-2xl px-8 h-14 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all text-base font-bold"
+                        >
+                            {saving ? (
+                                <>
+                                    <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <IconDeviceFloppy className="mr-2 h-5 w-5" />
+                                    Update Profile
+                                </>
+                            )}
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+function EmployeeAvatar({ photo, name }: { photo?: string, name: string }) {
+    const [url, setUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (photo) {
+            StorageService.getUrl(photo).then(res => {
+                const data = (res.data as any)?.data || res.data;
+                if (data?.url) setUrl(data.url);
+            });
+        } else {
+            setUrl(null);
+        }
+    }, [photo]);
+
+    return (
+        <div className="h-20 w-20 md:h-24 md:w-24 rounded-[2rem] bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center text-3xl font-black text-neutral-300 overflow-hidden shadow-inner border border-neutral-100 dark:border-neutral-800">
+            {url ? (
+                <img src={url} alt={name} className="h-full w-full object-cover px-1 py-1 rounded-[2rem]" />
+            ) : (
+                name?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()
+            )}
+        </div>
+    );
+}

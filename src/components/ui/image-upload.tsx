@@ -13,9 +13,19 @@ interface ImageUploadProps {
     onChange: (value: string) => void;
     className?: string;
     label?: string;
+    description?: string;
+    alt?: string;
 }
 
-export function ImageUpload({ value, companyId, onChange, className, label = "Company Logo" }: ImageUploadProps) {
+export function ImageUpload({
+    value,
+    companyId,
+    onChange,
+    className,
+    label = "Company Logo",
+    description = "brand logo",
+    alt = "Brand Identity"
+}: ImageUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | undefined>();
     const [isDragging, setIsDragging] = useState(false);
@@ -163,16 +173,16 @@ export function ImageUpload({ value, companyId, onChange, className, label = "Co
                         <div className="h-16 w-16 rounded-3xl bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500 ease-out">
                             <IconCloudUpload className="h-8 w-8 text-neutral-400 group-hover:text-primary transition-colors" />
                         </div>
-                        <p className="text-lg font-bold tracking-tight mb-1">Upload masterpiece</p>
+                        <p className="text-lg font-bold tracking-tight mb-1">Upload image</p>
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-[200px]">
-                            Drag & drop or <span className="text-primary font-semibold">browse</span> your brand logo
+                            Drag & drop or <span className="text-primary font-semibold">browse</span> your {description}
                         </p>
                     </div>
                 ) : preview && !uploading && !resolving ? (
                     <div className="relative w-full h-full flex items-center justify-center bg-white dark:bg-neutral-950 p-6 min-h-[220px] transition-all duration-700 animate-in zoom-in-95">
                         <img
                             src={preview}
-                            alt="Brand Identity"
+                            alt={alt}
                             className="max-h-[160px] max-w-full object-contain rounded-xl select-none"
                         />
                         <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center gap-3">

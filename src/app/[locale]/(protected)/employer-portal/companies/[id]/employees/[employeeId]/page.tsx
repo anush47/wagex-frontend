@@ -29,7 +29,8 @@ import { cn } from "@/lib/utils";
 import { EmployeeGeneralTab } from "./components/EmployeeGeneralTab";
 import { EmployeePoliciesTab } from "./components/EmployeePoliciesTab";
 import { EmployeeAccountTab } from "./components/EmployeeAccountTab";
-import { FilesTab } from "../../details/components/FilesTab";
+import { EmployeeFilesTab } from "./components/EmployeeFilesTab";
+import { StorageService } from "@/services/storage.service";
 
 export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: string, employeeId: string }> }) {
     const { id: companyId, employeeId } = use(params);
@@ -99,8 +100,14 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
         fetchData();
     }, [employeeId]);
 
-    const isEmployeeDirty = JSON.stringify(originalEmployee) !== JSON.stringify(employeeForm);
-    const isPolicyDirty = JSON.stringify(originalOverride) !== JSON.stringify(overridePolicy);
+    const canonicalStringify = (obj: any): string => {
+        if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+        if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
+        return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
+    };
+
+    const isEmployeeDirty = canonicalStringify(originalEmployee) !== canonicalStringify(employeeForm);
+    const isPolicyDirty = canonicalStringify(originalOverride) !== canonicalStringify(overridePolicy);
     const isDirty = isEmployeeDirty || isPolicyDirty;
 
     const handleSave = async () => {
@@ -222,9 +229,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-2xl font-black text-neutral-400">
-                            {employeeForm.nameWithInitials?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()}
-                        </div>
+                        <EmployeeAvatar photo={employeeForm.photo} name={employeeForm.nameWithInitials} />
                         <div>
                             <div className="flex items-center gap-3 mb-1">
                                 <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase">{employeeForm.nameWithInitials}</h1>
@@ -312,10 +317,10 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                 </TabsContent>
 
                 <TabsContent value="files" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* We'll handle files tab later - can reuse FilesTab with small tweaks if needed */}
-                    <div className="p-20 text-center text-neutral-400 font-bold uppercase tracking-widest bg-neutral-50 dark:bg-neutral-900 rounded-[3rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800">
-                        Document Management Coming Soon
-                    </div>
+                    <EmployeeFilesTab
+                        formData={employeeForm}
+                        handleChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
+                    />
                 </TabsContent>
             </Tabs>
 
@@ -349,6 +354,31 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     </motion.div>
                 )}
             </AnimatePresence>
+        </div>
+    );
+}
+
+function EmployeeAvatar({ photo, name }: { photo?: string, name: string }) {
+    const [url, setUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (photo) {
+            StorageService.getUrl(photo).then(res => {
+                const data = (res.data as any)?.data || res.data;
+                if (data?.url) setUrl(data.url);
+            });
+        } else {
+            setUrl(null);
+        }
+    }, [photo]);
+
+    return (
+        <div className="h-16 w-16 md:h-20 md:w-20 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-2xl font-black text-neutral-400 overflow-hidden shadow-inner border border-neutral-200 dark:border-neutral-700">
+            {url ? (
+                <img src={url} alt={name} className="h-full w-full object-cover" />
+            ) : (
+                name?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()
+            )}
         </div>
     );
 }

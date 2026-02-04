@@ -37,4 +37,6 @@ export interface Employee {
         active: boolean;
     };
     canSelfEdit?: boolean;
+    photo?: string;
+    files?: any[];
 }

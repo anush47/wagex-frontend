@@ -16,6 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Gender, EmploymentType } from "@/types/policy";
 import { cn } from "@/lib/utils";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface EmployeeGeneralTabProps {
     formData: Employee;
@@ -223,6 +224,27 @@ export function EmployeeGeneralTab({ formData, onChange }: EmployeeGeneralTabPro
                                 : "Employee is currently restricted from system activities."}
                         </p>
                     </div>
+                </Card>
+
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
+                    <CardContent className="p-10 space-y-8">
+                        <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                <IconId className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-2xl font-black tracking-tight uppercase">Identity</h3>
+                        </div>
+
+                        <ImageUpload
+                            label="Profile Photo"
+                            description="profile photo"
+                            alt="Employee Identity"
+                            companyId={formData.companyId}
+                            employeeId={formData.id}
+                            value={formData.photo}
+                            onChange={(key) => onChange('photo', key)}
+                        />
+                    </CardContent>
                 </Card>
 
                 <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 space-y-4">

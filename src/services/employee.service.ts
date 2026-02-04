@@ -15,6 +15,13 @@ export interface EmployeeQuery {
 
 export const EmployeeService = {
     /**
+     * Get current employee profile
+     */
+    async getMe(): Promise<ApiResponse<Employee>> {
+        return backendApiClient.get<Employee>('/employees/me');
+    },
+
+    /**
      * Get employees list
      */
     async getEmployees(query: EmployeeQuery = {}): Promise<ApiResponse<PaginatedResponse<Employee>>> {
