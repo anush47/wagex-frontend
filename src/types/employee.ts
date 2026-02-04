@@ -26,13 +26,14 @@ export interface Employee {
     companyId: string;
     managerId?: string;
     userId?: string;
-    allowLogin?: boolean;
-    createdAt: string;
-    updatedAt: string;
-
     // Optional joined data
     company?: {
         id: string;
         name: string;
+    };
+    user?: {
+        id: string;
+        email: string;
+        active: boolean;
     };
 }

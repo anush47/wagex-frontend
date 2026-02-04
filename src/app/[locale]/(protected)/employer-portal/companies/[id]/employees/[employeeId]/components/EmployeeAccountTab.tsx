@@ -81,7 +81,7 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
             }
             toast.success("User access removed successfully");
             onChange('userId', null);
-            onChange('allowLogin', true); // Reset allowLogin state
+            onChange('active', true); // Reset active state for next provisioning
         } catch (error: any) {
             toast.error(error.message || "An error occurred");
         } finally {
@@ -151,8 +151,8 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                                 </p>
                             </div>
                             <Switch
-                                checked={formData.allowLogin !== false}
-                                onCheckedChange={(c) => onChange('allowLogin', c)}
+                                checked={formData.user?.active !== false}
+                                onCheckedChange={(c) => onChange('active', c)}
                             />
                         </div>
                     )}

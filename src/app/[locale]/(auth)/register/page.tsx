@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { authService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,12 @@ import { Role } from "@/types/user";
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [step, setStep] = useState<"auth" | "profile">("auth");
+    const searchParams = useSearchParams();
+    const currentStep = (searchParams.get("step") as "auth" | "profile") || "auth";
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [checkingSession, setCheckingSession] = useState(true);
 
     const [authData, setAuthData] = useState({
         email: "",
@@ -29,8 +33,28 @@ export default function RegisterPage() {
         fullName: "",
         address: "",
         phone: "",
-        role: Role.EMPLOYER,
     });
+
+    // Check for existing session on mount
+    useEffect(() => {
+        const checkSession = async () => {
+            try {
+                const session = await authService.getSession();
+                if (session) {
+                    // User is already authenticated (signed up via Supabase)
+                    // Redirect to profile step if not already there
+                    if (currentStep !== "profile") {
+                        router.replace("/register?step=profile");
+                    }
+                }
+            } catch (err) {
+                console.error("Session check failed", err);
+            } finally {
+                setCheckingSession(false);
+            }
+        };
+        checkSession();
+    }, [currentStep, router]);
 
     const handleAuthSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,8 +79,8 @@ export default function RegisterPage() {
             }
 
             if (user && session) {
-                // Move to profile step
-                setStep("profile");
+                // Move to profile step via URL
+                router.push("/register?step=profile");
             }
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred");
@@ -78,14 +102,22 @@ export default function RegisterPage() {
                 return;
             }
 
-            // Registration complete, redirect to companies
-            router.push("/companies");
+            // Registration complete, redirect to companies (or employer portal directly if companies logic redirects)
+            router.push("/employer-portal/companies");
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred");
         } finally {
             setLoading(false);
         }
     };
+
+    if (checkingSession) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+                <IconLoader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 p-6">
@@ -99,10 +131,10 @@ export default function RegisterPage() {
                             </div>
                         </div>
                         <h1 className="text-3xl font-black tracking-tight uppercase">
-                            {step === "auth" ? "Create Account" : "Complete Your Profile"}
+                            {currentStep === "auth" ? "Create Account" : "Complete Your Profile"}
                         </h1>
                         <p className="text-neutral-500 font-medium text-sm">
-                            {step === "auth"
+                            {currentStep === "auth"
                                 ? "Get started by creating your account credentials."
                                 : "Tell us a bit more about yourself to complete registration."}
                         </p>
@@ -110,8 +142,8 @@ export default function RegisterPage() {
 
                     {/* Progress Indicator */}
                     <div className="flex items-center gap-2">
-                        <div className={`flex-1 h-2 rounded-full ${step === "auth" ? "bg-primary" : "bg-emerald-500"}`} />
-                        <div className={`flex-1 h-2 rounded-full ${step === "profile" ? "bg-primary" : "bg-neutral-200 dark:bg-neutral-800"}`} />
+                        <div className={`flex-1 h-2 rounded-full ${currentStep === "auth" ? "bg-primary" : "bg-emerald-500"}`} />
+                        <div className={`flex-1 h-2 rounded-full ${currentStep === "profile" ? "bg-primary" : "bg-neutral-200 dark:bg-neutral-800"}`} />
                     </div>
 
                     {/* Error Alert */}
@@ -123,7 +155,7 @@ export default function RegisterPage() {
                     )}
 
                     {/* Step 1: Auth */}
-                    {step === "auth" && (
+                    {currentStep === "auth" && (
                         <form onSubmit={handleAuthSubmit} className="space-y-6">
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
@@ -186,7 +218,7 @@ export default function RegisterPage() {
                     )}
 
                     {/* Step 2: Profile */}
-                    {step === "profile" && (
+                    {currentStep === "profile" && (
                         <form onSubmit={handleProfileSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
@@ -227,23 +259,6 @@ export default function RegisterPage() {
                                         onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
-                                        Role
-                                    </Label>
-                                    <Select
-                                        value={profileData.role}
-                                        onValueChange={(v) => setProfileData({ ...profileData, role: v as Role })}
-                                    >
-                                        <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl">
-                                            <SelectItem value={Role.EMPLOYER}>Employer</SelectItem>
-                                            <SelectItem value={Role.EMPLOYEE}>Employee</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -259,10 +274,17 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="flex gap-4">
+                                {/* Only show Back button if NOT auto-redirected from session? 
+                                    Actually, if they have a session, going back to auth makes no sense.
+                                    So we can keep Back button but if they have session it might redirect them back to profile.
+                                    We can check logic: if session exists, Back should be disabled or hidden.
+                                    But for now, simpler to just allow it, redirect will catch them if they try to submit auth again.
+                                    Or explicit hide:
+                                */}
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    onClick={() => setStep("auth")}
+                                    onClick={() => router.push("/register?step=auth")}
                                     className="flex-1 rounded-2xl h-14 font-bold text-sm uppercase tracking-widest"
                                 >
                                     Back
@@ -289,7 +311,7 @@ export default function RegisterPage() {
                     )}
 
                     {/* Footer */}
-                    {step === "auth" && (
+                    {currentStep === "auth" && (
                         <div className="text-center space-y-3">
                             <p className="text-sm text-neutral-500">
                                 Already have an account?{" "}
