@@ -19,7 +19,8 @@ import {
     IconBuildingSkyscraper,
     IconBriefcase,
     IconUserBolt,
-    IconChevronRight
+    IconChevronRight,
+    IconLoader2
 } from "@tabler/icons-react";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -130,6 +131,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                             <SelectContent className="rounded-xl border-neutral-200 dark:border-neutral-800">
                                 <SelectItem value="ACTIVE">Active Only</SelectItem>
                                 <SelectItem value="INACTIVE">Inactive Only</SelectItem>
+                                <SelectItem value="SUSPENDED">Suspended Only</SelectItem>
                                 <SelectItem value="ALL">All Employees</SelectItem>
                             </SelectContent>
                         </Select>

@@ -51,7 +51,9 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
         e.preventDefault();
         setSubmitting(true);
         try {
-            await EmployeeService.createEmployee(formData);
+            // Remove email and status from the payload as they're not in CreateEmployeeDto
+            const { email, status, ...employeeData } = formData;
+            await EmployeeService.createEmployee(employeeData);
             router.push(`/companies/${companyId}/employees`);
         } catch (error) {
             console.error("Failed to create employee", error);
