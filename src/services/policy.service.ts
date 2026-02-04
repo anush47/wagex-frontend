@@ -53,5 +53,12 @@ export const PoliciesService = {
             employeeId,
             settings
         });
+    },
+
+    /**
+     * Remove employee specific override
+     */
+    async deleteEmployeePolicy(employeeId: string, companyId: string): Promise<ApiResponse<void>> {
+        return backendApiClient.delete<void>(`/policies/override/${employeeId}?companyId=${companyId}`);
     }
 };

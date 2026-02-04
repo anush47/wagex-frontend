@@ -110,7 +110,17 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             const promises = [];
 
             if (isEmployeeDirty && employeeForm) {
-                const { id: _id, createdAt, updatedAt, company, userId, ...payload } = employeeForm as any;
+                // Strip all relation and read-only fields before sending to backend
+                const {
+                    id: _id,
+                    createdAt,
+                    updatedAt,
+                    company,
+                    user,
+                    userId,
+                    ...payload
+                } = employeeForm as any;
+
                 promises.push(EmployeeService.updateEmployee(employeeId, payload));
             }
 
@@ -128,6 +138,51 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             toast.error("Update failed", { id: toastId });
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleResetPolicy = async () => {
+        const toastId = toast.loading("Reverting to company defaults...");
+        try {
+            await PoliciesService.deleteEmployeePolicy(employeeId, companyId);
+            toast.success("Policy reset successfully", { id: toastId });
+            fetchData(true);
+            setOverridePolicy({}); // Clear local overrides
+            setOriginalOverride({});
+        } catch (error) {
+            console.error("Failed to reset policy", error);
+            toast.error("Reset failed", { id: toastId });
+        }
+    };
+
+    const handleResetTab = async (tabKey: string) => {
+        const labels: Record<string, string> = {
+            shifts: "Shifts",
+            workingDays: "Working Days",
+            salaryComponents: "Salary",
+            payrollConfiguration: "Payroll",
+            attendance: "Attendance",
+            leaves: "Leaves"
+        };
+        const label = labels[tabKey] || "Module";
+
+        const toastId = toast.loading(`Resetting ${label} to defaults...`);
+        try {
+            const newOverride = { ...overridePolicy };
+            delete (newOverride as any)[tabKey];
+
+            // Save the updated override object (with the module removed)
+            await PoliciesService.saveEmployeePolicy(companyId, employeeId, newOverride);
+
+            toast.success(`${label} reset to company defaults`, { id: toastId });
+
+            // Refresh local state
+            setOverridePolicy(newOverride);
+            setOriginalOverride(JSON.parse(JSON.stringify(newOverride)));
+            fetchData(true);
+        } catch (error) {
+            console.error(`Failed to reset ${label}`, error);
+            toast.error(`Reset failed`, { id: toastId });
         }
     };
 
@@ -217,7 +272,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     >
                         <IconSettings className="w-4 h-4" />
                         Policy Rules
-                        {policySource?.isOverridden && (
+                        {(policySource?.isOverridden || isPolicyDirty) && (
                             <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
                         )}
                     </TabsTrigger>
@@ -251,6 +306,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                         effective={effectivePolicy}
                         override={overridePolicy}
                         onOverrideChange={setOverridePolicy}
+                        onResetTab={handleResetTab}
                         source={policySource}
                     />
                 </TabsContent>
