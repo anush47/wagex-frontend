@@ -17,6 +17,39 @@ export enum PayrollComponentCategory {
     DEDUCTION = 'DEDUCTION'
 }
 
+export enum EmploymentType {
+    PROBATION = 'PROBATION',
+    CONTRACT = 'CONTRACT',
+    INTERN = 'INTERN',
+    PERMANENT = 'PERMANENT',
+    TEMPORARY = 'TEMPORARY',
+}
+
+export enum Gender {
+    MALE = 'MALE',
+    FEMALE = 'FEMALE',
+}
+
+export enum AccrualFrequency {
+    WEEKLY = 'WEEKLY',
+    MONTHLY = 'MONTHLY',
+    QUARTERLY = 'QUARTERLY',
+    HALF_YEARLY = 'HALF_YEARLY',
+    YEARLY = 'YEARLY',
+    CUSTOM = 'CUSTOM'
+}
+
+export enum EncashmentType {
+    MULTIPLIER_BASED = 'MULTIPLIER_BASED',
+    FIXED_AMOUNT = 'FIXED_AMOUNT'
+}
+
+export enum PolicyGenderTarget {
+    MALE = 'MALE',
+    FEMALE = 'FEMALE',
+    ALL = 'ALL'
+}
+
 export interface Shift {
     id: string;
     name: string;
@@ -99,11 +132,11 @@ export enum LateDeductionType {
 
 export interface PolicySettings {
     shifts?: ShiftsConfig;
-    attendance?: any;
+    attendance?: AttendanceConfig;
     salaryComponents?: SalaryComponentsConfig;
     payrollConfiguration?: PayrollSettingsConfig;
     workingDays?: WorkingDaysConfig;
-    attendance?: AttendanceConfig;
+    leaves?: LeavesConfig;
 }
 
 export enum WorkDayType {
@@ -183,6 +216,46 @@ export interface AttendanceConfig {
     geofencing: GeofencingConfig;
     approvalPolicy: ApprovalPolicyConfig;
     apiKeys: CompanyApiKey[];
+}
+
+export interface LeaveType {
+    id: string;
+    name: string;
+    code: string;
+    applicableGender: PolicyGenderTarget;
+    applicableEmploymentTypes: EmploymentType[];
+    requiresApproval: boolean;
+    approvalRequiredIfConsecutiveMoreThan?: number;
+
+    // Short Leave
+    isShortLeave: boolean;
+    maxDurationMinutes?: number;
+
+    // Accrual
+    baseAmount: number;
+    accrualFrequency: AccrualFrequency;
+    customFrequencyDays?: number;
+
+    // Rules
+    minDelayBetweenRequestsDays?: number;
+    canApplyBackdated?: boolean;
+    maxConsecutiveDays?: number;
+    requireDocuments?: boolean;
+    requireDocumentsIfConsecutiveMoreThan?: number;
+
+    // Carry Over
+    canCarryOver: boolean;
+    maxCarryOverDays?: number;
+
+    // Encashment
+    isEncashable: boolean;
+    encashmentType?: EncashmentType;
+    encashmentMultiplier?: number;
+    fixedAmount?: number;
+}
+
+export interface LeavesConfig {
+    leaveTypes: LeaveType[];
 }
 
 export interface Policy {

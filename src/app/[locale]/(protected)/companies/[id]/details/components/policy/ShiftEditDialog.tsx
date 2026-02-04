@@ -1,3 +1,4 @@
+"use client";
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -6,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Shift } from "@/types/policy";
-import { IconClock } from "@tabler/icons-react";
+import { IconClock, IconCalendarTime, IconSettings, IconAlertCircle, IconSparkles, IconLogout } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 
 interface ShiftEditDialogProps {
     open: boolean;
@@ -48,181 +50,190 @@ export function ShiftEditDialog({ open, onOpenChange, initialData, onSave }: Shi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full max-w-3xl p-0 overflow-hidden max-h-[90vh] h-[90vh] sm:h-auto flex flex-col bg-white dark:bg-neutral-900 border-none shadow-2xl rounded-[2rem]">
-
-                {/* Header - Compact Glassmorphism */}
-                <div className="absolute top-0 left-0 right-0 z-20 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800/50 transition-all">
-                    <DialogHeader className="px-6 py-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <DialogTitle className="text-xl md:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
-                                    {initialData ? "Edit Shift" : "Add New Shift"}
-                                </DialogTitle>
-                                <DialogDescription className="text-sm font-medium text-neutral-500 mt-1">
-                                    Configure working hours & rules.
-                                </DialogDescription>
-                            </div>
+            <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl md:rounded-[2.5rem] p-0 gap-0 border-none shadow-2xl">
+                <DialogHeader className="p-6 md:p-8 pb-4 border-b border-border/40">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
+                            <IconCalendarTime className="h-6 w-6" />
                         </div>
-                    </DialogHeader>
-                </div>
+                        <div>
+                            <DialogTitle className="text-xl md:text-2xl font-bold tracking-tight">
+                                {initialData ? "Shift Configuration" : "New Shift Pattern"}
+                            </DialogTitle>
+                            <DialogDescription className="text-xs font-medium text-muted-foreground">
+                                Define working hours, grace periods, and automated attendance rules.
+                            </DialogDescription>
+                        </div>
+                    </div>
+                </DialogHeader>
 
-                {/* Scrollable Content - Padding Adjusted */}
-                <div className="flex-1 overflow-y-auto pt-24 pb-24 px-6 md:px-8 space-y-6 scroll-smooth">
-
-                    {/* Shift Name */}
-                    <div className="space-y-2 mt-2">
-                        <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Shift Name</Label>
+                <div className="p-6 md:p-8 space-y-8">
+                    {/* Identity Section */}
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Identity</Label>
                         <Input
-                            id="name"
+                            placeholder="e.g. Morning Standard A"
                             value={formData.name}
                             onChange={(e) => handleChange("name", e.target.value)}
-                            placeholder="e.g. Morning Shift A"
-                            className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-5 text-lg font-bold shadow-sm transition-all text-neutral-900 dark:text-white"
+                            className="h-14 bg-muted/40 border-none rounded-2xl px-6 text-lg font-bold shadow-sm focus-visible:ring-blue-500/30"
                         />
                     </div>
 
-                    {/* Time Configuration */}
-                    <div className="space-y-4 p-5 bg-neutral-50 dark:bg-neutral-800/30 rounded-[1.5rem]">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="h-8 w-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                <IconClock className="w-5 h-5" />
-                            </div>
-                            <Label className="text-xs font-black uppercase tracking-wider text-neutral-900 dark:text-white">Working Hours</Label>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="startTime" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">Start Time</Label>
-                                <Input
-                                    id="startTime"
-                                    type="time"
-                                    value={formData.startTime}
-                                    onChange={(e) => handleChange("startTime", e.target.value)}
-                                    className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl text-center font-mono text-lg font-bold shadow-sm"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="endTime" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">End Time</Label>
-                                <Input
-                                    id="endTime"
-                                    type="time"
-                                    value={formData.endTime}
-                                    onChange={(e) => handleChange("endTime", e.target.value)}
-                                    className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl text-center font-mono text-lg font-bold shadow-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Constraints */}
-                    <div className="space-y-4 p-5 bg-neutral-50 dark:bg-neutral-800/30 rounded-[1.5rem]">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="h-8 w-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400">
-                                <IconClock className="w-5 h-5" />
-                            </div>
-                            <Label className="text-xs font-black uppercase tracking-wider text-neutral-900 dark:text-white">Constraints (Optional)</Label>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="minStartTime" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">Earliest Clock-In</Label>
-                                <Input
-                                    id="minStartTime"
-                                    type="time"
-                                    value={formData.minStartTime || ""}
-                                    onChange={(e) => handleChange("minStartTime", e.target.value)}
-                                    className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl text-center font-mono text-lg font-medium shadow-sm text-neutral-600 dark:text-neutral-300"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="maxOutTime" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">Latest Clock-Out</Label>
-                                <Input
-                                    id="maxOutTime"
-                                    type="time"
-                                    value={formData.maxOutTime || ""}
-                                    onChange={(e) => handleChange("maxOutTime", e.target.value)}
-                                    className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl text-center font-mono text-lg font-medium shadow-sm text-neutral-600 dark:text-neutral-300"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Numeric Settings */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="breakTime" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Break (Min)</Label>
-                            <Input
-                                id="breakTime"
-                                type="number"
-                                value={formData.breakTime}
-                                onChange={(e) => handleChange("breakTime", parseInt(e.target.value) || 0)}
-                                className="h-12 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-xl text-center font-bold text-lg shadow-sm"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Grace Periods (Min)</Label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Input
-                                        placeholder="Late"
-                                        type="number"
-                                        value={formData.gracePeriodLate}
-                                        onChange={(e) => handleChange("gracePeriodLate", parseInt(e.target.value) || 0)}
-                                        className="h-12 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-xl text-center font-bold text-lg shadow-sm"
-                                    />
-                                    <span className="text-[9px] text-center block text-neutral-400 font-bold uppercase">Late</span>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Left Column: Timing */}
+                        <div className="space-y-6">
+                            <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-6">
+                                <div className="flex items-center gap-2 text-neutral-500 mb-2">
+                                    <IconClock className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Core Working Hours</span>
                                 </div>
-                                <div className="space-y-1">
-                                    <Input
-                                        placeholder="Early"
-                                        type="number"
-                                        value={formData.gracePeriodEarly}
-                                        onChange={(e) => handleChange("gracePeriodEarly", parseInt(e.target.value) || 0)}
-                                        className="h-12 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-xl text-center font-bold text-lg shadow-sm"
-                                    />
-                                    <span className="text-[9px] text-center block text-neutral-400 font-bold uppercase">Early</span>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-bold text-neutral-600 ml-1">Daily Start</Label>
+                                        <Input
+                                            type="time"
+                                            value={formData.startTime}
+                                            onChange={(e) => handleChange("startTime", e.target.value)}
+                                            className="h-11 bg-background border-none rounded-xl text-center font-mono text-base font-bold shadow-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-bold text-neutral-600 ml-1">Daily End</Label>
+                                        <Input
+                                            type="time"
+                                            value={formData.endTime}
+                                            onChange={(e) => handleChange("endTime", e.target.value)}
+                                            className="h-11 bg-background border-none rounded-xl text-center font-mono text-base font-bold shadow-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-border/40 space-y-4">
+                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Clock-in Constraints</Label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-bold text-neutral-600 ml-1">Earliest In</Label>
+                                            <Input
+                                                type="time"
+                                                value={formData.minStartTime || ""}
+                                                onChange={(e) => handleChange("minStartTime", e.target.value)}
+                                                className="h-10 bg-background/50 border-none rounded-xl text-center font-mono text-sm shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-bold text-neutral-600 ml-1">Latest Out</Label>
+                                            <Input
+                                                type="time"
+                                                value={formData.maxOutTime || ""}
+                                                onChange={(e) => handleChange("maxOutTime", e.target.value)}
+                                                className="h-10 bg-background/50 border-none rounded-xl text-center font-mono text-sm shadow-sm"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Toggles */}
-                    <div className="space-y-3 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/30 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
-                            <div className="space-y-0.5">
-                                <Label className="text-sm font-bold">Smart Clock-In</Label>
-                                <p className="text-[10px] text-neutral-400 max-w-[200px] leading-tight">Count work from Shift Start if early.</p>
+                            <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50">
+                                <div className="flex items-center gap-2 text-neutral-500 mb-4">
+                                    <IconSettings className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Break Management</span>
+                                </div>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        value={formData.breakTime}
+                                        onChange={(e) => handleChange("breakTime", parseInt(e.target.value) || 0)}
+                                        className="h-12 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-16"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400">Minutes</span>
+                                </div>
+                                <p className="text-[10px] text-neutral-400 mt-2 px-1">Unpaid duration deducted from total working hours.</p>
                             </div>
-                            <Switch
-                                checked={formData.useShiftStartAsClockIn}
-                                onCheckedChange={(c) => handleChange("useShiftStartAsClockIn", c)}
-                            />
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/30 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
-                            <div className="space-y-0.5">
-                                <Label className="text-sm font-bold">Auto Clock-Out</Label>
-                                <p className="text-[10px] text-neutral-400 max-w-[200px] leading-tight">Auto end attendance at Latest Out.</p>
+                        {/* Right Column: Rules & Toggles */}
+                        <div className="space-y-6">
+                            <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-5">
+                                <div className="flex items-center gap-2 text-neutral-500 mb-2">
+                                    <IconAlertCircle className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Leniency Rules</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 bg-background rounded-2xl border border-border/30 shadow-sm space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-tight text-amber-600/70">Late Arrival Grace</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={formData.gracePeriodLate}
+                                                onChange={(e) => handleChange("gracePeriodLate", parseInt(e.target.value) || 0)}
+                                                className="h-9 w-full bg-muted/40 border-none rounded-lg font-bold text-sm px-3"
+                                            />
+                                            <span className="text-[10px] font-bold text-neutral-400">Min</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-background rounded-2xl border border-border/30 shadow-sm space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-tight text-emerald-600/70">Early Exit Grace</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={formData.gracePeriodEarly}
+                                                onChange={(e) => handleChange("gracePeriodEarly", parseInt(e.target.value) || 0)}
+                                                className="h-9 w-full bg-muted/40 border-none rounded-lg font-bold text-sm px-3"
+                                            />
+                                            <span className="text-[10px] font-bold text-neutral-400">Min</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <Switch
-                                checked={formData.autoClockOut}
-                                onCheckedChange={(c) => handleChange("autoClockOut", c)}
-                            />
+
+                            <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-4">
+                                <div className="flex items-center gap-2 text-neutral-500 mb-2">
+                                    <IconSparkles className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Automation Engine</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-2xl shadow-sm border border-transparent hover:border-blue-500/20 transition-all group">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-bold block">Smart Clock-In</Label>
+                                            <p className="text-[10px] text-muted-foreground">Adjust early check-ins to shift start time.</p>
+                                        </div>
+                                        <Switch
+                                            checked={formData.useShiftStartAsClockIn}
+                                            onCheckedChange={(c) => handleChange("useShiftStartAsClockIn", c)}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-2xl shadow-sm border border-transparent hover:border-red-500/20 transition-all group">
+                                        <div className="flex items-center gap-3">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-sm font-bold block">Automated Checkout</Label>
+                                                <p className="text-[10px] text-muted-foreground">Force clock-out at the defined end time.</p>
+                                            </div>
+                                        </div>
+                                        <Switch
+                                            checked={formData.autoClockOut}
+                                            onCheckedChange={(c) => handleChange("autoClockOut", c)}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer - Compact Glassmorphism */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-t border-neutral-100 dark:border-neutral-800/50 px-6 py-4">
-                    <DialogFooter className="gap-3 sm:gap-0">
-                        <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl h-12 px-6 text-sm font-bold hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">Cancel</Button>
-                        <Button onClick={handleSave} className="rounded-xl h-12 px-8 bg-primary text-primary-foreground text-sm font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                            {initialData ? "Save Changes" : "Create Shift"}
+                <DialogFooter className="p-6 md:p-8 bg-muted/60 border-t border-border mt-auto">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 w-full justify-end">
+                        <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl px-8 h-12 font-bold text-xs hover:bg-background/50">
+                            Dismiss
                         </Button>
-                    </DialogFooter>
-                </div>
-
+                        <Button onClick={handleSave} className="rounded-xl px-12 h-12 font-bold text-xs shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-primary-foreground">
+                            {initialData ? "Apply Changes" : "Activate Shift"}
+                        </Button>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

@@ -5,12 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { PolicySettings } from "@/types/policy";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { IconClock, IconCalendarStats, IconCoin, IconSettings, IconCalendarTime } from "@tabler/icons-react";
+import { IconClock, IconCalendarStats, IconCoin, IconSettings, IconCalendarTime, IconCalendarStar } from "@tabler/icons-react";
 import { ShiftsSection } from "./policy/ShiftsSection";
 import { PayrollSection } from "./policy/PayrollSection";
 import { PayrollSettingsTab } from "./policy/PayrollSettingsTab";
 import { WorkingDaysTab } from "./policy/WorkingDaysTab";
 import { AttendanceTab } from "./policy/AttendanceTab";
+import { LeavesTab } from "./policy/LeavesTab";
 
 interface PoliciesTabProps {
     settings: PolicySettings;
@@ -45,6 +46,10 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
 
     const updatePayrollConfiguration = (payrollConfiguration: any) => {
         onChange({ ...settings, payrollConfiguration });
+    };
+
+    const updateLeaves = (leaves: any) => {
+        onChange({ ...settings, leaves });
     };
 
     return (
@@ -100,6 +105,14 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                         <IconCalendarStats className="w-4 h-4 mr-2" />
                         Attendance Rules
                     </TabsTrigger>
+
+                    <TabsTrigger
+                        value="leaves"
+                        className="rounded-xl px-4 py-2 text-xs md:text-sm md:px-6 md:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
+                    >
+                        <IconCalendarStar className="w-4 h-4 mr-2" />
+                        Leaves Policy
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="shifts" className="mt-8 animate-in fade-in slide-in-from-left-4 duration-500">
@@ -133,6 +146,12 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     <AttendanceTab
                         value={settings.attendance}
                         onChange={(attendance) => onChange({ ...settings, attendance })}
+                    />
+                </TabsContent>
+                <TabsContent value="leaves" className="mt-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                    <LeavesTab
+                        value={settings.leaves}
+                        onChange={updateLeaves}
                     />
                 </TabsContent>
             </Tabs>

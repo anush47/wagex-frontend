@@ -1,3 +1,4 @@
+"use client";
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PayrollComponent, PayrollComponentCategory, PayrollComponentType } from "@/types/policy";
-import { IconCoin } from "@tabler/icons-react";
+import { IconCoin, IconCalculator, IconScale, IconShieldCheck, IconSettings } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 
 interface PayrollComponentDialogProps {
     open: boolean;
@@ -53,152 +55,166 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
     };
 
     const isAddition = category === PayrollComponentCategory.ADDITION;
-    const accentColor = isAddition ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
-    const accentBg = isAddition ? "bg-green-500/10" : "bg-red-500/10";
+    const accentColor = isAddition ? "text-emerald-600" : "text-rose-600";
+    const accentBg = isAddition ? "bg-emerald-500/10" : "bg-rose-500/10";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full max-w-3xl p-0 overflow-hidden max-h-[90vh] h-[90vh] sm:h-auto flex flex-col bg-white dark:bg-neutral-900 border-none shadow-2xl rounded-[2rem]">
-
-                {/* Header - Compact Glassmorphism */}
-                <div className="absolute top-0 left-0 right-0 z-20 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800/50 transition-all">
-                    <DialogHeader className="px-6 py-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <DialogTitle className="text-xl md:text-2xl font-black tracking-tight text-neutral-900 dark:text-white capitalize">
-                                    {initialData ? "Edit" : "Add"} {isAddition ? "Addition" : "Deduction"}
-                                </DialogTitle>
-                                <DialogDescription className="text-sm font-medium text-neutral-500 mt-1">
-                                    Configure payroll component details.
-                                </DialogDescription>
-                            </div>
+            <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl md:rounded-[2.5rem] p-0 gap-0 border-none shadow-2xl">
+                <DialogHeader className="p-6 md:p-8 pb-4 border-b border-border/40">
+                    <div className="flex items-center gap-4">
+                        <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center shrink-0", accentBg, accentColor)}>
+                            <IconCoin className="h-6 w-6" />
                         </div>
-                    </DialogHeader>
-                </div>
+                        <div>
+                            <DialogTitle className="text-xl md:text-2xl font-bold tracking-tight">
+                                {initialData ? "Component Configuration" : `New ${isAddition ? "Addition" : "Deduction"}`}
+                            </DialogTitle>
+                            <DialogDescription className="text-xs font-medium text-muted-foreground">
+                                Define how this {category.toLowerCase()} is calculated and its statutory status.
+                            </DialogDescription>
+                        </div>
+                    </div>
+                </DialogHeader>
 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto pt-24 pb-24 px-6 md:px-8 space-y-6 scroll-smooth">
-
-                    {/* Name */}
-                    <div className="space-y-2 mt-2">
-                        <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Component Name</Label>
+                <div className="p-6 md:p-8 space-y-8">
+                    {/* Identity Section */}
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">Label</Label>
                         <Input
-                            id="name"
+                            placeholder={isAddition ? "e.g. Performance Bonus" : "e.g. Employee Insurance"}
                             value={formData.name}
                             onChange={(e) => handleChange("name", e.target.value)}
-                            placeholder={isAddition ? "e.g. Travel Allowance, Bonus" : "e.g. Health Insurance, Tax"}
-                            className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-5 text-lg font-bold shadow-sm transition-all text-neutral-900 dark:text-white"
+                            className="h-14 bg-muted/40 border-none rounded-2xl px-6 text-lg font-bold shadow-sm"
                         />
                     </div>
 
-                    {/* Configuration Card */}
-                    <div className="space-y-4 p-5 bg-neutral-50 dark:bg-neutral-800/30 rounded-[1.5rem]">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className={`h-8 w-8 rounded-xl ${accentBg} flex items-center justify-center ${accentColor}`}>
-                                <IconCoin className="w-5 h-5" />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Calculation Engine */}
+                        <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-6">
+                            <div className="flex items-center gap-2 text-neutral-500 mb-2">
+                                <IconCalculator className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Calculation Engine</span>
                             </div>
-                            <Label className="text-xs font-black uppercase tracking-wider text-neutral-900 dark:text-white">Calculation Logic</Label>
-                        </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">Calculation Type</Label>
-                                <Select
-                                    value={formData.type}
-                                    onValueChange={(v) => handleChange("type", v as PayrollComponentType)}
-                                >
-                                    <SelectTrigger className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl font-bold shadow-sm">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value={PayrollComponentType.FLAT_AMOUNT}>Flat Amount</SelectItem>
-                                        <SelectItem value={PayrollComponentType.PERCENTAGE_BASIC}>% of Basic Salary</SelectItem>
-                                        <SelectItem value={PayrollComponentType.PERCENTAGE_GROSS}>% of Gross Salary</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="value" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">
-                                    {formData.type === PayrollComponentType.FLAT_AMOUNT ? "Default Amount" : "Percentage Value (%)"}
-                                </Label>
-                                <Input
-                                    id="value"
-                                    type="number"
-                                    value={formData.value}
-                                    onChange={(e) => handleChange("value", parseFloat(e.target.value) || 0)}
-                                    className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl text-center font-mono text-lg font-bold shadow-sm"
-                                />
-                            </div>
-                        </div>
-
-                        {formData.type !== PayrollComponentType.FLAT_AMOUNT && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-700/50">
+                            <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="minCap" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">
-                                        Minimum Cap (Optional)
-                                    </Label>
-                                    <Input
-                                        id="minCap"
-                                        type="number"
-                                        value={formData.minCap || ''}
-                                        onChange={(e) => handleChange("minCap", e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        placeholder="e.g. 500"
-                                        className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl font-bold shadow-sm"
-                                    />
+                                    <Label className="text-xs font-bold text-neutral-600 ml-1">Computational Basis</Label>
+                                    <Select
+                                        value={formData.type}
+                                        onValueChange={(v) => handleChange("type", v as PayrollComponentType)}
+                                    >
+                                        <SelectTrigger className="h-11 bg-background border-none rounded-xl font-bold px-4 shadow-sm">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl">
+                                            <SelectItem value={PayrollComponentType.FLAT_AMOUNT}>Fixed Amount (Flat)</SelectItem>
+                                            <SelectItem value={PayrollComponentType.PERCENTAGE_BASIC}>% of Basic Salary</SelectItem>
+                                            <SelectItem value={PayrollComponentType.PERCENTAGE_GROSS}>% of Gross Earnings</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
+
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="maxCap" className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">
-                                        Maximum Cap (Optional)
+                                    <Label className="text-xs font-bold text-neutral-600 ml-1">
+                                        {formData.type === PayrollComponentType.FLAT_AMOUNT ? "Base Amount (LKR)" : "Percentage Value (%)"}
                                     </Label>
-                                    <Input
-                                        id="maxCap"
-                                        type="number"
-                                        value={formData.maxCap || ''}
-                                        onChange={(e) => handleChange("maxCap", e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        placeholder="e.g. 10000"
-                                        className="h-12 bg-white dark:bg-neutral-900 border-transparent rounded-xl font-bold shadow-sm"
-                                    />
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            value={formData.value}
+                                            onChange={(e) => handleChange("value", parseFloat(e.target.value) || 0)}
+                                            className="h-11 bg-background border-none rounded-xl font-black px-4 shadow-sm"
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">
+                                            {formData.type === PayrollComponentType.FLAT_AMOUNT ? "LKR" : "%"}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
 
-                    {/* Toggles */}
-                    <div className="space-y-3 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/30 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
-                            <div className="space-y-0.5">
-                                <Label className="text-sm font-bold">Statutory Component</Label>
-                                <p className="text-[10px] text-neutral-400 max-w-[250px] leading-tight">This component is required by law (e.g. EPF, ETF).</p>
-                            </div>
-                            <Switch
-                                checked={formData.isStatutory}
-                                onCheckedChange={(c) => handleChange("isStatutory", c)}
-                            />
+                            {formData.type !== PayrollComponentType.FLAT_AMOUNT && (
+                                <div className="pt-6 border-t border-border/40 space-y-4 animate-in fade-in slide-in-from-top-2">
+                                    <div className="flex items-center gap-2 text-neutral-500">
+                                        <IconScale className="w-3.5 h-3.5" />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Guardrails (Caps)</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">Floor (Min)</Label>
+                                            <Input
+                                                type="number"
+                                                value={formData.minCap || ''}
+                                                onChange={(e) => handleChange("minCap", e.target.value ? parseFloat(e.target.value) : undefined)}
+                                                placeholder="None"
+                                                className="h-10 bg-background/50 border-none rounded-xl font-bold px-4 text-xs"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold text-neutral-400 ml-1 uppercase">Ceiling (Max)</Label>
+                                            <Input
+                                                type="number"
+                                                value={formData.maxCap || ''}
+                                                onChange={(e) => handleChange("maxCap", e.target.value ? parseFloat(e.target.value) : undefined)}
+                                                placeholder="None"
+                                                className="h-10 bg-background/50 border-none rounded-xl font-bold px-4 text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/30 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
-                            <div className="space-y-0.5">
-                                <Label className="text-sm font-bold">Affects Total Earnings</Label>
-                                <p className="text-[10px] text-neutral-400 max-w-[250px] leading-tight">Include this in the total earnings calculation.</p>
+                        {/* Rules & Status */}
+                        <div className="space-y-6">
+                            <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-4">
+                                <div className="flex items-center gap-2 text-neutral-500 mb-2">
+                                    <IconSettings className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Computational Rules</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-2xl shadow-sm border border-transparent">
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-2">
+                                                <IconShieldCheck className="w-4 h-4 text-indigo-500" />
+                                                <Label className="text-sm font-bold block">Statutory Compliance</Label>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground">Required by labor laws (e.g. ETF/EPF).</p>
+                                        </div>
+                                        <Switch
+                                            checked={formData.isStatutory}
+                                            onCheckedChange={(c) => handleChange("isStatutory", c)}
+                                            className="data-[state=active]:bg-indigo-500"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-2xl shadow-sm border border-transparent">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-bold block">Affects Total Earnings</Label>
+                                            <p className="text-[10px] text-muted-foreground">Impacts gross pay calculations.</p>
+                                        </div>
+                                        <Switch
+                                            checked={formData.affectsTotalEarnings}
+                                            onCheckedChange={(c) => handleChange("affectsTotalEarnings", c)}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <Switch
-                                checked={formData.affectsTotalEarnings}
-                                onCheckedChange={(c) => handleChange("affectsTotalEarnings", c)}
-                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Footer - Compact Glassmorphism */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-t border-neutral-100 dark:border-neutral-800/50 px-6 py-4">
-                    <DialogFooter className="gap-3 sm:gap-0">
-                        <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl h-12 px-6 text-sm font-bold hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">Cancel</Button>
-                        <Button onClick={handleSave} className="rounded-xl h-12 px-8 bg-primary text-primary-foreground text-sm font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                            {initialData ? "Save Changes" : "Create Component"}
+                <DialogFooter className="p-6 md:p-8 bg-muted/60 border-t border-border mt-auto">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 w-full justify-end">
+                        <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl px-8 h-12 font-bold text-xs hover:bg-background/50">
+                            Dismiss
                         </Button>
-                    </DialogFooter>
-                </div>
-
+                        <Button onClick={handleSave} className={cn("rounded-xl px-12 h-12 font-bold text-xs shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] text-white", isAddition ? "bg-emerald-600 shadow-emerald-500/20" : "bg-rose-600 shadow-rose-500/20")}>
+                            {initialData ? "Save Config" : `Activate ${isAddition ? "Addition" : "Deduction"}`}
+                        </Button>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
