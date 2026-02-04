@@ -56,6 +56,15 @@ export const EmployeeService = {
     },
 
     /**
+     * Unlink user account
+     */
+    async deprovisionUser(id: string, companyId?: string): Promise<ApiResponse<any>> {
+        const params = new URLSearchParams();
+        if (companyId) params.append('companyId', companyId);
+        return backendApiClient.delete<any>(`/employees/${id}/provision-user?${params.toString()}`);
+    },
+
+    /**
      * Delete employee
      */
     async deleteEmployee(id: string): Promise<ApiResponse<void>> {

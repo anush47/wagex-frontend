@@ -6,10 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { IconMail, IconUserCheck, IconLoader2, IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { IconMail, IconUserCheck, IconLoader2, IconAlertCircle, IconCheck, IconTrash, IconCopy, IconLock } from "@tabler/icons-react";
 import { EmployeeService } from "@/services/employee.service";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
 
 interface EmployeeAccountTabProps {
     formData: Employee;
@@ -20,7 +30,10 @@ interface EmployeeAccountTabProps {
 
 export function EmployeeAccountTab({ formData, onChange, onSave, loading = false }: EmployeeAccountTabProps) {
     const [provisioning, setProvisioning] = useState(false);
+    const [deprovisioning, setDeprovisioning] = useState(false);
     const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
+    const [showCredentials, setShowCredentials] = useState(false);
+    const [showDeprovisionDialog, setShowDeprovisionDialog] = useState(false);
 
     const handleProvision = async () => {
         if (!formData.email) {
@@ -31,7 +44,6 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
         setProvisioning(true);
 
         try {
-            // Force save first to ensure email is updated in backend
             await onSave();
 
             const res = await EmployeeService.provisionUser(formData.id, formData.companyId);
@@ -43,8 +55,8 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
             const data = (res.data as any)?.data || res.data;
             if (data?.password) {
                 setCredentials({ email: formData.email, password: data.password });
+                setShowCredentials(true);
                 toast.success("User account created successfully");
-                // Update local state to show linked
                 onChange('userId', data.userId);
             } else {
                 toast.success("User account linked successfully");
@@ -55,6 +67,26 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
             toast.error(error.message || "An error occurred");
         } finally {
             setProvisioning(false);
+        }
+    };
+
+    const handleDeprovision = async () => {
+        // Renamed from handleDeprovision for clarity inside dialog callback
+        setDeprovisioning(true);
+        try {
+            const res = await EmployeeService.deprovisionUser(formData.id, formData.companyId);
+            if (res.error) {
+                toast.error(res.error.message || "Failed to remove user access");
+                return;
+            }
+            toast.success("User access removed successfully");
+            onChange('userId', null);
+            onChange('allowLogin', true); // Reset allowLogin state
+        } catch (error: any) {
+            toast.error(error.message || "An error occurred");
+        } finally {
+            setDeprovisioning(false);
+            setShowDeprovisionDialog(false);
         }
     };
 
@@ -82,35 +114,46 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                             <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${isLinked ? 'bg-emerald-500 text-white' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400'}`}>
                                 {isLinked ? <IconCheck className="w-6 h-6" /> : <IconAlertCircle className="w-6 h-6" />}
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <h4 className="text-lg font-bold mb-1">{isLinked ? 'Account Active' : 'No User Account'}</h4>
-                                <p className="text-sm text-neutral-500 leading-relaxed max-w-lg">
+                                <p className="text-sm text-neutral-500 leading-relaxed max-w-lg mb-4">
                                     {isLinked
                                         ? "This employee has an active user account linked to the system."
                                         : "This employee does not have a user account yet. Provisioning an account will send login credentials."}
                                 </p>
+
+                                {isLinked && (
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => setShowDeprovisionDialog(true)}
+                                        disabled={deprovisioning || loading}
+                                        className="rounded-xl h-10 px-6 font-bold uppercase tracking-wider text-xs"
+                                    >
+                                        {deprovisioning ? <IconLoader2 className="w-4 h-4 animate-spin mr-2" /> : <IconTrash className="w-4 h-4 mr-2" />}
+                                        Remove Access
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Credential Display */}
-                    {credentials && (
-                        <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 space-y-4">
-                            <div className="flex items-center gap-2 text-indigo-600 font-bold uppercase tracking-widest text-xs">
-                                <IconMail className="w-4 h-4" />
-                                <span>New Credentials Generated</span>
+                    {/* Access Control */}
+                    {isLinked && (
+                        <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/30 rounded-[2rem] border border-neutral-100 dark:border-neutral-800">
+                            <div className="space-y-1">
+                                <Label className="text-sm font-bold flex items-center gap-2">
+                                    <IconLock className="w-4 h-4 text-neutral-500" />
+                                    Portal Access
+                                </Label>
+                                <p className="text-xs text-neutral-500 max-w-[250px]">
+                                    If disabled, this user effectively loses access to this company's portal, but their account remains linked.
+                                </p>
                             </div>
-                            <div className="bg-white dark:bg-black p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30 space-y-2">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-neutral-500 font-bold">Email:</span>
-                                    <span className="font-mono bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 rounded text-neutral-900 dark:text-neutral-100">{credentials.email}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-neutral-500 font-bold">Password:</span>
-                                    <span className="font-mono bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 rounded text-neutral-900 dark:text-neutral-100 select-all">{credentials.password}</span>
-                                </div>
-                            </div>
-                            <p className="text-xs text-indigo-600/80 font-medium">Please copy these credentials immediately. The password will not be shown again.</p>
+                            <Switch
+                                checked={formData.allowLogin !== false}
+                                onCheckedChange={(c) => onChange('allowLogin', c)}
+                            />
                         </div>
                     )}
 
@@ -141,13 +184,74 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                         </div>
                         {isLinked && (
                             <p className="text-xs text-neutral-500 ml-1 font-medium">
-                                Account is active. To change email, the user must update it from their profile settings.
+                                To update email for a linked account, unlink the account first or update via profile settings.
                             </p>
                         )}
                     </div>
 
                 </CardContent>
             </Card>
-        </div>
+
+            <Dialog open={showCredentials} onOpenChange={setShowCredentials}>
+                <DialogContent className="sm:max-w-md rounded-[2rem] p-8">
+                    <DialogHeader>
+                        <div className="mx-auto h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4 text-emerald-600 dark:text-emerald-400">
+                            <IconCheck className="w-6 h-6" />
+                        </div>
+                        <DialogTitle className="text-center text-xl font-black uppercase tracking-tight">Account Created</DialogTitle>
+                        <DialogDescription className="text-center font-medium">
+                            New user credentials have been generated.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {credentials && (
+                        <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-100 dark:border-neutral-800 space-y-4 my-2">
+                            <div className="space-y-1">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Email Address</div>
+                                <div className="font-bold text-lg select-all">{credentials.email}</div>
+                            </div>
+                            <div className="space-y-1">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Temporary Password</div>
+                                <div className="flex items-center justify-between bg-white dark:bg-black p-3 rounded-xl border border-neutral-200 dark:border-neutral-800">
+                                    <code className="font-mono text-lg font-bold select-all tracking-wider">{credentials.password}</code>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
+                                        navigator.clipboard.writeText(credentials.password);
+                                        toast.success("Password copied");
+                                    }}>
+                                        <IconCopy className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter className="sm:justify-center">
+                        <Button
+                            className="w-full h-12 rounded-xl font-bold"
+                            onClick={() => setShowCredentials(false)}
+                        >
+                            Done, I've copied it
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <ConfirmationDialog
+                open={showDeprovisionDialog}
+                onOpenChange={setShowDeprovisionDialog}
+                variant="destructive"
+                title="Remove User Access?"
+                description={
+                    <>
+                        This will <span className="font-bold">permanently delete</span> the user account associated with <span className="font-bold text-neutral-900 dark:text-white">{formData.fullName}</span>. They will no longer be able to log in to the portal.
+                    </>
+                }
+                icon={<IconTrash className="h-8 w-8" />}
+                actionLabel="Yes, Remove Access"
+                cancelLabel="Cancel"
+                loading={deprovisioning}
+                onAction={handleDeprovision}
+            />
+        </div >
     );
 }

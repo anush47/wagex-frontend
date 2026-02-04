@@ -62,8 +62,8 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
         }
     }, [searchParams]);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchData = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const [empRes, policyRes] = await Promise.all([
                 EmployeeService.getEmployee(employeeId),
@@ -122,7 +122,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
 
             await Promise.all(promises);
             toast.success("Profile updated successfully", { id: toastId });
-            fetchData(); // Refresh to get new effective policy
+            fetchData(true); // Refresh to get new effective policy
         } catch (error) {
             console.error("Failed to save", error);
             toast.error("Update failed", { id: toastId });

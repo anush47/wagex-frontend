@@ -26,6 +26,7 @@ export interface Employee {
     companyId: string;
     managerId?: string;
     userId?: string;
+    allowLogin?: boolean;
     createdAt: string;
     updatedAt: string;
 
