@@ -175,7 +175,7 @@ export function ImageUpload({ value, companyId, onChange, className, label = "Co
                             alt="Brand Identity"
                             className="max-h-[160px] max-w-full object-contain rounded-xl select-none"
                         />
-                        <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm flex items-center justify-center gap-3">
+                        <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center gap-3">
                             <Button
                                 type="button"
                                 variant="secondary"

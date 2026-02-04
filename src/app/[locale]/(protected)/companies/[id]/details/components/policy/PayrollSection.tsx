@@ -72,11 +72,11 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                         {isPercentage ? <IconPercentage className="w-6 h-6" /> : <IconCoin className="w-6 h-6" />}
                     </div>
                     <div>
-                        <h4 className="font-bold text-base leading-tight flex items-center gap-2 text-foreground">
+                        <h4 className="font-bold text-sm md:text-base leading-tight flex items-center gap-2 text-foreground">
                             {comp.name}
-                            {comp.isStatutory && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-background border-border">Statutory</Badge>}
+                            {comp.isStatutory && <Badge variant="secondary" className="text-[9px] px-1.5 h-5 bg-background border-border">Statutory</Badge>}
                         </h4>
-                        <p className="text-xs text-muted-foreground font-medium mt-1">
+                        <p className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
                             {comp.type === PayrollComponentType.FLAT_AMOUNT
                                 ? `Fixed Amount`
                                 : comp.type === PayrollComponentType.PERCENTAGE_BASIC
@@ -91,7 +91,7 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                         "text-right mr-2 font-mono tracking-tight",
                         isAddition ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                     )}>
-                        <span className="block text-xl font-black">
+                        <span className="block text-lg md:text-xl font-black">
                             {isAddition ? '+' : '-'}{formattedValue}{isPercentage ? '%' : ''}
                         </span>
                     </div>

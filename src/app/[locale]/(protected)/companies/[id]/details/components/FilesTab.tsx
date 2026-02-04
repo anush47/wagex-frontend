@@ -121,8 +121,8 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                             <IconFile className="h-6 w-6" />
                         </div>
                         <div className="space-y-0.5">
-                            <CardTitle className="text-2xl font-black tracking-tight text-foreground">Active Documents</CardTitle>
-                            <p className="text-sm text-muted-foreground font-medium">{filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found</p>
+                            <CardTitle className="text-xl md:text-2xl font-black tracking-tight text-foreground">Active Documents</CardTitle>
+                            <p className="text-xs md:text-sm text-muted-foreground font-medium">{filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found</p>
                         </div>
                     </div>
 
@@ -188,7 +188,7 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-0.5">
-                                                        <p className="font-bold text-base text-foreground truncate">{file.name}</p>
+                                                        <p className="font-bold text-sm md:text-base text-foreground truncate">{file.name}</p>
                                                         <div className="flex items-center gap-3 mt-1">
                                                             <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
                                                                 <IconCheck className="h-3 w-3" />
@@ -247,8 +247,8 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                             <div className="mx-auto h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center text-muted-foreground/30 mb-6 scale-110">
                                 <IconFile className="h-10 w-10" />
                             </div>
-                            <h3 className="text-xl font-black text-foreground mb-2">No documents found</h3>
-                            <p className="text-sm text-muted-foreground font-medium mb-8 max-w-sm mx-auto">Upload important company documents, licenses, or tax forms.</p>
+                            <h3 className="text-lg md:text-xl font-black text-foreground mb-2">No documents found</h3>
+                            <p className="text-xs md:text-sm text-muted-foreground font-medium mb-8 max-w-sm mx-auto">Upload important company documents, licenses, or tax forms.</p>
                             {!showUpload && (
                                 <Button
                                     onClick={() => setShowUpload(true)}

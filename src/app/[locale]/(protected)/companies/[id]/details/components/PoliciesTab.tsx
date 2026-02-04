@@ -53,8 +53,8 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     <IconSettings className="h-6 w-6" />
                 </div>
                 <div>
-                    <h3 className="text-2xl font-black tracking-tight">Policy Configuration</h3>
-                    <p className="text-sm text-muted-foreground">Manage automation rules for attendance and payroll.</p>
+                    <h3 className="text-xl md:text-2xl font-black tracking-tight">Policy Configuration</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">Manage automation rules for attendance and payroll.</p>
                 </div>
             </div>
 
@@ -62,7 +62,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                 <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start pb-2">
                     <TabsTrigger
                         value="shifts"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
+                        className="rounded-xl px-4 py-2 text-xs md:text-sm md:px-6 md:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconClock className="w-4 h-4 mr-2" />
                         Shifts & Hours
@@ -70,7 +70,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
 
                     <TabsTrigger
                         value="working-days"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
+                        className="rounded-xl px-4 py-2 text-xs md:text-sm md:px-6 md:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconCalendarStats className="w-4 h-4 mr-2" />
                         Working Days
@@ -78,7 +78,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
 
                     <TabsTrigger
                         value="salary-components"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
+                        className="rounded-xl px-4 py-2 text-xs md:text-sm md:px-6 md:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconCoin className="w-4 h-4 mr-2" />
                         Salary Components
@@ -86,7 +86,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
 
                     <TabsTrigger
                         value="payroll-settings"
-                        className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
+                        className="rounded-xl px-4 py-2 text-xs md:text-sm md:px-6 md:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground bg-background border border-border"
                     >
                         <IconCalendarTime className="w-4 h-4 mr-2" />
                         Payroll Settings
@@ -95,7 +95,7 @@ export function PoliciesTab({ settings, onChange }: PoliciesTabProps) {
                     <TabsTrigger
                         value="attendance"
                         disabled
-                        className="rounded-xl px-6 py-3 opacity-50 cursor-not-allowed bg-card border border-border"
+                        className="rounded-xl px-4 py-2 text-xs md:text-sm md:px-6 md:py-3 opacity-50 cursor-not-allowed bg-card border border-border"
                     >
                         <IconCalendarStats className="w-4 h-4 mr-2" />
                         Attendance Rules

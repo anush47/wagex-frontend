@@ -156,7 +156,7 @@ export function ShiftsSection({ value, onChange }: ShiftsSectionProps) {
                                                 <IconClock className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-lg leading-tight">{shift.name}</h4>
+                                                <h4 className="font-bold text-base md:text-lg leading-tight">{shift.name}</h4>
                                                 {isDefault && <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded ml-[-1px]">Default</span>}
                                             </div>
                                         </div>
@@ -175,13 +175,13 @@ export function ShiftsSection({ value, onChange }: ShiftsSectionProps) {
                                         <div className="flex items-center justify-between p-5 bg-muted/50 rounded-3xl">
                                             <div className="text-center flex-1 border-r border-border">
                                                 <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1">Clock In</span>
-                                                <span className="text-2xl font-black font-mono tracking-tighter">
+                                                <span className="text-xl md:text-2xl font-black font-mono tracking-tighter">
                                                     {new Date(`1970-01-01T${shift.startTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
                                             <div className="text-center flex-1">
                                                 <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-1">Clock Out</span>
-                                                <span className="text-2xl font-black font-mono tracking-tighter">
+                                                <span className="text-xl md:text-2xl font-black font-mono tracking-tighter">
                                                     {new Date(`1970-01-01T${shift.endTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>

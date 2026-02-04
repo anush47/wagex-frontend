@@ -234,27 +234,27 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
             {/* Header Removed as per request */}
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">{formData.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{formData.name}</h1>
                 {/* We can put the tabs list here or keep it below */}
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-                <TabsList className="w-full md:w-auto bg-muted p-1.5 rounded-2xl h-auto">
+                <TabsList className="w-full bg-muted p-1 rounded-xl h-auto flex flex-wrap gap-1">
                     <TabsTrigger
                         value="general"
-                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                        className="rounded-lg px-4 py-2 text-sm md:text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex-1 min-w-fit"
                     >
                         General
                     </TabsTrigger>
                     <TabsTrigger
                         value="policies"
-                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                        className="rounded-lg px-4 py-2 text-sm md:text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex-1 min-w-fit"
                     >
                         Policies
                     </TabsTrigger>
                     <TabsTrigger
                         value="files"
-                        className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                        className="rounded-lg px-4 py-2 text-sm md:text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex-1 min-w-fit"
                     >
                         Files ({formData.files?.length || 0})
                     </TabsTrigger>

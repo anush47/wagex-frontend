@@ -35,7 +35,7 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                     <div className="h-12 w-12 rounded-3xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
                                         <IconBuildingSkyscraper className="h-6 w-6" />
                                     </div>
-                                    <h3 className="text-2xl font-black tracking-tight">Company Details</h3>
+                                    <h3 className="text-xl md:text-2xl font-black tracking-tight">Company Details</h3>
                                 </div>
 
                                 <div className="space-y-6">
@@ -45,7 +45,7 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                             id="name"
                                             value={formData.name || ""}
                                             onChange={(e) => handleChange("name", e.target.value)}
-                                            className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-6 text-lg font-medium shadow-inner transition-all duration-300 focus:shadow-primary/5"
+                                            className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner transition-all duration-300 focus:shadow-primary/5"
                                             placeholder="Enter company name"
                                         />
                                     </LabelInputContainer>
@@ -57,7 +57,7 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                                 id="employerNumber"
                                                 value={formData.employerNumber || ""}
                                                 onChange={(e) => handleChange("employerNumber", e.target.value)}
-                                                className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-6 text-lg font-medium shadow-inner"
+                                                className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner"
                                                 placeholder="EMP-XXX"
                                             />
                                         </LabelInputContainer>
@@ -68,14 +68,14 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                                     <Button
                                                         variant={"outline"}
                                                         className={cn(
-                                                            "w-full h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-2xl px-6 text-left font-medium shadow-inner hover:bg-neutral-100 dark:hover:bg-neutral-800 text-lg",
+                                                            "w-full h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-2xl px-4 md:px-6 text-left font-medium shadow-inner hover:bg-neutral-100 dark:hover:bg-neutral-800 text-base md:text-lg",
                                                             !formData.startedDate && "text-muted-foreground"
                                                         )}
                                                     >
                                                         {formData.startedDate ? (
                                                             format(new Date(formData.startedDate), "PPP")
                                                         ) : (
-                                                            <span className="text-base text-neutral-400 font-normal">Pick a date</span>
+                                                            <span className="text-sm md:text-base text-neutral-400 font-normal">Pick a date</span>
                                                         )}
                                                         <IconCalendar className="ml-auto h-5 w-5 opacity-50" />
                                                     </Button>
@@ -105,7 +105,7 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                     <div className="h-12 w-12 rounded-3xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
                                         <IconMapPin className="h-6 w-6" />
                                     </div>
-                                    <h3 className="text-2xl font-black tracking-tight">Location</h3>
+                                    <h3 className="text-xl md:text-2xl font-black tracking-tight">Location</h3>
                                 </div>
 
                                 <LabelInputContainer>
@@ -114,7 +114,7 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                         id="address"
                                         value={formData.address || ""}
                                         onChange={(e) => handleChange("address", e.target.value)}
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-6 text-lg font-medium shadow-inner"
+                                        className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner"
                                         placeholder="123 Business St, City, Country"
                                     />
                                 </LabelInputContainer>
