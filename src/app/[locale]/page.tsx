@@ -7,7 +7,7 @@ export default function Home() {
     return (
         <main className="min-h-screen bg-background py-12 px-4 flex flex-col items-center justify-center">
             <div className="max-w-4xl mx-auto space-y-8 text-center">
-                <h1 className="text-6xl font-bold text-foreground tracking-tight">
+                <h1 className="text-6xl font-black text-foreground tracking-tighter italic">
                     WageX
                 </h1>
                 <p className="text-muted-foreground text-xl max-w-2xl mx-auto">

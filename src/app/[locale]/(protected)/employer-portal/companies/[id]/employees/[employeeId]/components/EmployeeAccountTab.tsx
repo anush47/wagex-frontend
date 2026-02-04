@@ -158,6 +158,23 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
                         </div>
                     )}
 
+                    {/* Self-Edit Control */}
+                    <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/30 rounded-[2rem] border border-neutral-100 dark:border-neutral-800">
+                        <div className="space-y-1">
+                            <Label className="text-sm font-bold flex items-center gap-2">
+                                <IconUserCheck className="w-4 h-4 text-neutral-500" />
+                                Self-Edit Permissions
+                            </Label>
+                            <p className="text-xs text-neutral-500 max-w-[250px]">
+                                If enabled, this employee can edit their own profile details through their portal.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={formData.canSelfEdit !== false}
+                            onCheckedChange={(c) => onChange('canSelfEdit', c)}
+                        />
+                    </div>
+
                     {/* Email Input */}
                     <div className="space-y-4 max-w-xl">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Professional Email</Label>

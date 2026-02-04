@@ -20,11 +20,14 @@ import {
     IconUsers,
     IconArrowLeft
 } from "@tabler/icons-react";
+import { CompanyService } from "@/services/company.service";
+import { Company } from "@/types/company";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations("Common");
     const { user } = useAuthStore();
     const [open, setOpen] = useState(false);
+    const [company, setCompany] = useState<Company | null>(null);
     const pathname = usePathname();
     const params = useParams();
 
@@ -43,21 +46,44 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
     const companyId = params?.id as string;
 
+    React.useEffect(() => {
+        const fetchCompany = async () => {
+            if (isCompanyContext && companyId) {
+                try {
+                    const response = await CompanyService.getCompany(companyId);
+                    // Handle double-wrapped response: response.data (from ApiClient) -> .data (from Backend)
+                    if (response.data) {
+                        const companyData = (response.data as any).data || response.data;
+                        setCompany(companyData);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch company for sidebar", error);
+                }
+            } else {
+                setCompany(null);
+            }
+        };
+
+        fetchCompany();
+    }, [isCompanyContext, companyId]);
+
     const mainLinks = [
         {
             label: t("dashboard"),
-            href: "/employer-portal/dashboard",
+            href: user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard",
             icon: (
                 <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
-        {
-            label: t("companies"),
-            href: "/employer-portal/companies",
-            icon: (
-                <IconBuildingSkyscraper className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-            ),
-        },
+        ...(user?.role === 'EMPLOYER' || user?.role === 'ADMIN' ? [
+            {
+                label: t("companies"),
+                href: "/employer-portal/companies",
+                icon: (
+                    <IconBuildingSkyscraper className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+                ),
+            }
+        ] : []),
         {
             label: t("profile"),
             href: "/profile",
@@ -126,7 +152,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <Sidebar open={open} setOpen={setOpen}>
                 <SidebarBody className="justify-between gap-10">
                     <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-                        {open ? <Logo /> : <LogoIcon />}
+                        <div className="flex flex-col gap-1">
+                            {open ? <Logo /> : <LogoIcon />}
+                            {isCompanyContext && company && open && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="px-2"
+                                >
+                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 truncate">
+                                            {company.name}
+                                        </span>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </div>
                         <div className="mt-8 flex flex-col gap-2">
                             {links.map((link, idx) => (
                                 <SidebarLink key={idx} link={link} />
@@ -169,7 +211,7 @@ export const Logo = () => {
             <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="font-medium text-black dark:text-white whitespace-pre"
+                className="font-black text-black dark:text-white whitespace-pre tracking-tighter italic"
             >
                 WageX
             </motion.span>

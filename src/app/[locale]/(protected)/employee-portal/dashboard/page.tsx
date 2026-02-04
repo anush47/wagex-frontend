@@ -14,7 +14,7 @@ export default function EmployeeDashboard() {
                     <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                         <IconLayoutDashboard className="h-7 w-7" />
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase italic">Employee Portal</h1>
+                    <h1 className="text-4xl font-black tracking-tight italic">Employee Portal</h1>
                 </div>
                 <p className="text-neutral-500 font-medium text-lg max-w-xl leading-relaxed">
                     Welcome back, <span className="text-foreground font-black underline decoration-primary/30 underline-offset-4">{user?.nameWithInitials || user?.fullName || "User"}</span>.

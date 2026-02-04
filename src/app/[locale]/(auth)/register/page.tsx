@@ -149,7 +149,7 @@ export default function RegisterPage() {
                                 <motion.span
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="font-black text-black dark:text-white whitespace-pre tracking-tighter uppercase italic"
+                                    className="font-black text-black dark:text-white whitespace-pre tracking-tighter italic"
                                 >
                                     WageX
                                 </motion.span>

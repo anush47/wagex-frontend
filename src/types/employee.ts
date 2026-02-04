@@ -36,4 +36,5 @@ export interface Employee {
         email: string;
         active: boolean;
     };
+    canSelfEdit?: boolean;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/routing";
 import { useAuthStore } from "@/stores/auth.store";
 import { logger } from "@/lib/utils/logger";
 
@@ -20,11 +20,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
         }
     }, [isAuthenticated, isLoading, router]);
 
+    const pathname = usePathname();
+
     // Strict Access Control for protected routes
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            const path = window.location.pathname;
-            const isRestrictedPage = path.includes('/restricted');
+            const isRestrictedPage = pathname.startsWith('/restricted');
 
             // 1. Check for missing profile
             if (!user) {
@@ -47,8 +48,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
             }
 
             // 4. Role-based portal protection
-            const isEmployerPortal = path.includes('/employer-portal');
-            const isEmployeePortal = path.includes('/employee-portal');
+            const isEmployerPortal = pathname.startsWith('/employer-portal');
+            const isEmployeePortal = pathname.startsWith('/employee-portal');
 
             if (user.role === 'EMPLOYEE' && isEmployerPortal) {
                 logger.warn("Employee attempted to access employer portal, redirecting", { userId: user.id });
@@ -58,7 +59,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 router.replace("/employer-portal/dashboard");
             }
         }
-    }, [user, isAuthenticated, isLoading, router]);
+    }, [user, isAuthenticated, isLoading, router, pathname]);
 
     // BLOCKING: Don't render children until we're sure the state is settled and correct
     if (isLoading) {
@@ -70,6 +71,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
 
     if (!isAuthenticated) return null;
+
+    // Additional Blocking logic
+    if (isAuthenticated) {
+        if (!user) return null;
+
+        const isRestrictedPage = pathname.startsWith('/restricted');
+        const isEmployerPortal = pathname.startsWith('/employer-portal');
+        const isEmployeePortal = pathname.startsWith('/employee-portal');
+
+        if (user.active === false && !isRestrictedPage) return null;
+        if (user.active !== false && isRestrictedPage) return null;
+        if (user.role === 'EMPLOYEE' && isEmployerPortal) return null;
+        if ((user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) return null;
+    }
 
     return <>{children}</>;
 }
