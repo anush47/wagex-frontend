@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LeavesConfig, LeaveType, AccrualFrequency, EmploymentType, Gender } from "@/types/policy";
+import { LeavesConfig, LeaveType, AccrualFrequency, AccrualMethod, EmploymentType, Gender } from "@/types/policy";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IconTrash, IconPlus, IconCalendar, IconCoin, IconEdit, IconCheck, IconCalendarStar, IconSettings } from "@tabler/icons-react";
@@ -25,6 +25,7 @@ const DEFAULT_LEAVE: LeaveType = {
     isShortLeave: false,
     baseAmount: 14,
     accrualFrequency: AccrualFrequency.YEARLY,
+    accrualMethod: AccrualMethod.PRO_RATA,
     canCarryOver: false,
     isEncashable: false,
 };

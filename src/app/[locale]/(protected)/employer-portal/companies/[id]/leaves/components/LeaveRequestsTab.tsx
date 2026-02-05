@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,9 @@ import {
 } from "@/components/ui/select";
 import { IconCheck, IconX, IconRefresh } from "@tabler/icons-react";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
+import type { Employee } from "@/types/employee";
 import { LeavesService } from "@/services/leaves.service";
+import { EmployeeService } from "@/services/employee.service";
 import { format } from "date-fns";
 
 interface LeaveRequestsTabProps {
@@ -31,12 +34,40 @@ interface LeaveRequestsTabProps {
 }
 
 export function LeaveRequestsTab({ requests, loading, onRefresh }: LeaveRequestsTabProps) {
+    const params = useParams();
+    const companyId = params?.id as string;
+
     const [statusFilter, setStatusFilter] = useState<LeaveStatus | "ALL">("ALL");
+    const [employeeFilter, setEmployeeFilter] = useState<string>("ALL");
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const filteredRequests = statusFilter === "ALL"
-        ? requests
-        : requests.filter(r => r.status === statusFilter);
+    // Fetch employees for filter
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            try {
+                const response = await EmployeeService.getEmployees({ companyId });
+                setEmployees(response.data?.data?.data || []);
+            } catch (error) {
+                console.error("Failed to fetch employees:", error);
+            }
+        };
+
+        if (companyId) {
+            fetchEmployees();
+        }
+    }, [companyId]);
+
+    // Apply both filters
+    let filteredRequests = requests;
+
+    if (statusFilter !== "ALL") {
+        filteredRequests = filteredRequests.filter(r => r.status === statusFilter);
+    }
+
+    if (employeeFilter !== "ALL") {
+        filteredRequests = filteredRequests.filter(r => r.employeeId === employeeFilter);
+    }
 
     const handleApprove = async (id: string) => {
         setProcessingId(id);
@@ -98,6 +129,19 @@ export function LeaveRequestsTab({ requests, loading, onRefresh }: LeaveRequests
                 <div className="flex items-center justify-between">
                     <CardTitle>Leave Requests</CardTitle>
                     <div className="flex items-center gap-2">
+                        <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
+                            <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder="Filter by employee" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Employees</SelectItem>
+                                {employees.map((emp) => (
+                                    <SelectItem key={emp.id} value={emp.id}>
+                                        {emp.nameWithInitials} ({emp.employeeNo})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeaveStatus | "ALL")}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Filter by status" />
