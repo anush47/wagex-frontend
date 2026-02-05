@@ -76,7 +76,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
-        ...(user?.role === 'EMPLOYER' || user?.role === 'ADMIN' ? [
+        ...(user?.role === 'EMPLOYER' || user?.role === 'ADMIN' || pathname.includes('/employer-portal') ? [
             {
                 label: t("companies"),
                 href: "/employer-portal/companies",
