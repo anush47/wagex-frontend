@@ -44,6 +44,12 @@ export enum EncashmentType {
     FIXED_AMOUNT = 'FIXED_AMOUNT'
 }
 
+export enum AccrualMethod {
+    PRO_RATA = 'PRO_RATA',           // Calculate based on remaining days in period
+    FULL_UPFRONT = 'FULL_UPFRONT'    // Grant full amount at period start
+}
+
+
 
 export interface Shift {
     id: string;
@@ -230,6 +236,7 @@ export interface LeaveType {
     // Accrual
     baseAmount: number;
     accrualFrequency: AccrualFrequency;
+    accrualMethod: AccrualMethod;
     customFrequencyDays?: number;
 
     // Rules

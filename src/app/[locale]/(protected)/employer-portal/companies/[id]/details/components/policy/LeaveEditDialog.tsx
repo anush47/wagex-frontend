@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LeaveType, AccrualFrequency, EncashmentType, EmploymentType, Gender } from "@/types/policy";
+import { LeaveType, AccrualFrequency, AccrualMethod, EncashmentType, EmploymentType, Gender } from "@/types/policy";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -214,6 +214,35 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         />
                                     </div>
                                 )}
+
+                                <div className="space-y-1.5 pt-2 border-t border-border/20">
+                                    <Label className="text-xs font-bold text-neutral-600">Accrual Method</Label>
+                                    <Select
+                                        value={editingLeave.accrualMethod || AccrualMethod.PRO_RATA}
+                                        onValueChange={v => updateField('accrualMethod', v as AccrualMethod)}
+                                    >
+                                        <SelectTrigger className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl">
+                                            <SelectItem value={AccrualMethod.PRO_RATA}>
+                                                <div className="space-y-0.5">
+                                                    <div className="font-bold">Pro-rata</div>
+                                                    <div className="text-[10px] text-muted-foreground">Calculate based on remaining days</div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value={AccrualMethod.FULL_UPFRONT}>
+                                                <div className="space-y-0.5">
+                                                    <div className="font-bold">Full Upfront</div>
+                                                    <div className="text-[10px] text-muted-foreground">Grant full amount at period start</div>
+                                                </div>
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-[10px] text-muted-foreground ml-1 mt-1">
+                                        Controls how leave is granted to employees who join mid-period
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
