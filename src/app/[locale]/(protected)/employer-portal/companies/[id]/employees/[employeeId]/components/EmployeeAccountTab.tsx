@@ -92,7 +92,7 @@ export function EmployeeAccountTab({ formData, onChange, onSave, loading = false
     const isLinked = !!formData.userId;
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6">
             <Card className="border-none shadow-none bg-transparent">
                 <CardHeader className="px-0 pt-0">
                     <div className="flex items-center gap-4 mb-2">

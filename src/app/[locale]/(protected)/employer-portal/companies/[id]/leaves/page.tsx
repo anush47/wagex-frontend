@@ -37,7 +37,7 @@ export default function LeavesPage() {
     };
 
     return (
-        <div className="flex flex-col gap-6 p-6">
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10">
             {/* Header */}
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

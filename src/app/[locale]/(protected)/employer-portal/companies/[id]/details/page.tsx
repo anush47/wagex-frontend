@@ -179,32 +179,22 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 relative pb-24">
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 relative pb-24">
 
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-3 text-primary mb-1">
                         <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
-                            {logoUrl ? (
-                                <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
-                            ) : (
-                                <IconBuildingSkyscraper className="h-5 w-5" />
-                            )}
+                            <IconBuildingSkyscraper className="h-5 w-5" />
                         </div>
-                        <h1 className="text-sm font-black tracking-widest uppercase text-primary/80">Company Profile</h1>
+                        <h1 className="text-3xl font-black tracking-tight uppercase">
+                            Company Profile
+                        </h1>
                     </div>
-                    <div>
-                        <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground flex items-center gap-4">
-                            {formData.name}
-                        </h2>
-                        <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="font-mono text-xs text-muted-foreground border-neutral-200 dark:border-neutral-800">
-                                EMP: {formData.employerNumber || "N/A"}
-                            </Badge>
-                            <span className="text-neutral-400 text-sm font-medium">Manage settings, policies, and files.</span>
-                        </div>
-                    </div>
+                    <p className="text-neutral-500 font-medium text-sm">
+                        Manage settings, policies, and files.
+                    </p>
                 </div>
             </div>
 

@@ -160,7 +160,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     if (!employeeForm) return <div className="p-20 text-center font-bold">Personnel not found</div>;
 
     return (
-        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 relative pb-24">
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 relative pb-24">
 
             {/* Minimal Breadcrumb */}
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
@@ -169,36 +169,30 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                 <span className="text-neutral-900 dark:text-white">{employeeForm.nameWithInitials}</span>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <EmployeeAvatar photo={employeeForm.photo} name={employeeForm.nameWithInitials} />
-                        <div>
-                            <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase">{employeeForm.nameWithInitials}</h1>
-                                <Badge className={cn(
-                                    "h-6 rounded-lg text-[10px] uppercase tracking-tighter px-2 border-none font-bold",
-                                    employeeForm.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-600" : "bg-neutral-100 text-neutral-400"
-                                )}>
-                                    {employeeForm.status}
-                                </Badge>
-                            </div>
-                            <div className="flex items-center gap-4 text-neutral-500 font-bold text-xs uppercase tracking-widest">
-                                <span className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md">
-                                    ID: <span className="text-primary font-black">{employeeForm.employeeNo}</span>
-                                </span>
-                                <span>{employeeForm.employmentType}</span>
-                            </div>
-                        </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3 text-primary mb-1">
+                        <EmployeeAvatar photo={employeeForm.photo} name={employeeForm.nameWithInitials} className="h-10 w-10 rounded-xl overflow-hidden" />
+                        <h1 className="text-3xl font-black tracking-tight uppercase">
+                            {employeeForm.nameWithInitials}
+                        </h1>
+                        <Badge className={cn(
+                            "h-6 rounded-lg text-[10px] uppercase tracking-tighter px-2 border-none font-bold ml-2",
+                            employeeForm.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-600" : "bg-neutral-100 text-neutral-400"
+                        )}>
+                            {employeeForm.status}
+                        </Badge>
                     </div>
-                </div>
-
-                <div className="flex gap-3">
-                    {/* Secondary Actions Placeholder */}
+                    <div className="flex items-center gap-4 text-neutral-500 font-bold text-xs uppercase tracking-widest">
+                        <span className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md">
+                            Member No: <span className="text-primary font-black">{employeeForm.employeeNo}</span>
+                        </span>
+                        <span>{employeeForm.employmentType}</span>
+                    </div>
                 </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-10">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
                 <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
                     <TabsTrigger
                         value="general"
@@ -233,7 +227,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="general" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <TabsContent value="general" className="mt-0">
                     <EmployeeGeneralTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
@@ -241,7 +235,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     />
                 </TabsContent>
 
-                <TabsContent value="account" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <TabsContent value="account" className="mt-0">
                     <EmployeeAccountTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
@@ -250,7 +244,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     />
                 </TabsContent>
 
-                <TabsContent value="policies" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <TabsContent value="policies" className="mt-0">
                     <EmployeePoliciesTab
                         effective={effectivePolicy}
                         override={overridePolicy}
@@ -260,7 +254,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     />
                 </TabsContent>
 
-                <TabsContent value="files" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <TabsContent value="files" className="mt-0">
                     <EmployeeFilesTab
                         formData={employeeForm}
                         handleChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
@@ -302,7 +296,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     );
 }
 
-function EmployeeAvatar({ photo, name }: { photo?: string, name: string }) {
+function EmployeeAvatar({ photo, name, className }: { photo?: string, name: string, className?: string }) {
     const [url, setUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -316,8 +310,10 @@ function EmployeeAvatar({ photo, name }: { photo?: string, name: string }) {
         }
     }, [photo]);
 
+    const defaultClassName = className || "h-10 w-10 rounded-xl";
+
     return (
-        <div className="h-16 w-16 md:h-20 md:w-20 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-2xl font-black text-neutral-400 overflow-hidden shadow-inner border border-neutral-200 dark:border-neutral-700">
+        <div className={`${defaultClassName} bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-lg font-black text-neutral-400 overflow-hidden shadow-inner border border-neutral-200 dark:border-neutral-700`}>
             {url ? (
                 <img src={url} alt={name} className="h-full w-full object-cover" />
             ) : (
