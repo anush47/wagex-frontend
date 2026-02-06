@@ -45,15 +45,25 @@ export default function LeavesPage() {
     return (
         <div className="flex flex-col gap-6 p-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage leave requests and track employee leave balances
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3 text-primary mb-1">
+                        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <IconCalendarTime className="h-5 w-5" />
+                        </div>
+                        <h1 className="text-3xl font-black tracking-tight uppercase">Leave Management</h1>
+                    </div>
+                    <p className="text-neutral-500 font-medium text-sm">
+                        Manage leave requests and track employee leave balances.
                     </p>
                 </div>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                    <IconPlus className="h-4 w-4 mr-2" />
+
+                <Button
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                    <IconPlus className="mr-2 h-5 w-5" />
                     New Request
                 </Button>
             </div>

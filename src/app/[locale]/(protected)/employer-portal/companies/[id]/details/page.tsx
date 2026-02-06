@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { PoliciesTab } from "./components/PoliciesTab";
 import { PoliciesService } from "@/services/policy.service";
 import { PolicySettings } from "@/types/policy";
+import { StorageService } from "@/services/storage.service";
 
 export default function CompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -217,6 +218,32 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         }
     };
 
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+    // Resolve Logo URL
+    useEffect(() => {
+        const resolveLogo = async () => {
+            if (formData?.logo) {
+                try {
+                    // Check if it's already a URL
+                    if (formData.logo.startsWith('http')) {
+                        setLogoUrl(formData.logo);
+                        return;
+                    }
+                    const response = await StorageService.getUrl(formData.logo);
+                    const url = (response.data as any)?.data?.url || (response.data as any)?.url;
+                    if (url) setLogoUrl(url);
+                } catch (error) {
+                    console.error("Failed to resolve logo", error);
+                }
+            } else {
+                setLogoUrl(null);
+            }
+        };
+        resolveLogo();
+    }, [formData?.logo]);
+
+
     if (loading) {
         return (
             <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-pulse">
@@ -232,10 +259,31 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     return (
         <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 relative pb-24">
 
-            {/* Header Removed as per request */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{formData.name}</h1>
-                {/* We can put the tabs list here or keep it below */}
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3 text-primary mb-1">
+                        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
+                            {logoUrl ? (
+                                <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                            ) : (
+                                <IconBuildingSkyscraper className="h-5 w-5" />
+                            )}
+                        </div>
+                        <h1 className="text-sm font-black tracking-widest uppercase text-primary/80">Company Profile</h1>
+                    </div>
+                    <div>
+                        <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground flex items-center gap-4">
+                            {formData.name}
+                        </h2>
+                        <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline" className="font-mono text-xs text-muted-foreground border-neutral-200 dark:border-neutral-800">
+                                EMP: {formData.employerNumber || "N/A"}
+                            </Badge>
+                            <span className="text-neutral-400 text-sm font-medium">Manage settings, policies, and files.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
