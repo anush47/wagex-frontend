@@ -94,7 +94,16 @@ export function SearchableEmployeeSelect({
                         onValueChange={setSearchQuery}
                     />
                     <CommandList>
-                        {loading && <div className="p-4 text-center text-sm text-muted-foreground">Loading...</div>}
+                        {loading && (
+                            <div className="p-2 space-y-2">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex flex-col gap-2 p-2 px-3 animate-pulse">
+                                        <div className="h-4 w-3/4 bg-neutral-100 dark:bg-neutral-800 rounded" />
+                                        <div className="h-3 w-1/4 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         {!loading && employees.length === 0 && (
                             <CommandEmpty>No employees found.</CommandEmpty>
                         )}

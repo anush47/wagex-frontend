@@ -158,9 +158,34 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                 <DataLoadingOverlay isLoading={loading} />
 
                 {loading && displayEmployees.length === 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="h-64 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+                            <div key={i} className="bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-100 dark:border-neutral-800 p-6 space-y-6 animate-pulse">
+                                <div className="flex gap-4">
+                                    <div className="h-14 w-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800" />
+                                    <div className="space-y-2 flex-1 pt-1">
+                                        <div className="h-5 w-3/4 bg-neutral-100 dark:bg-neutral-800 rounded-lg" />
+                                        <div className="flex gap-2">
+                                            <div className="h-4 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded-md" />
+                                            <div className="h-4 w-12 bg-neutral-50 dark:bg-neutral-800/50 rounded-md" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <div className="h-2 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
+                                        <div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded-lg" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="h-2 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
+                                        <div className="h-4 w-20 bg-neutral-100 dark:bg-neutral-800 rounded-lg" />
+                                    </div>
+                                </div>
+                                <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-between">
+                                    <div className="h-4 w-32 bg-neutral-50 dark:bg-neutral-800/50 rounded-md" />
+                                    <div className="h-8 w-8 rounded-full bg-neutral-50 dark:bg-neutral-800/50" />
+                                </div>
+                            </div>
                         ))}
                     </div>
                 ) : (

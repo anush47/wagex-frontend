@@ -190,8 +190,57 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {loading ? (
-                        <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                    {loading && requests.length === 0 ? (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Employee</TableHead>
+                                        <TableHead>Leave Type</TableHead>
+                                        <TableHead>Dates</TableHead>
+                                        <TableHead>Duration</TableHead>
+                                        <TableHead className="w-[200px]">Reason</TableHead>
+                                        <TableHead>Created</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <TableRow key={i} className="animate-pulse">
+                                            <TableCell>
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" />
+                                                    <div className="h-3 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-2 w-2 rounded-full bg-neutral-100 dark:bg-neutral-800" />
+                                                    <div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded" />
+                                                </div>
+                                            </TableCell>
+                                            <TableCell><div className="h-4 w-28 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
+                                            <TableCell>
+                                                <div className="space-y-1">
+                                                    <div className="h-4 w-12 bg-neutral-100 dark:bg-neutral-800 rounded" />
+                                                    <div className="h-3 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
+                                                </div>
+                                            </TableCell>
+                                            <TableCell><div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
+                                            <TableCell><div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
+                                            <TableCell><div className="h-6 w-20 bg-neutral-100 dark:bg-neutral-800 rounded-lg" /></TableCell>
+                                            <TableCell>
+                                                <div className="flex gap-2">
+                                                    <div className="h-8 w-24 bg-neutral-100 dark:bg-neutral-800 rounded-lg" />
+                                                    <div className="h-8 w-8 bg-neutral-100 dark:bg-neutral-800 rounded-lg" />
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     ) : requests.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">No leave requests found</div>
                     ) : (
