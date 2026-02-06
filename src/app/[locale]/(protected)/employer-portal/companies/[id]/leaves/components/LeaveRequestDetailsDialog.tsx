@@ -17,7 +17,7 @@ import { StorageService } from "@/services/storage.service";
 import { toast } from "sonner";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 
 interface LeaveRequestDetailsDialogProps {
     open: boolean;
@@ -119,10 +119,30 @@ export function LeaveRequestDetailsDialog({
         return labels[type as keyof typeof labels] || type;
     };
 
+    const handleViewDocument = async (doc: any) => {
+        try {
+            // Using as any to bypass strict typing issues with the response structure
+            const res = await StorageService.getUrl(doc.key) as any;
+
+            // Check for url in nested structures (res.data.url or res.data.data.url)
+            const url = res.data?.url || res.data?.data?.url;
+
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                console.error("URL not found in response:", res);
+                toast.error("Could not retrieve document URL");
+            }
+        } catch (e) {
+            console.error("View doc error:", e);
+            toast.error("Failed to open document");
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[95vw] md:max-w-2xl lg:max-w-3xl max-h-[95vh] overflow-y-auto rounded-3xl md:rounded-[2rem] p-0 gap-0 border-none shadow-2xl">
-                <DialogHeader className="p-5 md:p-6 pb-4 border-b border-border/40">
+            <DialogContent className="max-w-[95vw] md:max-w-2xl lg:max-w-3xl flex flex-col max-h-[90vh] p-0 gap-0 border-none shadow-2xl overflow-hidden rounded-3xl md:rounded-[2rem]">
+                <DialogHeader className="p-5 md:p-6 pb-4 border-b border-border/40 shrink-0 bg-background z-10">
                     <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white shrink-0 shadow-lg">
                             <IconCalendarEvent className="h-5 w-5" />
@@ -139,7 +159,7 @@ export function LeaveRequestDetailsDialog({
                     </div>
                 </DialogHeader>
 
-                <div className="p-5 md:p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
                     {/* Employee Information */}
                     <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-4">
                         <div className="flex items-center gap-2 text-neutral-500 mb-2">
@@ -199,31 +219,28 @@ export function LeaveRequestDetailsDialog({
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                                <Label className="text-[10px] text-muted-foreground mb-1 block">Start Date</Label>
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">Dates</Label>
                                 <div className="font-bold text-sm">
                                     {format(new Date(request.startDate), "MMM d, yyyy")}
+                                    {!isSameDay(new Date(request.startDate), new Date(request.endDate)) && (
+                                        <> - {format(new Date(request.endDate), "MMM d, yyyy")}</>
+                                    )}
                                 </div>
                                 {request.type === "SHORT_LEAVE" && (
-                                    <div className="text-xs text-muted-foreground font-mono">
-                                        {format(new Date(request.startDate), "HH:mm")}
+                                    <div className="text-xs text-muted-foreground font-mono mt-1">
+                                        {format(new Date(request.startDate), "h:mm a")} - {format(new Date(request.endDate), "h:mm a")}
                                     </div>
                                 )}
                             </div>
+
+                            {/* For Short Leave, showing 'Days' as 1 is redundant/confusing if we show time. 
+                                Could show duration in hours/minutes if available, or just hide days for short leave */}
                             <div>
-                                <Label className="text-[10px] text-muted-foreground mb-1 block">End Date</Label>
-                                <div className="font-bold text-sm">
-                                    {format(new Date(request.endDate), "MMM d, yyyy")}
-                                </div>
-                                {request.type === "SHORT_LEAVE" && (
-                                    <div className="text-xs text-muted-foreground font-mono">
-                                        {format(new Date(request.endDate), "HH:mm")}
-                                    </div>
-                                )}
-                            </div>
-                            <div>
-                                <Label className="text-[10px] text-muted-foreground mb-1 block">Total Days</Label>
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">
+                                    {request.type === "SHORT_LEAVE" ? "Duration Info" : "Total Days"}
+                                </Label>
                                 <div className="font-black text-2xl text-primary">
-                                    {request.days}
+                                    {request.type === "SHORT_LEAVE" ? "Short" : request.days}
                                 </div>
                             </div>
                         </div>
@@ -236,7 +253,7 @@ export function LeaveRequestDetailsDialog({
                                 <IconFileText className="w-3.5 h-3.5" />
                                 Reason
                             </Label>
-                            <p className="text-sm mt-2 leading-relaxed">{request.reason}</p>
+                            <p className="text-sm mt-2 leading-relaxed whitespace-pre-wrap">{request.reason}</p>
                         </div>
                     )}
 
@@ -262,17 +279,8 @@ export function LeaveRequestDetailsDialog({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-8 w-8 rounded-lg"
-                                            onClick={async () => {
-                                                try {
-                                                    const res = await StorageService.getUrl(doc.key);
-                                                    if (res.data) {
-                                                        window.open(res.data.url, '_blank');
-                                                    }
-                                                } catch (e) {
-                                                    toast.error("Failed to open document");
-                                                }
-                                            }}
+                                            className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                                            onClick={() => handleViewDocument(doc)}
                                         >
                                             <IconEye className="w-4 h-4" />
                                         </Button>
@@ -283,32 +291,36 @@ export function LeaveRequestDetailsDialog({
                     )}
 
                     {/* Approval Information */}
-                    {(request.approvedBy || request.rejectedBy) && (
+                    {(request.approvedBy || request.rejectedBy || request.responseReason) && (
                         <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-3">
                             <div className="flex items-center gap-2 text-neutral-500">
                                 {request.status === "APPROVED" ? (
                                     <IconCheck className="w-4 h-4 text-green-500" />
-                                ) : (
+                                ) : request.status === "REJECTED" ? (
                                     <IconX className="w-4 h-4 text-red-500" />
+                                ) : (
+                                    <IconUser className="w-4 h-4" />
                                 )}
                                 <span className="text-[10px] font-bold uppercase tracking-widest">
-                                    {request.status === "APPROVED" ? "Approval" : "Rejection"} Information
+                                    Processing Information
                                 </span>
                             </div>
                             <div className="space-y-2">
-                                <div>
-                                    <Label className="text-[10px] text-muted-foreground">
-                                        {request.status === "APPROVED" ? "Approved By" : "Rejected By"}
-                                    </Label>
-                                    <div className="font-bold text-sm">
-                                        {request.approvedBy || request.rejectedBy}
+                                {(request.approvedBy || request.rejectedBy) && (
+                                    <div>
+                                        <Label className="text-[10px] text-muted-foreground">
+                                            {request.status === "APPROVED" ? "Approved By" : "Rejected By"}
+                                        </Label>
+                                        <div className="font-bold text-sm">
+                                            {request.approvedBy || request.rejectedBy}
+                                        </div>
                                     </div>
-                                </div>
-                                {(request.approvalRemarks || request.rejectionRemarks) && (
+                                )}
+                                {(request.approvalRemarks || request.rejectionRemarks || request.responseReason) && (
                                     <div>
                                         <Label className="text-[10px] text-muted-foreground">Remarks</Label>
                                         <p className="text-sm mt-1">
-                                            {request.approvalRemarks || request.rejectionRemarks}
+                                            {request.approvalRemarks || request.rejectionRemarks || request.responseReason}
                                         </p>
                                     </div>
                                 )}
@@ -333,46 +345,47 @@ export function LeaveRequestDetailsDialog({
                     </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons - Sticky Footer */}
                 {(request.status === "PENDING" || request.status === "APPROVED") && (
-                    <DialogFooter className="p-6 md:p-8 bg-muted/60 border-t border-border mt-auto">
-                        <div className="flex flex-col-reverse sm:flex-row gap-3 w-full justify-between">
+                    <DialogFooter className="p-4 md:p-8 bg-muted/60 border-t border-border shrink-0 z-10 transition-all">
+                        <div className="flex flex-row gap-3 w-full justify-between items-center">
                             {/* Delete button on the left for pending requests */}
                             {request.status === "PENDING" && onDelete && (
                                 <Button
                                     variant="outline"
-                                    className="rounded-xl px-8 h-11 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                                    className="rounded-xl h-10 w-10 p-0 md:w-auto md:px-8 md:h-11 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200 shrink-0"
                                     onClick={handleDelete}
                                     disabled={processing}
+                                    title="Delete Request"
                                 >
-                                    <IconTrash className="h-4 w-4 mr-2" />
-                                    {processing ? "Deleting..." : "Delete"}
+                                    <IconTrash className="h-4 w-4 md:mr-2" />
+                                    <span className="hidden md:inline">{processing ? "Deleting..." : "Delete"}</span>
                                 </Button>
                             )}
 
                             {/* Approve/Reject/Cancel buttons on the right */}
-                            <div className="flex flex-col-reverse sm:flex-row gap-3">
+                            <div className="flex flex-row gap-2 md:gap-3 ml-auto flex-1 justify-end">
                                 {request.status === "PENDING" && (
                                     <>
                                         {onReject && (
                                             <Button
                                                 variant="outline"
-                                                className="rounded-xl px-8 h-11 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                                                className="rounded-xl px-4 md:px-8 h-10 md:h-11 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                                                 onClick={handleReject}
                                                 disabled={processing}
                                             >
-                                                <IconX className="h-4 w-4 mr-2" />
-                                                Reject
+                                                <IconX className="h-4 w-4 md:mr-2" />
+                                                <span>Reject</span>
                                             </Button>
                                         )}
                                         {onApprove && (
                                             <Button
-                                                className="rounded-xl px-8 h-11 font-bold text-xs shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                className="rounded-xl px-4 md:px-8 h-10 md:h-11 font-bold text-xs shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                 onClick={handleApprove}
                                                 disabled={processing}
                                             >
-                                                <IconCheck className="h-4 w-4 mr-2" />
-                                                {processing ? "Processing..." : "Approve"}
+                                                <IconCheck className="h-4 w-4 md:mr-2" />
+                                                <span>{processing ? "Processing..." : "Approve"}</span>
                                             </Button>
                                         )}
                                     </>
@@ -380,12 +393,12 @@ export function LeaveRequestDetailsDialog({
                                 {request.status === "APPROVED" && onCancel && (
                                     <Button
                                         variant="outline"
-                                        className="rounded-xl px-8 h-11 font-bold text-xs hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200"
+                                        className="rounded-xl px-4 md:px-8 h-10 md:h-11 font-bold text-xs hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200"
                                         onClick={handleCancel}
                                         disabled={processing}
                                     >
-                                        <IconBan className="h-4 w-4 mr-2" />
-                                        {processing ? "Cancelling..." : "Cancel Request"}
+                                        <IconBan className="h-3.5 w-3.5 mr-2" />
+                                        <span>{processing ? "Cancelling..." : "Cancel Request"}</span>
                                     </Button>
                                 )}
                             </div>

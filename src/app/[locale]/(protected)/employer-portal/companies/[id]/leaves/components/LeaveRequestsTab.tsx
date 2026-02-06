@@ -21,14 +21,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconCheck, IconX, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconX, IconRefresh, IconTrash, IconFileText, IconPaperclip } from "@tabler/icons-react";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import type { Employee } from "@/types/employee";
 import { LeavesService } from "@/services/leaves.service";
 import { EmployeeService } from "@/services/employee.service";
 import { LeaveRequestDetailsDialog } from "./LeaveRequestDetailsDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { toast } from "sonner";
 
 interface LeaveRequestsTabProps {
@@ -248,6 +248,8 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                         <TableHead>Type</TableHead>
                                         <TableHead>Dates</TableHead>
                                         <TableHead>Days</TableHead>
+                                        <TableHead className="w-[200px]">Reason</TableHead>
+                                        <TableHead>Created</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Actions</TableHead>
                                     </TableRow>
@@ -272,10 +274,38 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                             <TableCell className="whitespace-nowrap">{request.leaveTypeName || request.leaveTypeId}</TableCell>
                                             <TableCell className="whitespace-nowrap">{getTypeBadge(request.type)}</TableCell>
                                             <TableCell className="whitespace-nowrap">
-                                                {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
-                                                {format(new Date(request.endDate), "MMM d, yyyy")}
+                                                {isSameDay(new Date(request.startDate), new Date(request.endDate)) ? (
+                                                    format(new Date(request.startDate), "MMM d, yyyy")
+                                                ) : (
+                                                    <>
+                                                        {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
+                                                        {format(new Date(request.endDate), "MMM d, yyyy")}
+                                                    </>
+                                                )}
                                             </TableCell>
-                                            <TableCell>{request.days}</TableCell>
+                                            <TableCell>
+                                                {request.type === "SHORT_LEAVE" ? (
+                                                    <span className="text-sm font-mono text-muted-foreground">
+                                                        {format(new Date(request.startDate), "h:mm a")} -{" "}
+                                                        {format(new Date(request.endDate), "h:mm a")}
+                                                    </span>
+                                                ) : (
+                                                    request.days
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="max-w-[200px]">
+                                                <div className="flex items-center gap-2">
+                                                    {request.documents && request.documents.length > 0 && (
+                                                        <IconPaperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                                    )}
+                                                    <span className="truncate block text-sm text-muted-foreground" title={request.reason}>
+                                                        {request.reason || "-"}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                                {format(new Date(request.createdAt), "MMM d, HH:mm")}
+                                            </TableCell>
                                             <TableCell>{getStatusBadge(request.status)}</TableCell>
                                             <TableCell onClick={(e) => e.stopPropagation()}>
                                                 {request.status === "PENDING" && (

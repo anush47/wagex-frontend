@@ -46,6 +46,7 @@ export function CreateLeaveRequestDialog({
 
     // Let's hoist employeeId state to here so we can fetch config
     const [employeeId, setEmployeeId] = useState(defaultEmployeeId || "");
+    const [existingRequests, setExistingRequests] = useState<any[]>([]);
 
     useEffect(() => {
         if (open) {
@@ -58,14 +59,16 @@ export function CreateLeaveRequestDialog({
             if (!employeeId) {
                 setLeaveTypes([]);
                 setBalances([]);
+                setExistingRequests([]);
                 return;
             }
 
             setFetchingConfig(true);
             try {
-                const [policyRes, balancesRes] = await Promise.all([
+                const [policyRes, balancesRes, requestsRes] = await Promise.all([
                     PoliciesService.getEffectivePolicy(employeeId),
-                    LeavesService.getBalances(employeeId)
+                    LeavesService.getBalances(employeeId),
+                    LeavesService.getCompanyRequests(companyId, { employeeId })
                 ]);
 
                 const types = policyRes.data?.data?.effective?.leaves?.leaveTypes || [];
@@ -77,17 +80,24 @@ export function CreateLeaveRequestDialog({
                     : (Array.isArray((balancesData as any)?.data) ? (balancesData as any).data : []);
 
                 setBalances(balancesArray);
+
+                const requests = Array.isArray((requestsRes as any).data)
+                    ? (requestsRes as any).data
+                    : ((requestsRes as any).data?.data || []);
+                setExistingRequests(requests);
+
             } catch (error) {
                 console.error("Failed to fetch config:", error);
                 setLeaveTypes([]);
                 setBalances([]);
+                setExistingRequests([]);
             } finally {
                 setFetchingConfig(false);
             }
         };
 
         fetchConfig();
-    }, [employeeId]);
+    }, [employeeId, companyId]);
 
     const handleFormSubmit = async (formData: any, documents: CompanyFile[]) => {
         const selectedLeaveType = leaveTypes.find(lt => lt.id === formData.leaveTypeId);
@@ -96,7 +106,9 @@ export function CreateLeaveRequestDialog({
             formData,
             selectedLeaveType,
             documents,
-            creatorRole
+            creatorRole,
+            balances,
+            existingRequests
         });
 
         if (validationError) {
