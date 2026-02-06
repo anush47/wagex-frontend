@@ -46,7 +46,9 @@ export default function LeavesPage() {
                         <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
                             <IconCalendarTime className="h-5 w-5" />
                         </div>
-                        <h1 className="text-3xl font-black tracking-tight uppercase">Leave Management</h1>
+                        <h1 className="text-3xl font-black tracking-tight uppercase">
+                            Leave Management
+                        </h1>
                     </div>
                     <p className="text-neutral-500 font-medium text-sm">
                         Manage leave requests and track employee leave balances.

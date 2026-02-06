@@ -16,9 +16,10 @@ interface FileUploadProps {
     employeeId?: string;
     folder?: string;
     className?: string;
+    uploadedBy?: string; // User ID of the person uploading
 }
 
-export function FileUpload({ onUpload, companyId, employeeId, folder = "general", className }: FileUploadProps) {
+export function FileUpload({ onUpload, companyId, employeeId, folder = "general", className, uploadedBy }: FileUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -82,7 +83,9 @@ export function FileUpload({ onUpload, companyId, employeeId, folder = "general"
                 key: uploadData.key,
                 name: nameToUse,
                 url: uploadData.key, // We store the key, components will resolve it to a signed URL
-                size: formatSize(uploadData.size || fileToUpload.size)
+                size: formatSize(uploadData.size || fileToUpload.size),
+                uploadedAt: new Date().toISOString(), // Add timestamp for display
+                uploadedBy: uploadedBy || undefined // Add user ID who uploaded
             };
 
             onUpload(newFile);

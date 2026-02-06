@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { useCompany, useCompanyMutations } from "@/hooks/use-companies";
 import { useEffectivePolicy, usePolicyMutations, useCompanyPolicy } from "@/hooks/use-policies";
 import { PolicySettings } from "@/types/policy";
-import { StorageService } from "@/services/storage.service";
+import { useStorageUrl } from "@/hooks/use-storage";
 
 export default function CompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -140,30 +140,8 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         }
     };
 
-    const [logoUrl, setLogoUrl] = useState<string | null>(null);
-
-    // Resolve Logo URL
-    useEffect(() => {
-        const resolveLogo = async () => {
-            if (formData?.logo) {
-                try {
-                    // Check if it's already a URL
-                    if (formData.logo.startsWith('http')) {
-                        setLogoUrl(formData.logo);
-                        return;
-                    }
-                    const response = await StorageService.getUrl(formData.logo);
-                    const url = (response.data as any)?.data?.url || (response.data as any)?.url;
-                    if (url) setLogoUrl(url);
-                } catch (error) {
-                    console.error("Failed to resolve logo", error);
-                }
-            } else {
-                setLogoUrl(null);
-            }
-        };
-        resolveLogo();
-    }, [formData?.logo]);
+    // Resolve Logo URL using the storage hook
+    const { data: logoUrl } = useStorageUrl(formData?.logo || null);
 
 
     if (loading) {

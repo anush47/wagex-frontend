@@ -1,3 +1,4 @@
+import { CompanyFile } from "./company";
 import { EmploymentType, Gender } from "./policy";
 
 export enum EmployeeStatus {
@@ -39,7 +40,7 @@ export interface Employee {
     };
     canSelfEdit?: boolean;
     photo?: string;
-    files?: any[];
+    files?: CompanyFile[];
     createdAt?: string;
     updatedAt?: string;
 }

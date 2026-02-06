@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthStore } from "@/stores/auth.store";
 import { Company, CompanyFile } from "@/types/company";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconFile, IconX, IconEye, IconFileText, IconCheck, IconPencil, IconCheck as IconTick, IconPlus, IconCloudUpload, IconLoader2, IconSearch } from "@tabler/icons-react";
@@ -11,6 +12,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FilesTabProps {
     formData: Company;
@@ -60,17 +62,47 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
         toast.success("File renamed successfully");
     };
 
+    const queryClient = useQueryClient();
+
     const handleView = async (file: CompanyFile) => {
         if (viewingKeys.has(file.key)) return;
 
         setViewingKeys(prev => new Set(prev).add(file.key));
         try {
-            const response = await StorageService.getUrl(file.key);
-            const actualData = (response.data as any)?.data || response.data;
+            // Use the query client to fetch and cache the URL
+            // Show loading state
+            const loadingToast = toast.loading("Preparing document...");
 
-            if (actualData?.url) {
+            let url;
+            try {
+                const result = await queryClient.fetchQuery({
+                    queryKey: ['storage', 'url', file.key],
+                    queryFn: async () => {
+                        const response = await StorageService.getUrl(file.key);
+
+                        if (response.error) {
+                            throw new Error(response.error.message || 'Failed to get storage URL');
+                        }
+
+                        // The API response structure is deterministic: { statusCode, message, data: { url }, timestamp, path }
+                        // So the URL is always at response.data.data.url
+                        return (response.data as any).data.url as string;
+                    },
+                });
+
+                url = result;
+            } catch (error: any) {
+                console.error('Error fetching URL:', error);
+                toast.error(`Could not retrieve document link: ${error.message}`);
+                toast.dismiss(loadingToast); // Dismiss the loading toast
+                return; // Exit early if there's an error
+            }
+
+            toast.dismiss(loadingToast); // Dismiss the loading toast
+
+            if (url) {
                 // Open the signed URL in a new tab
-                window.open(actualData.url, '_blank');
+                window.open(url, '_blank');
             } else {
                 toast.error("Could not retrieve document link");
             }
@@ -106,7 +138,7 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                 <IconX className="h-6 w-6 text-neutral-400" />
                             </Button>
                             <CardContent className="p-10">
-                                <FileUpload onUpload={handleUpload} companyId={formData.id} />
+                                <FileUpload onUpload={handleUpload} companyId={formData.id} uploadedBy={useAuthStore.getState().user?.id} />
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -189,14 +221,20 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                                                 ) : (
                                                     <div className="space-y-0.5">
                                                         <p className="font-bold text-sm md:text-base text-foreground truncate">{file.name}</p>
-                                                        <div className="flex items-center gap-3 mt-1">
-                                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
-                                                                <IconCheck className="h-3 w-3" />
-                                                                Ready
-                                                            </span>
+                                                        <div className="flex flex-wrap gap-2 mt-1">
                                                             {file.size && (
                                                                 <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                                                                     {file.size}
+                                                                </span>
+                                                            )}
+                                                            {file.uploadedAt && (
+                                                                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                                                    {new Date(file.uploadedAt).toLocaleDateString()}
+                                                                </span>
+                                                            )}
+                                                            {file.uploadedBy && (
+                                                                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                                                    By: {file.uploadedBy.substring(0, 8)}...
                                                                 </span>
                                                             )}
                                                         </div>

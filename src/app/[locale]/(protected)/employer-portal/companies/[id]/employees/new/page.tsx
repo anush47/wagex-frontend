@@ -52,6 +52,15 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
         try {
             // Remove status from the payload as it's not in CreateEmployeeDto
             const { status, ...employeeData } = formData;
+
+            // Capitalize names
+            if (employeeData.nameWithInitials) {
+                employeeData.nameWithInitials = employeeData.nameWithInitials.toUpperCase();
+            }
+            if (employeeData.fullName) {
+                employeeData.fullName = employeeData.fullName.toUpperCase();
+            }
+
             await EmployeeService.createEmployee(employeeData);
             router.push(`/employer-portal/companies/${companyId}/employees`);
         } catch (error) {

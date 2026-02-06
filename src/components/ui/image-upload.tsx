@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StorageService } from "@/services/storage.service";
 import { toast } from "sonner";
+import { useStorageUrl } from "@/hooks/use-storage";
 
 interface ImageUploadProps {
     value?: string;
@@ -30,40 +31,29 @@ export function ImageUpload({
     const [preview, setPreview] = useState<string | undefined>();
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [resolving, setResolving] = useState(false);
 
-    // Resolve the key to a signed URL when value changes
+    // Use the storage hook to resolve the key to a signed URL
+    const { data: resolvedUrl, isLoading } = useStorageUrl(
+        value && !value.startsWith('http') && !value.startsWith('blob:') ? value : null
+    );
+
+    // Determine if we're currently resolving the URL
+    const resolving = isLoading;
+
+    // Update preview when resolved URL changes or when value is a direct URL
+    // But only update if we're not currently uploading
     useEffect(() => {
-        const resolveUrl = async () => {
-            if (!value) {
-                setPreview(undefined);
-                return;
-            }
+        if (uploading) {
+            // Don't update preview while uploading to preserve the local preview
+            return;
+        }
 
-            // If it's already a full URL or a blob, just use it
-            if (value.startsWith('http') || value.startsWith('blob:')) {
-                setPreview(value);
-                return;
-            }
-
-            // Otherwise, treat it as a key and fetch a signed URL
-            setResolving(true);
-            try {
-                const response = await StorageService.getUrl(value);
-                const actualData = (response.data as any)?.data || response.data;
-
-                if (actualData?.url) {
-                    setPreview(actualData.url);
-                }
-            } catch (error) {
-                console.error("Failed to resolve image URL", error);
-            } finally {
-                setResolving(false);
-            }
-        };
-
-        resolveUrl();
-    }, [value]);
+        if (value && (value.startsWith('http') || value.startsWith('blob:'))) {
+            setPreview(value);
+        } else {
+            setPreview(resolvedUrl || undefined);
+        }
+    }, [value, resolvedUrl, uploading]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
         let file: File | undefined;

@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { StorageService } from "@/services/storage.service";
 import { CompanyService } from "@/services/company.service";
 import { EmployeeService } from "@/services/employee.service";
 import { Employee } from "@/types/employee";
@@ -34,6 +33,7 @@ import { EmployeeFilesTab } from "./components/EmployeeFilesTab";
 import { useEmployee, useEmployeeMutations, useEmployees } from "@/hooks/use-employees";
 import { useEffectivePolicy, usePolicyMutations, useCompanyPolicy } from "@/hooks/use-policies";
 import { useDepartments } from "@/hooks/use-departments";
+import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 
 export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: string, employeeId: string }> }) {
     const { id: companyId, employeeId } = use(params);
@@ -102,6 +102,15 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     const handleSave = async () => {
         if (isEmployeeDirty && employeeForm) {
             const { id: _id, createdAt, updatedAt, company, user, userId, ...payload } = employeeForm as any;
+
+            // Capitalize names
+            if (payload.nameWithInitials) {
+                payload.nameWithInitials = payload.nameWithInitials.toUpperCase();
+            }
+            if (payload.fullName) {
+                payload.fullName = payload.fullName.toUpperCase();
+            }
+
             await updateEmployee.mutateAsync({ id: employeeId, data: payload });
         }
 
@@ -296,29 +305,3 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     );
 }
 
-function EmployeeAvatar({ photo, name, className }: { photo?: string, name: string, className?: string }) {
-    const [url, setUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (photo) {
-            StorageService.getUrl(photo).then(res => {
-                const data = (res.data as any)?.data || res.data;
-                if (data?.url) setUrl(data.url);
-            });
-        } else {
-            setUrl(null);
-        }
-    }, [photo]);
-
-    const defaultClassName = className || "h-10 w-10 rounded-xl";
-
-    return (
-        <div className={`${defaultClassName} bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-lg font-black text-neutral-400 overflow-hidden shadow-inner border border-neutral-200 dark:border-neutral-700`}>
-            {url ? (
-                <img src={url} alt={name} className="h-full w-full object-cover" />
-            ) : (
-                name?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()
-            )}
-        </div>
-    );
-}

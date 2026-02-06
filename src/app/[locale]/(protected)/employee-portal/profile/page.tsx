@@ -18,7 +18,7 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { StorageService } from "@/services/storage.service";
+import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import { EmployeeGeneralTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeGeneralTab";
 import { EmployeeFilesTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeFilesTab";
 import { useMe, useEmployeeMutations } from "@/hooks/use-employees";
@@ -114,7 +114,11 @@ export default function EmployeeProfilePage() {
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-neutral-900 p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
                 <div className="flex items-center gap-6">
-                    <EmployeeAvatar photo={employeeForm.photo} name={employeeForm.nameWithInitials} />
+                    <EmployeeAvatar
+                        photo={employeeForm.photo}
+                        name={employeeForm.nameWithInitials}
+                        className="h-20 w-20 md:h-24 md:w-24 rounded-[2rem] text-3xl"
+                    />
                     <div>
                         <div className="flex items-center gap-3 mb-1">
                             <h1 className="text-3xl font-black tracking-tighter uppercase">{employeeForm.nameWithInitials}</h1>
@@ -219,27 +223,3 @@ export default function EmployeeProfilePage() {
     );
 }
 
-function EmployeeAvatar({ photo, name }: { photo?: string, name: string }) {
-    const [url, setUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (photo) {
-            StorageService.getUrl(photo).then(res => {
-                const data = (res.data as any)?.data || res.data;
-                if (data?.url) setUrl(data.url);
-            });
-        } else {
-            setUrl(null);
-        }
-    }, [photo]);
-
-    return (
-        <div className="h-20 w-20 md:h-24 md:w-24 rounded-[2rem] bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center text-3xl font-black text-neutral-300 overflow-hidden shadow-inner border border-neutral-100 dark:border-neutral-800">
-            {url ? (
-                <img src={url} alt={name} className="h-full w-full object-cover px-1 py-1 rounded-[2rem]" />
-            ) : (
-                name?.split(' ').map(n => n?.[0]).join('').slice(0, 2).toUpperCase()
-            )}
-        </div>
-    );
-}

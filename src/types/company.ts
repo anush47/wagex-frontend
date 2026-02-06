@@ -3,6 +3,8 @@ export interface CompanyFile {
     name: string;
     url: string;
     size?: string;
+    uploadedAt?: string;
+    uploadedBy?: string;
 }
 
 export interface Company {

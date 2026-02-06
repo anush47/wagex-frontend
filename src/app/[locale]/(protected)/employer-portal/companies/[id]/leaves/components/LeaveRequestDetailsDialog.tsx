@@ -17,8 +17,10 @@ import { StorageService } from "@/services/storage.service";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
+import { useQueryClient } from "@tanstack/react-query";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format, isSameDay } from "date-fns";
+import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 
 interface LeaveRequestDetailsDialogProps {
     open: boolean;
@@ -44,6 +46,7 @@ export function LeaveRequestDetailsDialog({
     const [processing, setProcessing] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [responseReason, setResponseReason] = useState("");
+    const queryClient = useQueryClient();
 
     // Reset response reason when dialog opens with a new request
     React.useEffect(() => {
@@ -134,18 +137,43 @@ export function LeaveRequestDetailsDialog({
         return labels[type as keyof typeof labels] || type;
     };
 
+
     const handleViewDocument = async (doc: any) => {
         try {
-            // Using as any to bypass strict typing issues with the response structure
-            const res = await StorageService.getUrl(doc.key) as any;
+            // Show loading state
+            const loadingToast = toast.loading("Preparing document...");
 
-            // Check for url in nested structures (res.data.url or res.data.data.url)
-            const url = res.data?.url || res.data?.data?.url;
+            // Use the query client to fetch and cache the URL
+            let url;
+            try {
+                const result = await queryClient.fetchQuery({
+                    queryKey: ['storage', 'url', doc.key],
+                    queryFn: async () => {
+                        const response = await StorageService.getUrl(doc.key);
+
+                        if (response.error) {
+                            throw new Error(response.error.message || 'Failed to get storage URL');
+                        }
+
+                        // The API response structure is deterministic: { statusCode, message, data: { url }, timestamp, path }
+                        // So the URL is always at response.data.data.url
+                        return (response.data as any).data.url as string;
+                    },
+                });
+
+                url = result;
+            } catch (error: any) {
+                console.error('Error fetching URL:', error);
+                toast.error(`Could not retrieve document URL: ${error.message}`);
+                toast.dismiss(loadingToast); // Dismiss the loading toast
+                return; // Exit early if there's an error
+            }
+
+            toast.dismiss(loadingToast); // Dismiss the loading toast
 
             if (url) {
                 window.open(url, '_blank');
             } else {
-                console.error("URL not found in response:", res);
                 toast.error("Could not retrieve document URL");
             }
         } catch (e) {
@@ -209,17 +237,11 @@ export function LeaveRequestDetailsDialog({
                             <span className="text-[10px] font-bold uppercase tracking-widest">Employee Information</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            {request.employee?.photo ? (
-                                <img
-                                    src={request.employee.photo}
-                                    alt={request.employee.nameWithInitials}
-                                    className="h-12 w-12 rounded-full border-2 border-border"
-                                />
-                            ) : (
-                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-                                    {request.employee?.nameWithInitials?.[0] || "?"}
-                                </div>
-                            )}
+                            <EmployeeAvatar
+                                photo={request.employee?.photo}
+                                name={request.employee?.nameWithInitials}
+                                className="h-12 w-12 rounded-2xl text-lg shadow-lg"
+                            />
                             <div>
                                 <div className="font-bold text-base">{request.employee?.nameWithInitials}</div>
                                 {request.employee?.employeeNo && (
