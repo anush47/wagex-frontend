@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLeaveBalances } from "@/hooks/use-leaves";
+import { useCompanyPolicy } from "@/hooks/use-policies";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { LeaveBalance } from "@/types/leave";
 
@@ -19,6 +20,10 @@ export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
         data: balances = [],
         isLoading: loading
     } = useLeaveBalances(selectedEmployeeId);
+
+    // Fetch policy for colors
+    const { data: policyData } = useCompanyPolicy(companyId);
+    const leaveTypes = policyData?.settings?.leaves?.leaveTypes || [];
 
     return (
         <div className="space-y-6">
@@ -55,12 +60,22 @@ export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
                             ? (balance.available / balance.entitled) * 100
                             : 0;
 
+                        const leaveType = leaveTypes.find((lt: any) => lt.id === balance.leaveTypeId);
+                        const color = leaveType?.color || '#3b82f6';
+
                         return (
-                            <Card key={balance.leaveTypeId} className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+                            <Card
+                                key={balance.leaveTypeId}
+                                className="border-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500"
+                                style={{ borderColor: `${color}40` }} // 40 is hex opacity ~25%
+                            >
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-xl font-black flex items-center justify-between">
-                                        <span className="tracking-tight">{balance.leaveTypeName}</span>
-                                        <span className="text-xs font-mono px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-400 group-hover:text-primary transition-colors">
+                                        <span className="tracking-tight" style={{ color: color }}>{balance.leaveTypeName}</span>
+                                        <span
+                                            className="text-xs font-mono px-2 py-1 rounded-lg transition-colors"
+                                            style={{ backgroundColor: `${color}15`, color: color }}
+                                        >
                                             {balance.leaveTypeCode}
                                         </span>
                                     </CardTitle>
@@ -69,11 +84,17 @@ export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">Available</span>
-                                            <span className="font-black text-2xl tracking-tighter text-primary">
+                                            <span className="font-black text-2xl tracking-tighter" style={{ color: color }}>
                                                 {balance.available.toFixed(1)} <span className="text-xs font-bold text-neutral-300">/ {balance.entitled.toFixed(1)}</span>
                                             </span>
                                         </div>
-                                        <Progress value={percentage} className="h-3 bg-neutral-100 dark:bg-neutral-800" />
+                                        <Progress
+                                            value={percentage}
+                                            className="h-3 bg-neutral-100 dark:bg-neutral-800"
+                                            indicatorClassName="transition-all duration-500"
+                                            style={{ backgroundColor: `${color}15` }}
+                                            indicatorStyle={{ backgroundColor: color }}
+                                        />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-6 pt-2">
