@@ -26,7 +26,7 @@ import { LeavesService } from "@/services/leaves.service";
 import { EmployeeService } from "@/services/employee.service";
 import { PoliciesService } from "@/services/policies.service";
 import type { Employee } from "@/types/employee";
-import type { LeaveRequestType } from "@/types/leave";
+import type { LeaveRequestType, LeaveBalance } from "@/types/leave";
 import { toast } from "sonner";
 
 interface CreateLeaveRequestDialogProps {
@@ -44,7 +44,9 @@ export function CreateLeaveRequestDialog({
 }: CreateLeaveRequestDialogProps) {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
+    const [balances, setBalances] = useState<LeaveBalance[]>([]);
     const [loading, setLoading] = useState(false);
+    const [fetchingConfig, setFetchingConfig] = useState(false);
 
     const [formData, setFormData] = useState({
         employeeId: "",
@@ -72,25 +74,43 @@ export function CreateLeaveRequestDialog({
     }, [open, companyId]);
 
     useEffect(() => {
-        const fetchLeaveTypes = async () => {
+        const fetchConfig = async () => {
             if (!formData.employeeId) {
                 setLeaveTypes([]);
+                setBalances([]);
                 return;
             }
 
+            setFetchingConfig(true);
             try {
-                const response = await PoliciesService.getEffectivePolicy(formData.employeeId);
-                // Extract from response.data.data.effective.leaves.leaveTypes
-                const types = response.data?.data?.effective?.leaves?.leaveTypes || [];
-                console.log("Fetched leave types:", types);
+                // Fetch policy (leave types) and balances in parallel
+                const [policyRes, balancesRes] = await Promise.all([
+                    PoliciesService.getEffectivePolicy(formData.employeeId),
+                    LeavesService.getBalances(formData.employeeId)
+                ]);
+
+                // Set leave types
+                const types = policyRes.data?.data?.effective?.leaves?.leaveTypes || [];
                 setLeaveTypes(types);
+
+                // Set balances
+                const balancesData = balancesRes.data;
+                // Handle nested API response { data: { data: [...] } } or direct { data: [...] }
+                const balancesArray = Array.isArray(balancesData)
+                    ? balancesData
+                    : (Array.isArray((balancesData as any)?.data) ? (balancesData as any).data : []);
+
+                setBalances(balancesArray);
             } catch (error) {
-                console.error("Failed to fetch leave types:", error);
+                console.error("Failed to fetch config:", error);
                 setLeaveTypes([]);
+                setBalances([]);
+            } finally {
+                setFetchingConfig(false);
             }
         };
 
-        fetchLeaveTypes();
+        fetchConfig();
     }, [formData.employeeId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -175,6 +195,37 @@ export function CreateLeaveRequestDialog({
                             </Select>
                         </div>
 
+                    </div>
+
+                    {/* Balances Display */}
+                    {balances.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-muted/30 rounded-2xl border border-border/50">
+                            {balances.map((balance) => {
+                                const leaveType = leaveTypes.find(lt => lt.id === balance.leaveTypeId);
+                                return (
+                                    <div key={balance.leaveTypeId} className="space-y-1">
+                                        <div className="flex items-center gap-1.5">
+                                            <div
+                                                className="h-2 w-2 rounded-full"
+                                                style={{ backgroundColor: leaveType?.color || '#3b82f6' }}
+                                            />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground truncate">
+                                                {balance.leaveTypeCode || balance.leaveTypeName}
+                                            </span>
+                                        </div>
+                                        <div className="text-xl font-bold tracking-tight">
+                                            {Number(balance.available).toFixed(1).replace(/\.0$/, '')}
+                                            <span className="text-[10px] font-medium text-muted-foreground ml-1">
+                                                / {Number(balance.entitled).toFixed(1).replace(/\.0$/, '')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Leave Type Selection */}
                         <div className="space-y-1.5">
                             <Label className="text-xs font-bold text-neutral-500 ml-1 flex items-center gap-1.5">
@@ -191,10 +242,13 @@ export function CreateLeaveRequestDialog({
                                         type: selectedType?.isShortLeave ? "SHORT_LEAVE" : "FULL_DAY"
                                     });
                                 }}
-                                disabled={!formData.employeeId}
+                                disabled={!formData.employeeId || fetchingConfig}
                             >
                                 <SelectTrigger className="h-11 bg-muted/40 border-none rounded-xl px-4 font-bold text-sm shadow-sm">
-                                    <SelectValue placeholder={formData.employeeId ? "Select leave type" : "Select employee first"} />
+                                    <SelectValue placeholder={
+                                        fetchingConfig ? "Loading leave types..." :
+                                            formData.employeeId ? "Select leave type" : "Select employee first"
+                                    } />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl">
                                     {leaveTypes.length === 0 && formData.employeeId ? (
@@ -202,52 +256,62 @@ export function CreateLeaveRequestDialog({
                                             No leave types available
                                         </div>
                                     ) : (
-                                        leaveTypes.map((lt) => (
-                                            <SelectItem key={lt.id} value={lt.id}>
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className="h-3 w-3 rounded"
-                                                        style={{ backgroundColor: lt.color || '#3b82f6' }}
-                                                    />
-                                                    <span className="font-bold">{lt.name}</span>
-                                                    <Badge variant="outline" className="text-[9px] font-mono font-black">
-                                                        {lt.code}
-                                                    </Badge>
-                                                </div>
-                                            </SelectItem>
-                                        ))
+                                        leaveTypes.map((lt) => {
+                                            const balance = balances.find(b => b.leaveTypeId === lt.id);
+                                            return (
+                                                <SelectItem key={lt.id} value={lt.id}>
+                                                    <div className="flex items-center justify-between w-full min-w-[200px] gap-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="h-3 w-3 rounded"
+                                                                style={{ backgroundColor: lt.color || '#3b82f6' }}
+                                                            />
+                                                            <span className="font-bold">{lt.name}</span>
+                                                            <Badge variant="outline" className="text-[9px] font-mono font-black">
+                                                                {lt.code}
+                                                            </Badge>
+                                                        </div>
+                                                        {balance && (
+                                                            <span className="text-xs font-medium text-muted-foreground">
+                                                                {balance.available} days left
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </SelectItem>
+                                            );
+                                        })
                                     )}
                                 </SelectContent>
                             </Select>
                         </div>
-                    </div>
 
-                    {/* Request Type */}
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-neutral-500 ml-1 flex items-center gap-1.5">
-                            <IconClock className="w-3.5 h-3.5" />
-                            Request Type
-                        </Label>
-                        <Select
-                            value={formData.type}
-                            onValueChange={(value) => setFormData({ ...formData, type: value as LeaveRequestType })}
-                            disabled={!formData.leaveTypeId}
-                        >
-                            <SelectTrigger className="h-11 bg-muted/40 border-none rounded-xl px-4 font-bold text-sm shadow-sm">
-                                <SelectValue placeholder={formData.leaveTypeId ? "Select request type" : "Select leave type first"} />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                                {selectedLeaveType?.isShortLeave ? (
-                                    <SelectItem value="SHORT_LEAVE">Short Leave</SelectItem>
-                                ) : (
-                                    <>
-                                        <SelectItem value="FULL_DAY">Full Day</SelectItem>
-                                        <SelectItem value="HALF_DAY_FIRST">Half Day (First Half)</SelectItem>
-                                        <SelectItem value="HALF_DAY_LAST">Half Day (Second Half)</SelectItem>
-                                    </>
-                                )}
-                            </SelectContent>
-                        </Select>
+                        {/* Request Type */}
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-neutral-500 ml-1 flex items-center gap-1.5">
+                                <IconClock className="w-3.5 h-3.5" />
+                                Request Type
+                            </Label>
+                            <Select
+                                value={formData.type}
+                                onValueChange={(value) => setFormData({ ...formData, type: value as LeaveRequestType })}
+                                disabled={!formData.leaveTypeId}
+                            >
+                                <SelectTrigger className="h-11 bg-muted/40 border-none rounded-xl px-4 font-bold text-sm shadow-sm">
+                                    <SelectValue placeholder={formData.leaveTypeId ? "Select request type" : "Select leave type first"} />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    {selectedLeaveType?.isShortLeave ? (
+                                        <SelectItem value="SHORT_LEAVE">Short Leave</SelectItem>
+                                    ) : (
+                                        <>
+                                            <SelectItem value="FULL_DAY">Full Day</SelectItem>
+                                            <SelectItem value="HALF_DAY_FIRST">Half Day (First Half)</SelectItem>
+                                            <SelectItem value="HALF_DAY_LAST">Half Day (Second Half)</SelectItem>
+                                        </>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     {/* Date Range */}
@@ -312,7 +376,7 @@ export function CreateLeaveRequestDialog({
                     )}
                 </form>
 
-                <DialogFooter className="p-6 md:p-8 bg-muted/60 border-t border-border mt-auto">
+                <DialogFooter className="p-4 bg-muted/60 border-t border-border mt-auto">
                     <div className="flex flex-col-reverse sm:flex-row gap-3 w-full justify-end">
                         <Button
                             type="button"

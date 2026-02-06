@@ -31,9 +31,10 @@ import { format } from "date-fns";
 
 interface LeaveRequestsTabProps {
     companyId: string;
+    refreshTrigger?: number;
 }
 
-export function LeaveRequestsTab({ companyId }: LeaveRequestsTabProps) {
+export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequestsTabProps) {
     const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<LeaveStatus | "ALL">("ALL");
@@ -88,7 +89,7 @@ export function LeaveRequestsTab({ companyId }: LeaveRequestsTabProps) {
         if (companyId) {
             fetchRequests();
         }
-    }, [companyId, statusFilter, employeeFilter]);
+    }, [companyId, statusFilter, employeeFilter, refreshTrigger]);
 
     const handleApprove = async (id: string) => {
         setProcessingId(id);
