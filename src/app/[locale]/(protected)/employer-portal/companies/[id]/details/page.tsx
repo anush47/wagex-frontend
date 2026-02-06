@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { IconDeviceFloppy, IconBuildingSkyscraper, IconMapPin, IconCalendar, IconId, IconLoader2 } from "@tabler/icons-react";
 import { GeneralTab } from "./components/GeneralTab";
 import { FilesTab } from "./components/FilesTab";
+import { PoliciesTab } from "./components/PoliciesTab";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
@@ -16,8 +17,8 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PoliciesTab } from "./components/PoliciesTab";
-import { PoliciesService } from "@/services/policy.service";
+import { useCompany, useCompanyMutations } from "@/hooks/use-companies";
+import { useEffectivePolicy, usePolicyMutations, useCompanyPolicy } from "@/hooks/use-policies";
 import { PolicySettings } from "@/types/policy";
 import { StorageService } from "@/services/storage.service";
 
@@ -29,15 +30,39 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     const pathname = usePathname();
     const router = useRouter();
 
-    const [originalData, setOriginalData] = useState<Company | null>(null);
-    const [formData, setFormData] = useState<Company | null>(null);
+    // React Query Hooks
+    const { data: companyData, isLoading: compLoading } = useCompany(id);
+    const { data: policyData, isLoading: policyLoading } = useCompanyPolicy(id);
 
-    // Policy State
-    const [originalPolicy, setOriginalPolicy] = useState<PolicySettings>({});
+    const { updateCompany, deleteCompany } = useCompanyMutations();
+    const { saveCompanyPolicy } = usePolicyMutations();
+
+    // Local Form State
+    const [formData, setFormData] = useState<Company | null>(null);
     const [policySettings, setPolicySettings] = useState<PolicySettings>({});
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    // Sync with React Query
+    useEffect(() => {
+        if (companyData) {
+            setFormData(JSON.parse(JSON.stringify(companyData)));
+        }
+    }, [companyData]);
+
+    useEffect(() => {
+        if (policyData) {
+            const settings = policyData.settings || {};
+            // MIGRATION: Handle legacy 'payroll' key
+            if ((settings as any).payroll) {
+                if (!settings.salaryComponents) settings.salaryComponents = (settings as any).payroll;
+                delete (settings as any).payroll;
+            }
+            setPolicySettings(JSON.parse(JSON.stringify(settings)));
+        }
+    }, [policyData]);
+
+    const loading = compLoading || policyLoading;
+    const originalData = companyData;
+    const originalPolicy = policyData?.settings || {};
 
     // Initialize tab from URL or default to general
     const initialTab = searchParams.get("tab") || "general";
@@ -45,7 +70,6 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     const [pendingTab, setPendingTab] = useState<string | null>(null);
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [deleting, setDeleting] = useState(false);
 
     // Sync activeTab with URL search params
     useEffect(() => {
@@ -54,52 +78,6 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
             setActiveTab(tab);
         }
     }, [searchParams]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!id) return;
-            try {
-                // Fetch Company and Policy in parallel
-                const [companyRes, policyRes] = await Promise.all([
-                    CompanyService.getCompany(id),
-                    // We handle policy errors silently as 404 is expected for new companies
-                    PoliciesService.getCompanyPolicy(id).catch(() => ({ data: null }))
-                ]);
-
-                // Handle Company Data
-                const companyData = (companyRes.data as any)?.data || companyRes.data;
-                if (companyData) {
-                    setOriginalData(companyData);
-                    setFormData(JSON.parse(JSON.stringify(companyData)));
-                }
-
-                // Handle Policy Data
-                // policyRes structure: { data: { statusCode: 200, data: { settings: ... } } }
-                const backendResponse = (policyRes as any)?.data;
-                const policyResource = backendResponse?.data;
-                const settings = policyResource?.settings || {};
-
-                // MIGRATION: Handle legacy 'payroll' key from backend if it exists
-                if ((settings as any).payroll) {
-                    if (!settings.salaryComponents) {
-                        settings.salaryComponents = (settings as any).payroll;
-                    }
-                    delete (settings as any).payroll;
-                }
-
-                setOriginalPolicy(JSON.parse(JSON.stringify(settings)));
-                setPolicySettings(JSON.parse(JSON.stringify(settings)));
-
-            } catch (error) {
-                console.error("Failed to fetch data", error);
-                toast.error("Failed to load company details");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [id]);
 
     const handleChange = (field: keyof Company, value: any) => {
         if (!formData) return;
@@ -112,83 +90,27 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
     const handleSave = async () => {
         if (!formData || !id) return;
-        setSaving(true);
-        const toastId = toast.loading("Saving changes...");
-        try {
-            const promises = [];
 
-            // 1. Save Company if dirty
-            if (isCompanyDirty) {
-                const { id: _id, createdAt, updatedAt, ...payload } = formData;
-                promises.push(
-                    CompanyService.updateCompany(id, payload as any)
-                        .then(res => {
-                            const data = (res.data as any)?.data || res.data;
-                            if (data) {
-                                setOriginalData(data);
-                                setFormData(JSON.parse(JSON.stringify(data)));
-                            }
-                            return "Company details saved";
-                        })
-                );
-            }
+        if (isCompanyDirty) {
+            const { id: _id, createdAt, updatedAt, ...payload } = formData;
+            await updateCompany.mutateAsync({ id, data: payload as any });
+        }
 
-            // 2. Save Policy if dirty
-            if (isPolicyDirty) {
-                const payload = JSON.parse(JSON.stringify(policySettings));
-                // Ensure legacy key is removed before sending to strict backend
-                if ((payload as any).payroll) {
-                    delete (payload as any).payroll;
-                }
-
-                promises.push(
-                    PoliciesService.saveCompanyPolicy(id, payload)
-                        .then(res => {
-                            // Backend verification
-                            const data = (res.data as any)?.data || res.data;
-                            if (!data && (res as any)?.error) {
-                                throw new Error((res as any).error.message || "Policy update failed");
-                            }
-
-                            // 400s might return as data if axios is configured not to throw, check for nestjs error structure
-                            if ((data as any)?.statusCode && (data as any)?.statusCode >= 400) {
-                                throw new Error((data as any).message || "Policy update failed");
-                            }
-
-                            const newSettings = data?.settings || policySettings;
-                            setOriginalPolicy(newSettings);
-                            setPolicySettings(JSON.parse(JSON.stringify(newSettings)));
-                            return "Policies updated";
-                        })
-                );
-            }
-
-            await Promise.all(promises);
-            toast.success("Changes saved successfully", { id: toastId });
-
-        } catch (error) {
-            console.error("Failed to update", error);
-            toast.error("Failed to save changes", { id: toastId });
-        } finally {
-            setSaving(false);
+        if (isPolicyDirty) {
+            const payload = JSON.parse(JSON.stringify(policySettings));
+            if (payload.payroll) delete payload.payroll;
+            await saveCompanyPolicy.mutateAsync({ companyId: id, settings: payload });
         }
     };
 
     const handleDelete = async () => {
         if (!id) return;
-        setDeleting(true);
-        const toastId = toast.loading("Deleting company...");
-        try {
-            await CompanyService.deleteCompany(id);
-            toast.success("Company deleted successfully", { id: toastId });
-            router.push("/employer-portal/companies");
-        } catch (error) {
-            console.error("Failed to delete company", error);
-            toast.error("Failed to delete company", { id: toastId });
-            setDeleting(false);
-            setShowDeleteDialog(false);
-        }
+        await deleteCompany.mutateAsync(id);
+        router.push("/employer-portal/companies");
     };
+
+    const saving = updateCompany.isPending || saveCompanyPolicy.isPending;
+    const deleting = deleteCompany.isPending;
 
     const updateTabUrl = (tab: string) => {
         const params = new URLSearchParams(window.location.search);

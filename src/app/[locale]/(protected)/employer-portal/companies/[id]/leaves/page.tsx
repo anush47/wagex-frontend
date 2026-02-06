@@ -22,7 +22,6 @@ export default function LeavesPage() {
     const [activeTab, setActiveTab] = useState(tabFromUrl);
     const [balances, setBalances] = useState<LeaveBalance[]>([]);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Sync tab state with URL parameter
     useEffect(() => {
@@ -35,11 +34,6 @@ export default function LeavesPage() {
         // Update URL without page reload
         const newUrl = `${window.location.pathname}?tab=${value}`;
         router.push(newUrl, { scroll: false });
-    };
-
-    const handleRequestCreated = () => {
-        setCreateDialogOpen(false);
-        setRefreshTrigger(prev => prev + 1);
     };
 
     return (
@@ -82,7 +76,7 @@ export default function LeavesPage() {
                 </TabsList>
 
                 <TabsContent value="requests" className="mt-6">
-                    <LeaveRequestsTab companyId={companyId} refreshTrigger={refreshTrigger} />
+                    <LeaveRequestsTab companyId={companyId} />
                 </TabsContent>
 
                 <TabsContent value="balances" className="mt-6">
@@ -95,7 +89,6 @@ export default function LeavesPage() {
                 open={createDialogOpen}
                 onOpenChange={setCreateDialogOpen}
                 companyId={companyId}
-                onSuccess={handleRequestCreated}
             />
         </div>
     );

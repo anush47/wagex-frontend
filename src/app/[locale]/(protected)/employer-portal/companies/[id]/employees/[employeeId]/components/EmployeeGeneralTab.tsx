@@ -14,18 +14,19 @@ import {
     IconCurrencyDollar
 } from "@tabler/icons-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Gender, EmploymentType } from "@/types/policy";
 import { cn } from "@/lib/utils";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 
 interface EmployeeGeneralTabProps {
     formData: Employee;
     onChange: (field: keyof Employee, value: any) => void;
     departments?: any[];
-    potentialManagers?: Employee[];
 }
 
-export function EmployeeGeneralTab({ formData, onChange, departments = [], potentialManagers = [] }: EmployeeGeneralTabProps) {
+export function EmployeeGeneralTab({ formData, onChange, departments = [] }: EmployeeGeneralTabProps) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
@@ -194,17 +195,23 @@ export function EmployeeGeneralTab({ formData, onChange, departments = [], poten
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Reporting Manager</Label>
-                                <Select value={formData.managerId || "unassigned"} onValueChange={v => onChange('managerId', v === "unassigned" ? null : v)}>
-                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
-                                        <SelectValue placeholder="Select Manager" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        <SelectItem value="unassigned">No Manager</SelectItem>
-                                        {potentialManagers?.map(mgr => (
-                                            <SelectItem key={mgr.id} value={mgr.id}>{mgr.nameWithInitials} ({mgr.designation})</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <SearchableEmployeeSelect
+                                    companyId={formData.companyId}
+                                    value={formData.managerId}
+                                    onSelect={(id) => onChange('managerId', id)}
+                                    excludeIds={[formData.id]}
+                                    placeholder="Select Manager"
+                                />
+                                {formData.managerId && (
+                                    <Button
+                                        variant="link"
+                                        size="sm"
+                                        onClick={() => onChange('managerId', null)}
+                                        className="h-6 px-0 text-[10px] text-red-500 hover:text-red-600 uppercase font-black tracking-widest"
+                                    >
+                                        Clear Manager
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </CardContent>
@@ -296,13 +303,13 @@ export function EmployeeGeneralTab({ formData, onChange, departments = [], poten
                         <div className="flex justify-between items-center text-xs">
                             <span className="font-bold text-neutral-400 uppercase tracking-tighter">Joined Date</span>
                             <span className="font-black text-neutral-900 dark:text-white">
-                                {new Date(formData.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {formData.createdAt ? new Date(formData.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
                             <span className="font-bold text-neutral-400 uppercase tracking-tighter">Last Update</span>
                             <span className="font-black text-neutral-900 dark:text-white">
-                                {new Date(formData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {formData.updatedAt ? new Date(formData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
                             </span>
                         </div>
                     </div>

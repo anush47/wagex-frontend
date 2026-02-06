@@ -24,9 +24,9 @@ import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-se
 import { IconCheck, IconX, IconRefresh, IconTrash, IconFileText, IconPaperclip } from "@tabler/icons-react";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import type { Employee } from "@/types/employee";
-import { LeavesService } from "@/services/leaves.service";
-import { EmployeeService } from "@/services/employee.service";
-import { PoliciesService } from "@/services/policies.service";
+import { useLeaveRequests, useLeaveMutations } from "@/hooks/use-leaves";
+import { useCompanyPolicy } from "@/hooks/use-policies";
+import { useAuth } from "@/hooks/useAuth";
 import { LeaveRequestDetailsDialog } from "./LeaveRequestDetailsDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format, isSameDay } from "date-fns";
@@ -38,102 +38,44 @@ interface LeaveRequestsTabProps {
 }
 
 export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequestsTabProps) {
-    const [requests, setRequests] = useState<LeaveRequest[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
     const [statusFilter, setStatusFilter] = useState<LeaveStatus | "ALL">("ALL");
     const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
-    // const [employees, setEmployees] = useState<Employee[]>([]); // Removed
-    const [processingId, setProcessingId] = useState<string | null>(null);
     const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
-    const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
+    // Use React Query for requests
+    const {
+        data: requests = [],
+        isLoading: loading,
+        refetch: fetchRequests
+    } = useLeaveRequests(companyId, {
+        status: statusFilter === "ALL" ? undefined : statusFilter,
+        employeeId: employeeFilter
+    });
+
+    const { approveRequest, rejectRequest, deleteRequest } = useLeaveMutations();
 
     // Fetch company policy to get leave type colors and codes
-    useEffect(() => {
-        const fetchPolicy = async () => {
-            try {
-                const response = await PoliciesService.getCompanyPolicy(companyId);
-                const types = response.data?.data?.settings?.leaves?.leaveTypes || [];
-                setLeaveTypes(types);
-            } catch (error) {
-                console.error("Failed to fetch policy leave types:", error);
-            }
-        };
-        if (companyId) fetchPolicy();
-    }, [companyId]);
-
-    // Fetch requests with backend filtering
-    const fetchRequests = async () => {
-        setLoading(true);
-        try {
-            const filters: { status?: LeaveStatus; employeeId?: string } = {};
-            if (statusFilter !== "ALL") {
-                filters.status = statusFilter;
-            }
-            if (employeeFilter) {
-                filters.employeeId = employeeFilter;
-            }
-
-            const response = await LeavesService.getCompanyRequests(companyId, filters);
-            setRequests(Array.isArray(response.data) ? response.data : (response.data?.data || []));
-        } catch (error) {
-            console.error("Failed to fetch leave requests:", error);
-            setRequests([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Fetch requests when filters change
-    useEffect(() => {
-        if (companyId) {
-            fetchRequests();
-        }
-    }, [companyId, statusFilter, employeeFilter, refreshTrigger]);
+    const { data: policyData } = useCompanyPolicy(companyId);
+    const leaveTypes = policyData?.settings?.leaves?.leaveTypes || [];
 
     const handleApprove = async (id: string, reason?: string) => {
-        setProcessingId(id);
-        try {
-            const response = await LeavesService.approveRequest(id, "current-user-id", reason || "Approved");
-            if (response.data) {
-                toast.success("Leave request approved");
-                fetchRequests();
-            }
-        } catch (error) {
-            console.error("Failed to approve request:", error);
-            toast.error("Failed to approve request");
-        } finally {
-            setProcessingId(null);
-        }
+        if (!user) return;
+        await approveRequest.mutateAsync({ id, managerId: user.id, reason: reason || "Approved" });
     };
 
-    const handleReject = async (id: string, reason: string) => {
-        setProcessingId(id);
-        try {
-            await LeavesService.rejectRequest(id, "manager-id", reason);
-            toast.success("Leave request rejected");
-            fetchRequests();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to reject request");
-        } finally {
-            setProcessingId(null);
-        }
+    const handleReject = async (id: string, reason?: string) => {
+        if (!user) return;
+        await rejectRequest.mutateAsync({ id, managerId: user.id, reason: reason || "Rejected" });
     };
 
     const executeDelete = async (id: string) => {
-        setProcessingId(id);
         try {
-            await LeavesService.deleteRequest(id);
-            toast.success("Leave request deleted");
-            fetchRequests();
-        } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to delete request";
-            toast.error(message);
-            throw error;
-        } finally {
-            setProcessingId(null);
+            await deleteRequest.mutateAsync(id);
+        } catch (error) {
+            console.error("Failed to delete request", error);
         }
     };
 
@@ -241,7 +183,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                     <SelectItem value="CANCELLED">Cancelled</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" size="icon" onClick={fetchRequests} disabled={loading}>
+                            <Button variant="outline" size="icon" onClick={() => fetchRequests()} disabled={loading}>
                                 <IconRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             </Button>
                         </div>
@@ -268,7 +210,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {requests.map((request) => (
+                                    {requests.map((request: LeaveRequest) => (
                                         <TableRow
                                             key={request.id}
                                             className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -287,7 +229,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                             <TableCell className="whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     {(() => {
-                                                        const lt = leaveTypes.find(t => t.id === request.leaveTypeId);
+                                                        const lt = leaveTypes.find((t: any) => t.id === request.leaveTypeId);
                                                         return (
                                                             <>
                                                                 <div
@@ -355,18 +297,26 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                                             size="sm"
                                                             className="rounded-lg shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90"
                                                             onClick={() => handleApprove(request.id)}
-                                                            disabled={processingId === request.id}
+                                                            disabled={approveRequest.isPending && approveRequest.variables?.id === request.id}
                                                         >
-                                                            <IconCheck className="h-4 w-4 mr-2" />
+                                                            {approveRequest.isPending && approveRequest.variables?.id === request.id ? (
+                                                                <IconRefresh className="h-4 w-4 mr-2 animate-spin" />
+                                                            ) : (
+                                                                <IconCheck className="h-4 w-4 mr-2" />
+                                                            )}
                                                             Approve
                                                         </Button>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => handleReject(request.id)}
-                                                            disabled={processingId === request.id}
+                                                            disabled={rejectRequest.isPending && rejectRequest.variables?.id === request.id}
                                                         >
-                                                            <IconX className="h-4 w-4" />
+                                                            {rejectRequest.isPending && rejectRequest.variables?.id === request.id ? (
+                                                                <IconRefresh className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <IconX className="h-4 w-4" />
+                                                            )}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -393,7 +343,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     setDeleteConfirmOpen(false);
                     setRequestToDelete(null);
                 }}
-                loading={processingId === requestToDelete}
+                loading={false}
                 variant="destructive"
             />
         </>

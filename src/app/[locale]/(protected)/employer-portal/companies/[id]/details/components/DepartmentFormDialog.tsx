@@ -11,6 +11,7 @@ import {
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 
 interface DepartmentFormDialogProps {
     open: boolean;
@@ -75,27 +76,22 @@ export function DepartmentFormDialog({
 
                     <div className="space-y-2">
                         <Label className="uppercase text-[10px] font-black tracking-widest text-neutral-400">Head of Department</Label>
-                        <Select
-                            value={formData.headId || "unassigned"}
-                            onValueChange={(val) => handleChange('headId', val === "unassigned" ? undefined : val)}
-                        >
-                            <SelectTrigger className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-800 border-none font-bold shadow-inner">
-                                <SelectValue placeholder="Select Department Head" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl border-neutral-100 dark:border-neutral-800">
-                                <SelectItem value="unassigned">No Head Assigned</SelectItem>
-                                {employees.map(emp => (
-                                    <SelectItem key={emp.id} value={emp.id}>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-6 w-6 rounded-full bg-neutral-100 flex items-center justify-center text-[10px] font-bold">
-                                                {emp.nameWithInitials?.charAt(0)}
-                                            </div>
-                                            {emp.nameWithInitials}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <SearchableEmployeeSelect
+                            companyId={formData.companyId}
+                            value={formData.headId}
+                            onSelect={(id) => handleChange('headId', id)}
+                            placeholder="Search and select department head..."
+                        />
+                        {formData.headId && (
+                            <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => handleChange('headId', null)}
+                                className="h-6 px-0 text-[10px] text-red-500 hover:text-red-600 uppercase font-black tracking-widest"
+                            >
+                                Clear Head Assignment
+                            </Button>
+                        )}
                     </div>
 
                     <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl flex items-center gap-3 border border-neutral-100 dark:border-neutral-700/50">
@@ -111,7 +107,7 @@ export function DepartmentFormDialog({
                         {formData.parentId && (
                             <Button
                                 size="sm" variant="ghost"
-                                onClick={() => handleChange('parentId', undefined)}
+                                onClick={() => handleChange('parentId', null)}
                                 className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
                             >
                                 Detach

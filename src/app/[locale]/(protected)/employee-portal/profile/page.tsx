@@ -18,9 +18,10 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { StorageService } from "@/services/storage.service";
 import { EmployeeGeneralTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeGeneralTab";
 import { EmployeeFilesTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeFilesTab";
-import { StorageService } from "@/services/storage.service";
+import { useMe, useEmployeeMutations } from "@/hooks/use-employees";
 
 export default function EmployeeProfilePage() {
     const t = useTranslations("Common");
@@ -28,16 +29,23 @@ export default function EmployeeProfilePage() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    // React Query Hooks
+    const { data: me, isLoading: loading, refetch } = useMe();
+    const { updateEmployee } = useEmployeeMutations();
 
     // Employee Data
-    const [originalEmployee, setOriginalEmployee] = useState<Employee | null>(null);
     const [employeeForm, setEmployeeForm] = useState<Employee | null>(null);
 
     // Tab State
     const initialTab = searchParams.get("tab") || "general";
     const [activeTab, setActiveTab] = useState(initialTab);
+
+    // Sync form with data
+    useEffect(() => {
+        if (me) {
+            setEmployeeForm(JSON.parse(JSON.stringify(me)));
+        }
+    }, [me]);
 
     useEffect(() => {
         const tab = searchParams.get("tab");
@@ -46,34 +54,13 @@ export default function EmployeeProfilePage() {
         }
     }, [searchParams]);
 
-    const fetchData = async (silent = false) => {
-        if (!silent) setLoading(true);
-        try {
-            const response = await EmployeeService.getMe();
-            const empData = (response.data as any)?.data || response.data;
-            if (empData) {
-                setOriginalEmployee(empData);
-                setEmployeeForm(JSON.parse(JSON.stringify(empData)));
-            }
-        } catch (error) {
-            console.error("Failed to fetch employee details", error);
-            toast.error("Failed to load your profile");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     const canonicalStringify = (obj: any): string => {
         if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
         if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
         return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
     };
 
-    const isDirty = canonicalStringify(originalEmployee) !== canonicalStringify(employeeForm);
+    const isDirty = canonicalStringify(me) !== canonicalStringify(employeeForm);
     const canSelfEdit = employeeForm?.canSelfEdit ?? true;
 
     const handleSave = async () => {
@@ -82,38 +69,21 @@ export default function EmployeeProfilePage() {
             return;
         }
 
-        setSaving(true);
-        const toastId = toast.loading("Updating your profile...");
-        try {
-            if (employeeForm && originalEmployee) {
-                // Only allow updating certain fields when self-editing
-                // For now, we'll send the whole modified object, backend controller
-                // needs to be updated to handle employee self-update too.
-                // WE SHOULD ADD A SELF-UPDATE ENDPOINT OR ALLOW EMPLOYEES TO PATCH CERTAIN FIELDS.
+        if (employeeForm && me) {
+            const {
+                id: _id,
+                createdAt,
+                updatedAt,
+                company,
+                user,
+                userId,
+                employeeNo, // Read-only
+                basicSalary, // Read-only for employee
+                status, // Read-only for employee
+                ...payload
+            } = employeeForm as any;
 
-                // Let's assume for now the employer update endpoint works if we permit the role.
-                const {
-                    id: _id,
-                    createdAt,
-                    updatedAt,
-                    company,
-                    user,
-                    userId,
-                    employeeNo, // Read-only
-                    basicSalary, // Read-only for employee
-                    status, // Read-only for employee
-                    ...payload
-                } = employeeForm as any;
-
-                await EmployeeService.updateEmployee(originalEmployee.id, payload);
-                toast.success("Profile updated successfully", { id: toastId });
-                fetchData(true);
-            }
-        } catch (error) {
-            console.error("Failed to save", error);
-            toast.error("Update failed", { id: toastId });
-        } finally {
-            setSaving(false);
+            await updateEmployee.mutateAsync({ id: me.id, data: payload });
         }
     };
 
@@ -226,11 +196,11 @@ export default function EmployeeProfilePage() {
                     >
                         <Button
                             onClick={handleSave}
-                            disabled={saving}
+                            disabled={updateEmployee.isPending}
                             size="lg"
                             className="rounded-full shadow-2xl px-8 h-14 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all text-base font-bold"
                         >
-                            {saving ? (
+                            {updateEmployee.isPending ? (
                                 <>
                                     <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
                                     Saving...

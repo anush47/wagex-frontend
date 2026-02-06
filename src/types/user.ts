@@ -12,12 +12,13 @@ export interface LoginCredentials {
 export interface UserProfile {
     id: string;
     email: string;
-    role: Role;
-    active: boolean;
+    role?: Role;
+    active?: boolean;
     nameWithInitials?: string;
     fullName?: string;
     address?: string;
     phone?: string;
+    created_at?: string;
 }
 
 export interface RegisterData {

@@ -1,11 +1,11 @@
 import { backendApiClient } from '@/lib/api/client';
 import type { ApiResponse } from '@/types/api/api.types';
-import type {
+import {
     LeaveRequest,
     LeaveBalance,
     CreateLeaveRequestDto,
     UpdateLeaveRequestDto,
-    LeaveStatus
+    LeaveStatus,
 } from '@/types/leave';
 
 export class LeavesService {
@@ -60,7 +60,7 @@ export class LeavesService {
      */
     static async approveRequest(id: string, managerId: string, responseReason?: string): Promise<ApiResponse<LeaveRequest>> {
         return this.updateRequest(id, {
-            status: 'APPROVED',
+            status: LeaveStatus.APPROVED,
             managerId,
             responseReason
         });
@@ -71,7 +71,7 @@ export class LeavesService {
      */
     static async rejectRequest(id: string, managerId: string, responseReason: string): Promise<ApiResponse<LeaveRequest>> {
         return this.updateRequest(id, {
-            status: 'REJECTED',
+            status: LeaveStatus.REJECTED,
             managerId,
             responseReason
         });

@@ -17,18 +17,19 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { EmployeeService } from "@/services/employee.service";
 import type { Employee } from "@/types/employee";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Badge } from "@/components/ui/badge";
+import { useEmployees, useEmployee } from "@/hooks/use-employees";
 
 interface SearchableEmployeeSelectProps {
     companyId: string;
-    value?: string;
+    value?: string | null;
     onSelect?: (employeeId: string, employee?: Employee) => void;
     placeholder?: string;
     className?: string;
     disabled?: boolean;
+    excludeIds?: string[];
 }
 
 export function SearchableEmployeeSelect({
@@ -38,66 +39,29 @@ export function SearchableEmployeeSelect({
     placeholder = "Select employee...",
     className,
     disabled = false,
+    excludeIds = [],
 }: SearchableEmployeeSelectProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>(undefined);
-
     const debouncedSearch = useDebounce(searchQuery, 300);
 
-    // Initial fetch for selected employee if value exists but object is missing
-    useEffect(() => {
-        const fetchInitial = async () => {
-            if (value && !selectedEmployee && value !== "ALL") {
-                try {
-                    const response = await EmployeeService.getEmployee(value);
-                    if (response.data) {
-                        setSelectedEmployee(response.data);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch selected employee", error);
-                }
-            } else if (!value) {
-                setSelectedEmployee(undefined);
-            }
-        };
-        fetchInitial();
-    }, [value, selectedEmployee]);
+    // Fetch the selected employee details (TanStack Query handles caching)
+    const { data: selectedEmployee } = useEmployee(value || null);
 
-    // Fetch employees on search
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            if (!open) return;
+    // Fetch the list of employees based on search
+    const { data: resp, isLoading: loading } = useEmployees({
+        companyId,
+        search: typeof debouncedSearch === 'string' ? debouncedSearch : "",
+        limit: 20
+    }, open); // Only enabled when dropdown is open
 
-            setLoading(true);
-            try {
-                // Ensure we pass a string for search, useDebounce might return the initial value immediately
-                const term = typeof debouncedSearch === 'string' ? debouncedSearch : "";
+    // Handle paginated or raw array response
+    let employees = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
 
-                const response = await EmployeeService.getEmployees({
-                    companyId,
-                    search: term,
-                    limit: 20
-                });
-
-                // Handle response structure carefully based on previous findings
-                const data = response.data?.data || [];
-                // @ts-ignore - Temporary fix if types are still mismatched in some environments
-                const list = Array.isArray(data) ? data : (data?.data || []);
-
-                setEmployees(list);
-            } catch (error) {
-                console.error("Failed to search employees", error);
-                setEmployees([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchEmployees();
-    }, [debouncedSearch, companyId, open]);
+    // Filter out excluded IDs if provided
+    if (excludeIds.length > 0 && Array.isArray(employees)) {
+        employees = employees.filter((e: Employee) => !excludeIds.includes(e.id));
+    }
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -135,12 +99,11 @@ export function SearchableEmployeeSelect({
                             <CommandEmpty>No employees found.</CommandEmpty>
                         )}
                         <CommandGroup>
-                            {employees.map((employee) => (
+                            {employees.map((employee: Employee) => (
                                 <CommandItem
                                     key={employee.id}
                                     value={employee.id} // Standard value prop for command item
                                     onSelect={() => {
-                                        setSelectedEmployee(employee);
                                         if (onSelect) onSelect(employee.id, employee);
                                         setOpen(false);
                                     }}

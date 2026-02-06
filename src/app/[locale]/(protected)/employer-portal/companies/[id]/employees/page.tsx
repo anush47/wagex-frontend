@@ -26,11 +26,11 @@ import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { DataLoadingOverlay } from "@/components/ui/data-loading-overlay";
 
+import { useEmployees, useEmployee } from "@/hooks/use-employees";
+
 export default function EmployeesListPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: companyId } = use(params);
     const t = useTranslations("Common");
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loading, setLoading] = useState(true);
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
     const [query, setQuery] = useState<EmployeeQuery>({
         companyId,
@@ -40,33 +40,22 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
         search: ""
     });
 
-    // Debounce search input - Removed as we use SearchableEmployeeSelect now
+    const {
+        data: resp,
+        isLoading: listLoading,
+    } = useEmployees(query, !selectedEmployeeId);
 
+    // Handle paginated response structure
+    const employees = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
+    const meta = (resp as any)?.meta;
 
-    const fetchEmployees = async () => {
-        setLoading(true);
-        try {
-            const response = await EmployeeService.getEmployees(query);
-            if (response.data) {
-                // Backend response structure: { data: { data: Employee[], meta: ... } }
-                const payload = (response.data as any).data;
-                const employeeList = payload?.data || response.data;
-                setEmployees(Array.isArray(employeeList) ? employeeList : []);
-            } else {
-                setEmployees([]);
-            }
-        } catch (error) {
-            console.error("Failed to fetch employees", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {
+        data: selectedEmployee,
+        isLoading: selectedLoading
+    } = useEmployee(selectedEmployeeId);
 
-    useEffect(() => {
-        if (!selectedEmployeeId) {
-            fetchEmployees();
-        }
-    }, [query, selectedEmployeeId]);
+    const displayEmployees = selectedEmployeeId ? (selectedEmployee ? [selectedEmployee] : []) : employees;
+    const loading = selectedEmployeeId ? selectedLoading : listLoading;
 
     const updateQuery = (updates: Partial<EmployeeQuery>) => {
         setQuery(prev => ({ ...prev, ...updates }));
@@ -104,11 +93,8 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                             companyId={companyId}
                             value={selectedEmployeeId || undefined}
                             placeholder="Search by name or member ID..."
-                            onSelect={(id, employee) => {
+                            onSelect={(id) => {
                                 setSelectedEmployeeId(id);
-                                if (employee) {
-                                    setEmployees([employee]);
-                                }
                             }}
                         />
                         {selectedEmployeeId && (
@@ -169,7 +155,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
             <div className="relative min-h-[400px]">
                 <DataLoadingOverlay isLoading={loading} />
 
-                {loading && employees.length === 0 ? (
+                {loading && displayEmployees.length === 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={i} className="h-64 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
@@ -177,10 +163,10 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                     </div>
                 ) : (
                     <div className={cn(
-                        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-500",
+                        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8",
                         loading && "blur-[1px]"
                     )}>
-                        {employees.map(emp => (
+                        {displayEmployees.map((emp: Employee) => (
                             <Link key={emp.id} href={`/employer-portal/companies/${companyId}/employees/${emp.id}`}>
                                 <Card className="group border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-2xl hover:shadow-primary/5 bg-white dark:bg-neutral-900 rounded-[2rem] overflow-hidden transition-all duration-300 hover:border-primary/20">
                                     <CardContent className="p-0">

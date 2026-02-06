@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Department, CreateDepartmentDto } from "@/types/department";
-import { DepartmentService } from "@/services/department.service";
-import { EmployeeService } from "@/services/employee.service";
 import { Company } from "@/types/company";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,14 +11,14 @@ import {
 import { toast } from "sonner";
 import { DepartmentNode } from "./DepartmentNode";
 import { DepartmentFormDialog } from "./DepartmentFormDialog";
+import { useDepartments, useDepartmentMutations } from "@/hooks/use-departments";
+import { useEmployees } from "@/hooks/use-employees";
 
 interface DepartmentsTabProps {
     company: Company;
 }
 
 export function DepartmentsTab({ company }: DepartmentsTabProps) {
-    const [departments, setDepartments] = useState<Department[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingDept, setEditingDept] = useState<Department | null>(null);
 
@@ -31,38 +29,14 @@ export function DepartmentsTab({ company }: DepartmentsTabProps) {
         parentId: undefined,
         headId: undefined
     });
-    const [submitting, setSubmitting] = useState(false);
 
-    const [employees, setEmployees] = useState<any[]>([]);
+    // React Query Hooks
+    const { data: resp, isLoading: loading } = useDepartments(company.id);
+    const { data: empsResp } = useEmployees({ companyId: company.id, status: "ACTIVE" });
+    const { createDepartment, updateDepartment, deleteDepartment } = useDepartmentMutations();
 
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const [deptRes, empRes] = await Promise.all([
-                DepartmentService.getAll(company.id),
-                EmployeeService.getEmployees({ companyId: company.id, status: "ACTIVE" })
-            ]);
-
-            // Handle departments
-            const deptData = (deptRes.data as any)?.data || deptRes.data;
-            setDepartments(Array.isArray(deptData) ? deptData : []);
-
-            // Handle employees
-            const empData = (empRes.data as any)?.data || empRes.data;
-            const empList = Array.isArray(empData) ? empData : (empData?.data && Array.isArray(empData.data) ? empData.data : []);
-            setEmployees(empList);
-
-        } catch (error) {
-            console.error("Failed to load data", error);
-            setDepartments([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, [company.id]);
+    const departments = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
+    const employees = (empsResp as any)?.data || (Array.isArray(empsResp) ? empsResp : []);
 
     const handleOpenCreate = (parentId?: string) => {
         setEditingDept(null);
@@ -91,38 +65,27 @@ export function DepartmentsTab({ company }: DepartmentsTabProps) {
     const handleSubmit = async () => {
         if (!formData.name) return toast.error("Department Name is required");
 
-        setSubmitting(true);
         try {
             if (editingDept) {
-                await DepartmentService.update(editingDept.id, formData);
-                toast.success("Department updated");
+                await updateDepartment.mutateAsync({ id: editingDept.id, data: formData });
             } else {
-                await DepartmentService.create(formData);
-                toast.success("Department created");
+                await createDepartment.mutateAsync(formData);
             }
             setIsDialogOpen(false);
-            fetchData();
         } catch (error) {
             console.error("Save failed", error);
-            toast.error("Failed to save department");
-        } finally {
-            setSubmitting(false);
         }
     };
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`Are you sure you want to delete ${name}?`)) return;
-        try {
-            await DepartmentService.delete(id);
-            toast.success("Department deleted");
-            fetchData();
-        } catch (error) {
-            toast.error("Failed to delete department");
-        }
+        await deleteDepartment.mutateAsync({ id, companyId: company.id });
     };
 
+    const submitting = createDepartment.isPending || updateDepartment.isPending;
+
     // Root departments (those without parent)
-    const rootDepartments = departments.filter(d => !d.parentId);
+    const rootDepartments = departments.filter((d: Department) => !d.parentId);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -170,7 +133,7 @@ export function DepartmentsTab({ company }: DepartmentsTabProps) {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {rootDepartments.map(dept => (
+                            {rootDepartments.map((dept: Department) => (
                                 <DepartmentNode
                                     key={dept.id}
                                     dept={dept}

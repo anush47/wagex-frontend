@@ -9,19 +9,18 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { IconCalendarEvent } from "@tabler/icons-react";
-import { LeavesService } from "@/services/leaves.service";
-import { PoliciesService } from "@/services/policies.service";
 import { LeaveBalance } from "@/types/leave";
 import { toast } from "sonner";
 import { CompanyFile } from "@/types/company";
 import { validateLeaveRequest, CreatorRole } from "@/lib/validations/leave-request";
 import { CreateLeaveRequestForm } from "./create-request/CreateLeaveRequestForm";
+import { useLeaveRequests, useLeaveBalances, useLeaveMutations } from "@/hooks/use-leaves";
+import { useEffectivePolicy } from "@/hooks/use-policies";
 
 interface CreateLeaveRequestDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     companyId: string;
-    onSuccess: () => void;
     defaultEmployeeId?: string;
     creatorRole?: CreatorRole;
 }
@@ -30,77 +29,26 @@ export function CreateLeaveRequestDialog({
     open,
     onOpenChange,
     companyId,
-    onSuccess,
     defaultEmployeeId,
     creatorRole = 'EMPLOYER'
 }: CreateLeaveRequestDialogProps) {
-    const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
-    const [balances, setBalances] = useState<LeaveBalance[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [fetchingConfig, setFetchingConfig] = useState(false);
-    // Track employee ID change here to re-fetch config if needed
-    // But mostly the Form handles the employee ID selection if not default.
-    // However, the config depends on employee ID.
-    // So the Form needs to tell the Dialog when employee changes so we can fetch config?
-    // OR we hoist the employeeId state to here.
-
     // Let's hoist employeeId state to here so we can fetch config
     const [employeeId, setEmployeeId] = useState(defaultEmployeeId || "");
-    const [existingRequests, setExistingRequests] = useState<any[]>([]);
 
-    useEffect(() => {
-        if (open) {
-            setEmployeeId(defaultEmployeeId || "");
-        }
-    }, [open, defaultEmployeeId]);
+    // Use React Query hooks
+    const { data: policyData, isLoading: policyLoading } = useEffectivePolicy(employeeId || null);
+    const { data: balancesData, isLoading: balancesLoading } = useLeaveBalances(employeeId || null);
+    const { data: requestsData, isLoading: requestsLoading } = useLeaveRequests(companyId, { employeeId });
 
-    useEffect(() => {
-        const fetchConfig = async () => {
-            if (!employeeId) {
-                setLeaveTypes([]);
-                setBalances([]);
-                setExistingRequests([]);
-                return;
-            }
+    const leaveTypes = (policyData as any)?.effective?.leaves?.leaveTypes || [];
+    const balances = Array.isArray(balancesData) ? balancesData : [];
+    const existingRequests = Array.isArray(requestsData) ? requestsData : [];
+    const fetchingConfig = policyLoading || balancesLoading || requestsLoading;
 
-            setFetchingConfig(true);
-            try {
-                const [policyRes, balancesRes, requestsRes] = await Promise.all([
-                    PoliciesService.getEffectivePolicy(employeeId),
-                    LeavesService.getBalances(employeeId),
-                    LeavesService.getCompanyRequests(companyId, { employeeId })
-                ]);
-
-                const types = policyRes.data?.data?.effective?.leaves?.leaveTypes || [];
-                setLeaveTypes(types);
-
-                const balancesData = balancesRes.data;
-                const balancesArray = Array.isArray(balancesData)
-                    ? balancesData
-                    : (Array.isArray((balancesData as any)?.data) ? (balancesData as any).data : []);
-
-                setBalances(balancesArray);
-
-                const requests = Array.isArray((requestsRes as any).data)
-                    ? (requestsRes as any).data
-                    : ((requestsRes as any).data?.data || []);
-                setExistingRequests(requests);
-
-            } catch (error) {
-                console.error("Failed to fetch config:", error);
-                setLeaveTypes([]);
-                setBalances([]);
-                setExistingRequests([]);
-            } finally {
-                setFetchingConfig(false);
-            }
-        };
-
-        fetchConfig();
-    }, [employeeId, companyId]);
+    const { createRequest } = useLeaveMutations();
 
     const handleFormSubmit = async (formData: any, documents: CompanyFile[]) => {
-        const selectedLeaveType = leaveTypes.find(lt => lt.id === formData.leaveTypeId);
+        const selectedLeaveType = leaveTypes.find((lt: any) => lt.id === formData.leaveTypeId);
 
         const validationError = validateLeaveRequest({
             formData,
@@ -116,30 +64,15 @@ export function CreateLeaveRequestDialog({
             return;
         }
 
-        setLoading(true);
-
         try {
-            const response = await LeavesService.createRequest({
+            await createRequest.mutateAsync({
                 ...formData,
                 companyId,
                 documents,
             });
-
-            if (response.error) {
-                toast.error(response.error.message || "Failed to create leave request");
-                return;
-            }
-
-            if (response.data) {
-                toast.success("Leave request created successfully");
-                onSuccess();
-                onOpenChange(false);
-            }
-        } catch (error: any) {
-            console.error("Unexpected error:", error);
-            toast.error("An unexpected error occurred");
-        } finally {
-            setLoading(false);
+            onOpenChange(false);
+        } catch (error) {
+            // Error handled by mutation hook
         }
     };
 
@@ -168,7 +101,7 @@ export function CreateLeaveRequestDialog({
                     creatorRole={creatorRole}
                     leaveTypes={leaveTypes}
                     balances={balances}
-                    loading={loading}
+                    loading={createRequest.isPending}
                     fetchingConfig={fetchingConfig}
                     onSubmit={handleFormSubmit}
                     onCancel={() => onOpenChange(false)}

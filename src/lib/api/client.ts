@@ -84,7 +84,7 @@ class ApiClient {
 
             const response = await fetch(url, {
                 ...restConfig,
-                headers: finalHeaders,
+                headers: finalHeaders as HeadersInit,
             });
 
             const data = await response.json();
@@ -186,7 +186,7 @@ class ApiClient {
             headers: {
                 ...headers,
                 'Content-Type': undefined, // Explicitly omit to let fetch/browser handle it for FormData
-            },
+            } as any,
         });
     }
 

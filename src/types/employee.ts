@@ -40,4 +40,6 @@ export interface Employee {
     canSelfEdit?: boolean;
     photo?: string;
     files?: any[];
+    createdAt?: string;
+    updatedAt?: string;
 }

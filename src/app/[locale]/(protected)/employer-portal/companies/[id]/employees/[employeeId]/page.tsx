@@ -1,8 +1,9 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { StorageService } from "@/services/storage.service";
+import { CompanyService } from "@/services/company.service";
 import { EmployeeService } from "@/services/employee.service";
-import { PoliciesService } from "@/services/policy.service";
 import { Employee } from "@/types/employee";
 import { PolicySettings } from "@/types/policy";
 import { useTranslations } from "next-intl";
@@ -30,8 +31,9 @@ import { EmployeeGeneralTab } from "./components/EmployeeGeneralTab";
 import { EmployeePoliciesTab } from "./components/EmployeePoliciesTab";
 import { EmployeeAccountTab } from "./components/EmployeeAccountTab";
 import { EmployeeFilesTab } from "./components/EmployeeFilesTab";
-import { StorageService } from "@/services/storage.service";
-import { DepartmentService } from "@/services/department.service";
+import { useEmployee, useEmployeeMutations, useEmployees } from "@/hooks/use-employees";
+import { useEffectivePolicy, usePolicyMutations, useCompanyPolicy } from "@/hooks/use-policies";
+import { useDepartments } from "@/hooks/use-departments";
 
 export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: string, employeeId: string }> }) {
     const { id: companyId, employeeId } = use(params);
@@ -40,23 +42,24 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     const pathname = usePathname();
     const router = useRouter();
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    // Simplified Hook-based Data
+    const { data: employeeData, isLoading: empLoading } = useEmployee(employeeId);
+    const { data: policyData, isLoading: policyLoading } = useEffectivePolicy(employeeId);
+    const { data: deptsResp, isLoading: deptsLoading } = useDepartments(companyId);
+    const { data: empsResp, isLoading: empsLoading } = useEmployees({ companyId });
 
-    // Employee Data
-    const [originalEmployee, setOriginalEmployee] = useState<Employee | null>(null);
+    const departments = (deptsResp as any)?.data || (Array.isArray(deptsResp) ? deptsResp : []);
+    const { updateEmployee } = useEmployeeMutations();
+    const { saveEmployeePolicy, deleteEmployeePolicy } = usePolicyMutations();
+
+    // Local State for Forms
     const [employeeForm, setEmployeeForm] = useState<Employee | null>(null);
-
-    // Policy Data
-    const [effectivePolicy, setEffectivePolicy] = useState<PolicySettings>({});
     const [overridePolicy, setOverridePolicy] = useState<PolicySettings>({});
-    const [originalOverride, setOriginalOverride] = useState<PolicySettings>({});
-    const [policySource, setPolicySource] = useState<any>(null);
 
-    // Tab State
     const initialTab = searchParams.get("tab") || "general";
     const [activeTab, setActiveTab] = useState(initialTab);
 
+    // Sync activeTab with URL search params
     useEffect(() => {
         const tab = searchParams.get("tab");
         if (tab && tab !== activeTab) {
@@ -64,67 +67,27 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
         }
     }, [searchParams]);
 
-    const fetchData = async (silent = false) => {
-        if (!silent) setLoading(true);
-        try {
-            const [empRes, policyRes] = await Promise.all([
-                EmployeeService.getEmployee(employeeId),
-                PoliciesService.getEffectivePolicy(employeeId)
-            ]);
-
-            // Handle Employee Data
-            const empData = (empRes.data as any)?.data || empRes.data;
-            if (empData) {
-                setOriginalEmployee(empData);
-                setEmployeeForm(JSON.parse(JSON.stringify(empData)));
-            }
-
-            // Handle Policy Data
-            const policyData = (policyRes as any)?.data?.data || (policyRes as any)?.data;
-            if (policyData) {
-                setEffectivePolicy(policyData.effective || {});
-                setPolicySource(policyData.source || {});
-
-                const override = policyData.employeeOverride?.settings || {};
-                setOverridePolicy(JSON.parse(JSON.stringify(override)));
-                setOriginalOverride(JSON.parse(JSON.stringify(override)));
-            }
-        } catch (error) {
-            console.error("Failed to fetch employee details", error);
-            toast.error("Failed to load employee profile");
-        } finally {
-            setLoading(false);
+    // Sync with React Query data
+    useEffect(() => {
+        if (employeeData) {
+            setEmployeeForm(JSON.parse(JSON.stringify(employeeData)));
         }
-    };
-
-    // Options
-    const [departments, setDepartments] = useState<any[]>([]);
-    const [potentialManagers, setPotentialManagers] = useState<Employee[]>([]);
+    }, [employeeData]);
 
     useEffect(() => {
-        const fetchOptions = async () => {
-            try {
-                const [deptRes, empRes] = await Promise.all([
-                    DepartmentService.getAll(companyId),
-                    EmployeeService.getEmployees({ companyId }) // Fixed method name
-                ]);
-                // Handle departments data extraction
-                const deptPayload = (deptRes.data as any)?.data || deptRes.data;
-                setDepartments(Array.isArray(deptPayload) ? deptPayload : []);
-                const payload = (empRes.data as any)?.data || empRes.data;
-                const allEmps = Array.isArray(payload) ? payload : (payload?.data && Array.isArray(payload.data) ? payload.data : []);
-                // Filter out self as potential manager
-                setPotentialManagers(allEmps.filter((e: Employee) => e.id !== employeeId));
-            } catch (error) {
-                console.error("Failed to fetch options", error);
-            }
-        };
-        if (companyId) fetchOptions();
-    }, [companyId, employeeId]);
+        if (policyData) {
+            const override = policyData.employeeOverride?.settings || {};
+            setOverridePolicy(JSON.parse(JSON.stringify(override)));
+        }
+    }, [policyData]);
 
-    useEffect(() => {
-        fetchData();
-    }, [employeeId]);
+    const loading = empLoading || policyLoading || deptsLoading || empsLoading;
+
+    // Derived values from policyData
+    const effectivePolicy = policyData?.effective || {};
+    const policySource = policyData?.source || {};
+    const originalOverride = policyData?.employeeOverride?.settings || {};
+    const originalEmployee = employeeData;
 
     const canonicalStringify = (obj: any): string => {
         if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
@@ -137,55 +100,18 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     const isDirty = isEmployeeDirty || isPolicyDirty;
 
     const handleSave = async () => {
-        setSaving(true);
-        const toastId = toast.loading("Syncing personnel record...");
-        try {
-            const promises = [];
+        if (isEmployeeDirty && employeeForm) {
+            const { id: _id, createdAt, updatedAt, company, user, userId, ...payload } = employeeForm as any;
+            await updateEmployee.mutateAsync({ id: employeeId, data: payload });
+        }
 
-            if (isEmployeeDirty && employeeForm) {
-                // Strip all relation and read-only fields before sending to backend
-                const {
-                    id: _id,
-                    createdAt,
-                    updatedAt,
-                    company,
-                    user,
-                    userId,
-                    ...payload
-                } = employeeForm as any;
-
-                promises.push(EmployeeService.updateEmployee(employeeId, payload));
-            }
-
-            if (isPolicyDirty) {
-                // Save policy override
-                // The backend endpoint for policy handles companyId + employeeId
-                promises.push(PoliciesService.saveEmployeePolicy(companyId, employeeId, overridePolicy));
-            }
-
-            await Promise.all(promises);
-            toast.success("Profile updated successfully", { id: toastId });
-            fetchData(true); // Refresh to get new effective policy
-        } catch (error) {
-            console.error("Failed to save", error);
-            toast.error("Update failed", { id: toastId });
-        } finally {
-            setSaving(false);
+        if (isPolicyDirty) {
+            await saveEmployeePolicy.mutateAsync({ companyId, employeeId, settings: overridePolicy });
         }
     };
 
     const handleResetPolicy = async () => {
-        const toastId = toast.loading("Reverting to company defaults...");
-        try {
-            await PoliciesService.deleteEmployeePolicy(employeeId, companyId);
-            toast.success("Policy reset successfully", { id: toastId });
-            fetchData(true);
-            setOverridePolicy({}); // Clear local overrides
-            setOriginalOverride({});
-        } catch (error) {
-            console.error("Failed to reset policy", error);
-            toast.error("Reset failed", { id: toastId });
-        }
+        await deleteEmployeePolicy.mutateAsync({ employeeId, companyId });
     };
 
     const handleResetTab = async (tabKey: string) => {
@@ -199,25 +125,16 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
         };
         const label = labels[tabKey] || "Module";
 
-        const toastId = toast.loading(`Resetting ${label} to defaults...`);
         try {
             const newOverride = { ...overridePolicy };
             delete (newOverride as any)[tabKey];
-
-            // Save the updated override object (with the module removed)
-            await PoliciesService.saveEmployeePolicy(companyId, employeeId, newOverride);
-
-            toast.success(`${label} reset to company defaults`, { id: toastId });
-
-            // Refresh local state
-            setOverridePolicy(newOverride);
-            setOriginalOverride(JSON.parse(JSON.stringify(newOverride)));
-            fetchData(true);
+            await saveEmployeePolicy.mutateAsync({ companyId, employeeId, settings: newOverride });
         } catch (error) {
             console.error(`Failed to reset ${label}`, error);
-            toast.error(`Reset failed`, { id: toastId });
         }
     };
+
+    const saving = updateEmployee.isPending || saveEmployeePolicy.isPending;
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
@@ -321,7 +238,6 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
                         departments={departments}
-                        potentialManagers={potentialManagers}
                     />
                 </TabsContent>
 

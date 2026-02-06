@@ -17,7 +17,7 @@ import {
 import { Link } from "@/i18n/routing";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
-import { useCompanies } from "@/hooks/useCompanies";
+import { useCompanies } from "@/hooks/use-companies";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
@@ -50,9 +50,9 @@ export default function CompaniesPage() {
         search
     });
 
-    const companyData = (response as any)?.data;
-    const companies = companyData?.data || [];
-    const meta = companyData?.meta || response?.meta;
+    // Handle standardized response structure
+    const companies = response?.data || [];
+    const meta = response?.meta;
 
     if (isLoading) {
         return (

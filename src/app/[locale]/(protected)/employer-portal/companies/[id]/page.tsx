@@ -15,31 +15,14 @@ import {
     IconChartBar
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { useCompany } from "@/hooks/use-companies";
 
 export default function CompanyOverviewPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const t = useTranslations("Companies");
     const common = useTranslations("Common");
-    const [company, setCompany] = useState<Company | null>(null);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchCompany = async () => {
-            if (!id) return;
-            try {
-                const response = await CompanyService.getCompany(id);
-                if (response.data) {
-                    setCompany(response.data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch company", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCompany();
-    }, [id]);
+    const { data: company, isLoading: loading } = useCompany(id);
 
     if (loading) {
         return (

@@ -10,7 +10,7 @@ import { companySchema, type CompanyFormValues } from "@/schemas/company.schema"
 import { LabelInputContainer } from "@/components/ui/form-elements";
 import { IconArrowLeft, IconMapPin, IconInfoCircle, IconCalendar } from "@tabler/icons-react";
 import { Link, useRouter } from "@/i18n/routing";
-import { useCreateCompany } from "@/hooks/useCompanies";
+import { useCompanyMutations } from "@/hooks/use-companies";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
@@ -25,7 +25,8 @@ export default function NewCompanyPage() {
     const t = useTranslations("Companies");
     const common = useTranslations("Common");
 
-    const { mutateAsync: createCompany, isPending } = useCreateCompany();
+    const { createCompany } = useCompanyMutations();
+    const { mutateAsync: createCompanyFn, isPending } = createCompany;
 
     const {
         register,
@@ -47,7 +48,7 @@ export default function NewCompanyPage() {
     const onSubmit = async (data: CompanyFormValues) => {
         const toastId = toast.loading("Establishing new company...");
         try {
-            await createCompany(data);
+            await createCompanyFn(data);
             toast.success("Company established successfully!", { id: toastId });
             router.push("/employer-portal/companies");
         } catch (error) {
