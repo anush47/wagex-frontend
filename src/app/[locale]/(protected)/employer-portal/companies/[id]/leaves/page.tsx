@@ -20,40 +20,14 @@ export default function LeavesPage() {
 
     const tabFromUrl = searchParams.get("tab") || "requests";
     const [activeTab, setActiveTab] = useState(tabFromUrl);
-    const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [balances, setBalances] = useState<LeaveBalance[]>([]);
-    const [loading, setLoading] = useState(true);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
-    const fetchRequests = async () => {
-        try {
-            const response = await LeavesService.getCompanyRequests(companyId);
-            // Backend returns {statusCode, message, data: [], ...}
-            // API client wraps it in {data: backendResponse}
-            setRequests(Array.isArray(response.data) ? response.data : (response.data?.data || []));
-        } catch (error) {
-            console.error("Failed to fetch leave requests:", error);
-            setRequests([]);
-        }
-    };
 
     // Sync tab state with URL parameter
     useEffect(() => {
         const tabFromUrl = searchParams.get("tab") || "requests";
         setActiveTab(tabFromUrl);
     }, [searchParams]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            await fetchRequests();
-            setLoading(false);
-        };
-
-        if (companyId) {
-            fetchData();
-        }
-    }, [companyId]);
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
@@ -64,7 +38,7 @@ export default function LeavesPage() {
 
     const handleRequestCreated = () => {
         setCreateDialogOpen(false);
-        fetchRequests();
+        // LeaveRequestsTab will auto-refresh via its useEffect
     };
 
     return (
@@ -97,11 +71,7 @@ export default function LeavesPage() {
                 </TabsList>
 
                 <TabsContent value="requests" className="mt-6">
-                    <LeaveRequestsTab
-                        requests={requests}
-                        loading={loading}
-                        onRefresh={fetchRequests}
-                    />
+                    <LeaveRequestsTab companyId={companyId} />
                 </TabsContent>
 
                 <TabsContent value="balances" className="mt-6">

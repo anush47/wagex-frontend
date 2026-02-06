@@ -76,4 +76,11 @@ export class LeavesService {
             responseReason
         });
     }
+
+    /**
+     * Delete a leave request (only pending requests)
+     */
+    static async deleteRequest(id: string): Promise<ApiResponse<{ message: string }>> {
+        return backendApiClient.delete<{ message: string }>(`/leaves/${id}`);
+    }
 }
