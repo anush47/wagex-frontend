@@ -26,6 +26,7 @@ import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import type { Employee } from "@/types/employee";
 import { LeavesService } from "@/services/leaves.service";
 import { EmployeeService } from "@/services/employee.service";
+import { PoliciesService } from "@/services/policies.service";
 import { LeaveRequestDetailsDialog } from "./LeaveRequestDetailsDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format, isSameDay } from "date-fns";
@@ -47,9 +48,21 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
+    const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
 
-    // Employee fetch useEffect removed
-
+    // Fetch company policy to get leave type colors and codes
+    useEffect(() => {
+        const fetchPolicy = async () => {
+            try {
+                const response = await PoliciesService.getCompanyPolicy(companyId);
+                const types = response.data?.data?.settings?.leaves?.leaveTypes || [];
+                setLeaveTypes(types);
+            } catch (error) {
+                console.error("Failed to fetch policy leave types:", error);
+            }
+        };
+        if (companyId) fetchPolicy();
+    }, [companyId]);
 
     // Fetch requests with backend filtering
     const fetchRequests = async () => {
@@ -80,10 +93,10 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
         }
     }, [companyId, statusFilter, employeeFilter, refreshTrigger]);
 
-    const handleApprove = async (id: string) => {
+    const handleApprove = async (id: string, reason?: string) => {
         setProcessingId(id);
         try {
-            const response = await LeavesService.approveRequest(id, "current-user-id", "Approved");
+            const response = await LeavesService.approveRequest(id, "current-user-id", reason || "Approved");
             if (response.data) {
                 toast.success("Leave request approved");
                 fetchRequests();
@@ -96,10 +109,10 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
         }
     };
 
-    const handleReject = async (id: string) => {
+    const handleReject = async (id: string, reason: string) => {
         setProcessingId(id);
         try {
-            await LeavesService.rejectRequest(id, "manager-id", "Rejected by manager");
+            await LeavesService.rejectRequest(id, "manager-id", reason);
             toast.success("Leave request rejected");
             fetchRequests();
         } catch (error: any) {
@@ -178,12 +191,13 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                 open={detailsOpen}
                 onOpenChange={setDetailsOpen}
                 request={selectedRequest}
-                onApprove={async (id) => {
-                    await handleApprove(id);
+                leaveTypes={leaveTypes}
+                onApprove={async (id, reason) => {
+                    await handleApprove(id, reason);
                     setDetailsOpen(false);
                 }}
-                onReject={async (id) => {
-                    await handleReject(id);
+                onReject={async (id, reason) => {
+                    await handleReject(id, reason);
                     setDetailsOpen(false);
                 }}
                 onDelete={async (id) => {
@@ -245,9 +259,8 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                     <TableRow>
                                         <TableHead>Employee</TableHead>
                                         <TableHead>Leave Type</TableHead>
-                                        <TableHead>Type</TableHead>
                                         <TableHead>Dates</TableHead>
-                                        <TableHead>Days</TableHead>
+                                        <TableHead>Duration</TableHead>
                                         <TableHead className="w-[200px]">Reason</TableHead>
                                         <TableHead>Created</TableHead>
                                         <TableHead>Status</TableHead>
@@ -271,27 +284,55 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                                     )}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="whitespace-nowrap">{request.leaveTypeName || request.leaveTypeId}</TableCell>
-                                            <TableCell className="whitespace-nowrap">{getTypeBadge(request.type)}</TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    {(() => {
+                                                        const lt = leaveTypes.find(t => t.id === request.leaveTypeId);
+                                                        return (
+                                                            <>
+                                                                <div
+                                                                    className="h-2 w-2 rounded-full shrink-0"
+                                                                    style={{ backgroundColor: lt?.color || '#cbd5e1' }}
+                                                                />
+                                                                <span className="font-medium">
+                                                                    {lt?.code ? (
+                                                                        <span className="text-[10px] font-bold text-muted-foreground mr-1.5 px-1 rounded bg-muted">
+                                                                            {lt.code}
+                                                                        </span>
+                                                                    ) : null}
+                                                                    {request.leaveTypeName || request.leaveTypeId}
+                                                                </span>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 {isSameDay(new Date(request.startDate), new Date(request.endDate)) ? (
                                                     format(new Date(request.startDate), "MMM d, yyyy")
                                                 ) : (
-                                                    <>
-                                                        {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
-                                                        {format(new Date(request.endDate), "MMM d, yyyy")}
-                                                    </>
+                                                    <div className="text-xs">
+                                                        {format(new Date(request.startDate), "MMM d")} - {format(new Date(request.endDate), "MMM d, yyyy")}
+                                                    </div>
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {request.type === "SHORT_LEAVE" ? (
-                                                    <span className="text-sm font-mono text-muted-foreground">
-                                                        {format(new Date(request.startDate), "h:mm a")} -{" "}
-                                                        {format(new Date(request.endDate), "h:mm a")}
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-sm">
+                                                        {request.type === "SHORT_LEAVE" ? (
+                                                            "Short"
+                                                        ) : (
+                                                            `${request.days} ${request.days === 1 ? 'Day' : 'Days'}`
+                                                        )}
                                                     </span>
-                                                ) : (
-                                                    request.days
-                                                )}
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                                                        {request.type === "SHORT_LEAVE" ? (
+                                                            format(new Date(request.startDate), "h:mm a") + " - " + format(new Date(request.endDate), "h:mm a")
+                                                        ) : (
+                                                            getTypeBadge(request.type)
+                                                        )}
+                                                    </span>
+                                                </div>
                                             </TableCell>
                                             <TableCell className="max-w-[200px]">
                                                 <div className="flex items-center gap-2">

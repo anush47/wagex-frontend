@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { IconCalendarEvent, IconUser, IconCalendarStar, IconClock, IconFileText, IconCheck, IconX, IconBan, IconTrash, IconDownload, IconEye } from "@tabler/icons-react";
 import { StorageService } from "@/services/storage.service";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -23,8 +24,9 @@ interface LeaveRequestDetailsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     request: LeaveRequest | null;
-    onApprove?: (id: string) => Promise<void>;
-    onReject?: (id: string) => Promise<void>;
+    leaveTypes?: any[];
+    onApprove?: (id: string, reason?: string) => Promise<void>;
+    onReject?: (id: string, reason: string) => Promise<void>;
     onCancel?: (id: string) => Promise<void>;
     onDelete?: (id: string) => Promise<void>;
 }
@@ -33,6 +35,7 @@ export function LeaveRequestDetailsDialog({
     open,
     onOpenChange,
     request,
+    leaveTypes = [],
     onApprove,
     onReject,
     onCancel,
@@ -40,6 +43,14 @@ export function LeaveRequestDetailsDialog({
 }: LeaveRequestDetailsDialogProps) {
     const [processing, setProcessing] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [responseReason, setResponseReason] = useState("");
+
+    // Reset response reason when dialog opens with a new request
+    React.useEffect(() => {
+        if (open && request) {
+            setResponseReason(request.responseReason || "");
+        }
+    }, [open, request]);
 
     if (!request) return null;
 
@@ -47,7 +58,7 @@ export function LeaveRequestDetailsDialog({
         if (!onApprove) return;
         setProcessing(true);
         try {
-            await onApprove(request.id);
+            await onApprove(request.id, responseReason);
             onOpenChange(false);
         } finally {
             setProcessing(false);
@@ -56,9 +67,13 @@ export function LeaveRequestDetailsDialog({
 
     const handleReject = async () => {
         if (!onReject) return;
+        if (!responseReason.trim()) {
+            toast.error("Please provide a reason for rejection");
+            return;
+        }
         setProcessing(true);
         try {
-            await onReject(request.id);
+            await onReject(request.id, responseReason);
             onOpenChange(false);
         } finally {
             setProcessing(false);
@@ -142,20 +157,47 @@ export function LeaveRequestDetailsDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-[95vw] md:max-w-2xl lg:max-w-3xl flex flex-col max-h-[90vh] p-0 gap-0 border-none shadow-2xl overflow-hidden rounded-3xl md:rounded-[2rem]">
-                <DialogHeader className="p-5 md:p-6 pb-4 border-b border-border/40 shrink-0 bg-background z-10">
+                <DialogHeader className="p-5 md:p-6 pb-4 border-b border-border/40 shrink-0 bg-background z-10 relative">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-4 top-4 rounded-full h-8 w-8 text-muted-foreground hover:bg-muted"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        <IconX className="h-4 w-4" />
+                    </Button>
                     <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white shrink-0 shadow-lg">
+                        <div
+                            className="h-10 w-10 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg"
+                            style={{ backgroundColor: leaveTypes.find(t => t.id === request.leaveTypeId)?.color || '#3b82f6' }}
+                        >
                             <IconCalendarEvent className="h-5 w-5" />
                         </div>
                         <div className="flex-1">
-                            <DialogTitle className="text-lg md:text-xl font-bold tracking-tight">
-                                Leave Request Details
-                            </DialogTitle>
+                            <div className="flex items-center gap-2">
+                                <DialogTitle className="text-lg md:text-xl font-bold tracking-tight">
+                                    Leave Request Details
+                                </DialogTitle>
+                                {request.leaveNumber && (
+                                    <Badge variant="secondary" className="font-mono text-[10px] h-5">
+                                        #{request.leaveNumber}
+                                    </Badge>
+                                )}
+                            </div>
                             <DialogDescription className="text-[11px] font-medium text-muted-foreground/80">
-                                Request ID: {request.id.slice(0, 8)}
+                                {(() => {
+                                    const lt = leaveTypes.find(t => t.id === request.leaveTypeId);
+                                    return lt?.code ? (
+                                        <span className="font-bold text-primary uppercase tracking-tighter">
+                                            {lt.code}
+                                        </span>
+                                    ) : null;
+                                })()}
                             </DialogDescription>
                         </div>
-                        {getStatusBadge(request.status)}
+                        <div className="mr-8 md:mr-0">
+                            {getStatusBadge(request.status)}
+                        </div>
                     </div>
                 </DialogHeader>
 
@@ -290,43 +332,57 @@ export function LeaveRequestDetailsDialog({
                         </div>
                     )}
 
-                    {/* Approval Information */}
-                    {(request.approvedBy || request.rejectedBy || request.responseReason) && (
-                        <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-3">
-                            <div className="flex items-center gap-2 text-neutral-500">
-                                {request.status === "APPROVED" ? (
-                                    <IconCheck className="w-4 h-4 text-green-500" />
-                                ) : request.status === "REJECTED" ? (
-                                    <IconX className="w-4 h-4 text-red-500" />
-                                ) : (
-                                    <IconUser className="w-4 h-4" />
-                                )}
-                                <span className="text-[10px] font-bold uppercase tracking-widest">
-                                    Processing Information
-                                </span>
+                    {/* Approval Information / Response Workflow */}
+                    <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-4">
+                        <div className="flex items-center gap-2 text-neutral-500">
+                            {request.status === "APPROVED" ? (
+                                <IconCheck className="w-4 h-4 text-green-500" />
+                            ) : request.status === "REJECTED" ? (
+                                <IconX className="w-4 h-4 text-red-500" />
+                            ) : (
+                                <IconUser className="w-4 h-4" />
+                            )}
+                            <span className="text-[10px] font-bold uppercase tracking-widest">
+                                {request.status === "PENDING" ? "Your Response" : "Processing Information"}
+                            </span>
+                        </div>
+
+                        {request.status === "PENDING" ? (
+                            <div className="space-y-3">
+                                <Label className="text-xs font-bold text-muted-foreground ml-1">
+                                    Response Reason (Remarks)
+                                </Label>
+                                <Textarea
+                                    placeholder="Enter reason or remarks for your decision..."
+                                    className="min-h-[100px] rounded-xl bg-background/50 border-border/50 focus:border-primary/50 transition-all text-sm"
+                                    value={responseReason}
+                                    onChange={(e) => setResponseReason(e.target.value)}
+                                    disabled={processing}
+                                />
                             </div>
-                            <div className="space-y-2">
+                        ) : (
+                            <div className="space-y-3">
                                 {(request.approvedBy || request.rejectedBy) && (
                                     <div>
-                                        <Label className="text-[10px] text-muted-foreground">
+                                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
                                             {request.status === "APPROVED" ? "Approved By" : "Rejected By"}
                                         </Label>
-                                        <div className="font-bold text-sm">
+                                        <div className="font-bold text-sm mt-0.5">
                                             {request.approvedBy || request.rejectedBy}
                                         </div>
                                     </div>
                                 )}
-                                {(request.approvalRemarks || request.rejectionRemarks || request.responseReason) && (
+                                {(request.responseReason || request.approvalRemarks || request.rejectionRemarks) && (
                                     <div>
-                                        <Label className="text-[10px] text-muted-foreground">Remarks</Label>
-                                        <p className="text-sm mt-1">
-                                            {request.approvalRemarks || request.rejectionRemarks || request.responseReason}
+                                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Remarks</Label>
+                                        <p className="text-sm mt-1 leading-relaxed text-neutral-700">
+                                            {request.responseReason || request.approvalRemarks || request.rejectionRemarks}
                                         </p>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Timestamps */}
                     <div className="grid grid-cols-2 gap-3 text-xs">

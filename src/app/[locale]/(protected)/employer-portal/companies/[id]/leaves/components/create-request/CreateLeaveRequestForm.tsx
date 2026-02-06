@@ -168,7 +168,22 @@ export function CreateLeaveRequestForm({
                             <SelectValue placeholder={
                                 fetchingConfig ? "Loading leave types..." :
                                     (formData.employeeId || defaultEmployeeId) ? "Select leave type" : "Select employee first"
-                            } />
+                            }>
+                                {formData.leaveTypeId && selectedLeaveType && (
+                                    <div className="flex items-center gap-2">
+                                        <div
+                                            className="h-3 w-3 rounded-full"
+                                            style={{ backgroundColor: selectedLeaveType.color || '#3b82f6' }}
+                                        />
+                                        <span>{selectedLeaveType.name}</span>
+                                        {selectedLeaveType.code && (
+                                            <Badge variant="outline" className="text-[9px] font-mono py-0 h-4 min-w-0 px-1">
+                                                {selectedLeaveType.code}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                )}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                             {leaveTypes.length === 0 && (formData.employeeId || defaultEmployeeId) ? (
