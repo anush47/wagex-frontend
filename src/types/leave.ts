@@ -1,3 +1,5 @@
+import type { CompanyFile } from "@/types/company";
+
 export enum LeaveStatus {
     PENDING = 'PENDING',
     APPROVED = 'APPROVED',
@@ -28,13 +30,18 @@ export interface LeaveRequest {
     reason?: string;
     managerId?: string;
     responseReason?: string;
-    documents?: any[];
+    approvedBy?: string;
+    rejectedBy?: string;
+    approvalRemarks?: string;
+    rejectionRemarks?: string;
+    documents?: CompanyFile[];
     createdAt: string;
     updatedAt: string;
     employee?: {
         id: string;
         nameWithInitials: string;
         fullName: string;
+        employeeNo?: string;
         photo?: string;
     };
 }
@@ -61,7 +68,7 @@ export interface CreateLeaveRequestDto {
     startDate: string; // ISO DateTime
     endDate: string;   // ISO DateTime
     reason?: string;
-    documents?: any[];
+    documents?: CompanyFile[];
 }
 
 export interface UpdateLeaveRequestDto {

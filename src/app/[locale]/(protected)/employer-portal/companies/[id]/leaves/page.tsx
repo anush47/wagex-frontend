@@ -45,7 +45,7 @@ export default function LeavesPage() {
     return (
         <div className="flex flex-col gap-6 p-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
                     <p className="text-muted-foreground mt-1">

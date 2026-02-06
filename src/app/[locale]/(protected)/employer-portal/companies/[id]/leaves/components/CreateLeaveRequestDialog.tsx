@@ -21,13 +21,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { IconCalendarEvent, IconUser, IconCalendarStar, IconClock } from "@tabler/icons-react";
+import { IconCalendarEvent, IconUser, IconCalendarStar, IconClock, IconCloudUpload, IconFileText, IconTrash } from "@tabler/icons-react";
 import { LeavesService } from "@/services/leaves.service";
 import { EmployeeService } from "@/services/employee.service";
 import { PoliciesService } from "@/services/policies.service";
 import type { Employee } from "@/types/employee";
 import type { LeaveRequestType, LeaveBalance } from "@/types/leave";
 import { toast } from "sonner";
+import { FileUpload } from "@/components/ui/file-upload";
+import { CompanyFile } from "@/types/company";
+import { differenceInCalendarDays } from "date-fns";
 
 interface CreateLeaveRequestDialogProps {
     open: boolean;
@@ -45,6 +48,7 @@ export function CreateLeaveRequestDialog({
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
     const [balances, setBalances] = useState<LeaveBalance[]>([]);
+    const [documents, setDocuments] = useState<CompanyFile[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingConfig, setFetchingConfig] = useState(false);
 
@@ -56,6 +60,20 @@ export function CreateLeaveRequestDialog({
         endDate: "",
         reason: "",
     });
+
+    useEffect(() => {
+        if (!open) {
+            setFormData({
+                employeeId: "",
+                leaveTypeId: "",
+                type: "FULL_DAY" as LeaveRequestType,
+                startDate: "",
+                endDate: "",
+                reason: "",
+            });
+            setDocuments([]);
+        }
+    }, [open, companyId]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -121,6 +139,7 @@ export function CreateLeaveRequestDialog({
             const response = await LeavesService.createRequest({
                 ...formData,
                 companyId,
+                documents,
             });
             if (response.data) {
                 toast.success("Leave request created successfully");
@@ -374,6 +393,73 @@ export function CreateLeaveRequestDialog({
                             </div>
                         </div>
                     )}
+                    {/* Documents */}
+                    <div className="space-y-3">
+                        <Label className="text-xs font-bold text-neutral-500 ml-1 flex items-center gap-1.5 justify-between">
+                            <div className="flex items-center gap-1.5">
+                                <IconCloudUpload className="w-3.5 h-3.5" />
+                                Supporting Documents
+                            </div>
+                            {selectedLeaveType && (selectedLeaveType.requireDocuments || (
+                                selectedLeaveType.requireDocumentsIfConsecutiveMoreThan &&
+                                formData.startDate && formData.endDate &&
+                                (differenceInCalendarDays(new Date(formData.endDate), new Date(formData.startDate)) + 1) > selectedLeaveType.requireDocumentsIfConsecutiveMoreThan
+                            )) && (
+                                    <Badge variant="destructive" className="text-[9px] h-5 px-2">Required</Badge>
+                                )}
+                        </Label>
+
+                        {documents.length > 0 ? (
+                            <div className="space-y-2">
+                                {documents.map((doc, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border/50">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                                <IconFileText className="w-4 h-4" />
+                                            </div>
+                                            <div className="truncate">
+                                                <div className="text-sm font-bold truncate">{doc.name}</div>
+                                                <div className="text-[10px] text-muted-foreground">{doc.size}</div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-neutral-400 hover:text-red-500 hover:bg-red-50"
+                                            onClick={() => setDocuments(docs => docs.filter((_, i) => i !== index))}
+                                        >
+                                            <IconTrash className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        // Creating a hidden input to trigger more uploads would be complex here
+                                        // Ideally FileUpload supports multiple or we just clear and add more
+                                        // For now, let's keep it simple: one upload allows adding to list,
+                                        // but the FileUpload component itself resets after upload.
+                                        // So showing the FileUpload component again if they want to add more?
+                                        // Or just always showing it?
+                                        // Let's just show the FileUpload below the list for adding more.
+                                    }}
+                                    className="w-full text-xs font-bold h-9 hidden" // Hidden for now, using the FileUpload below
+                                >
+                                    Add Another Document
+                                </Button>
+                            </div>
+                        ) : null}
+
+                        <FileUpload
+                            companyId={companyId}
+                            folder="leaves"
+                            onUpload={(file) => setDocuments(prev => [...prev, file])}
+                            className="min-h-[120px]"
+                        />
+                    </div>
                 </form>
 
                 <DialogFooter className="p-4 bg-muted/60 border-t border-border mt-auto">

@@ -28,6 +28,7 @@ import { EmployeeService } from "@/services/employee.service";
 import { LeaveRequestDetailsDialog } from "./LeaveRequestDetailsDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface LeaveRequestsTabProps {
     companyId: string;
@@ -120,37 +121,48 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
         }
     };
 
-    const handleDelete = (id: string) => {
+    const executeDelete = async (id: string) => {
+        setProcessingId(id);
+        try {
+            await LeavesService.deleteRequest(id);
+            toast.success("Leave request deleted");
+            fetchRequests();
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Failed to delete request";
+            toast.error(message);
+            throw error;
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleDeleteClick = (id: string) => {
         setRequestToDelete(id);
         setDeleteConfirmOpen(true);
     };
 
     const confirmDelete = async () => {
         if (!requestToDelete) return;
-        setProcessingId(requestToDelete);
         try {
-            await LeavesService.deleteRequest(requestToDelete);
-            toast.success("Leave request deleted");
-            fetchRequests();
+            await executeDelete(requestToDelete);
             setDeleteConfirmOpen(false);
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to delete request");
+        } catch (error) {
+            // Error handling already done in executeDelete
         } finally {
-            setProcessingId(null);
             setRequestToDelete(null);
         }
     };
 
     const getStatusBadge = (status: LeaveStatus) => {
-        const variants = {
-            PENDING: "warning",
-            APPROVED: "success",
-            REJECTED: "destructive",
-            CANCELLED: "secondary",
-        } as const;
+        const styles: Record<string, string> = {
+            PENDING: "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200",
+            APPROVED: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
+            REJECTED: "bg-red-100 text-red-700 hover:bg-red-100 border-red-200",
+            CANCELLED: "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200",
+        };
 
         return (
-            <Badge variant={variants[status] || "default"}>
+            <Badge variant="outline" className={`font-bold ${styles[status]}`}>
                 {status}
             </Badge>
         );
@@ -187,15 +199,15 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     setDetailsOpen(false);
                 }}
                 onDelete={async (id) => {
-                    await handleDelete(id);
+                    await executeDelete(id);
                     setDetailsOpen(false);
                 }}
             />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <CardTitle>Leave Requests</CardTitle>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
                             <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
                                 <SelectTrigger className="w-[200px]">
                                     <SelectValue placeholder="Filter by employee" />
@@ -233,81 +245,75 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     ) : requests.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">No leave requests found</div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Employee</TableHead>
-                                    <TableHead>Leave Type</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Dates</TableHead>
-                                    <TableHead>Days</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {requests.map((request) => (
-                                    <TableRow
-                                        key={request.id}
-                                        className="cursor-pointer hover:bg-muted/50 transition-colors"
-                                        onClick={() => handleRowClick(request)}
-                                    >
-                                        <TableCell>
-                                            <div className="font-medium">
-                                                {request.employee?.nameWithInitials}{" "}
-                                                {request.employee?.employeeNo && (
-                                                    <span className="text-muted-foreground font-mono text-xs">
-                                                        ({request.employee.employeeNo})
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{request.leaveTypeName || request.leaveTypeId}</TableCell>
-                                        <TableCell>{getTypeBadge(request.type)}</TableCell>
-                                        <TableCell>
-                                            {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
-                                            {format(new Date(request.endDate), "MMM d, yyyy")}
-                                        </TableCell>
-                                        <TableCell>{request.days}</TableCell>
-                                        <TableCell>{getStatusBadge(request.status)}</TableCell>
-                                        <TableCell onClick={(e) => e.stopPropagation()}>
-                                            {request.status === "PENDING" && (
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleApprove(request.id)}
-                                                        disabled={processingId === request.id}
-                                                    >
-                                                        <IconCheck className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleReject(request.id)}
-                                                        disabled={processingId === request.id}
-                                                    >
-                                                        <IconX className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                                                        onClick={() => handleDelete(request.id)}
-                                                        disabled={processingId === request.id}
-                                                    >
-                                                        <IconTrash className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </TableCell>
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Employee</TableHead>
+                                        <TableHead>Leave Type</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Dates</TableHead>
+                                        <TableHead>Days</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Actions</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {requests.map((request) => (
+                                        <TableRow
+                                            key={request.id}
+                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                            onClick={() => handleRowClick(request)}
+                                        >
+                                            <TableCell>
+                                                <div className="font-medium">
+                                                    {request.employee?.nameWithInitials}{" "}
+                                                    {request.employee?.employeeNo && (
+                                                        <span className="text-muted-foreground font-mono text-xs">
+                                                            ({request.employee.employeeNo})
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap">{request.leaveTypeName || request.leaveTypeId}</TableCell>
+                                            <TableCell className="whitespace-nowrap">{getTypeBadge(request.type)}</TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
+                                                {format(new Date(request.endDate), "MMM d, yyyy")}
+                                            </TableCell>
+                                            <TableCell>{request.days}</TableCell>
+                                            <TableCell>{getStatusBadge(request.status)}</TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                                {request.status === "PENDING" && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            className="rounded-lg shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90"
+                                                            onClick={() => handleApprove(request.id)}
+                                                            disabled={processingId === request.id}
+                                                        >
+                                                            <IconCheck className="h-4 w-4 mr-2" />
+                                                            Approve
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleReject(request.id)}
+                                                            disabled={processingId === request.id}
+                                                        >
+                                                            <IconX className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     )}
                 </CardContent>
-            </Card>
+            </Card >
 
             <ConfirmationDialog
                 open={deleteConfirmOpen}

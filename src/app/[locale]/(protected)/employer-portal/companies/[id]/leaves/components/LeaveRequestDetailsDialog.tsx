@@ -12,7 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { IconCalendarEvent, IconUser, IconCalendarStar, IconClock, IconFileText, IconCheck, IconX, IconBan, IconTrash } from "@tabler/icons-react";
+import { IconCalendarEvent, IconUser, IconCalendarStar, IconClock, IconFileText, IconCheck, IconX, IconBan, IconTrash, IconDownload, IconEye } from "@tabler/icons-react";
+import { StorageService } from "@/services/storage.service";
+import { toast } from "sonner";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
@@ -92,17 +94,15 @@ export function LeaveRequestDetailsDialog({
     };
 
     const getStatusBadge = (status: LeaveStatus) => {
-        const variants = {
-            PENDING: { variant: "warning" as const, color: "bg-amber-500" },
-            APPROVED: { variant: "success" as const, color: "bg-green-500" },
-            REJECTED: { variant: "destructive" as const, color: "bg-red-500" },
-            CANCELLED: { variant: "secondary" as const, color: "bg-neutral-500" },
+        const styles: Record<string, string> = {
+            PENDING: "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200",
+            APPROVED: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
+            REJECTED: "bg-red-100 text-red-700 hover:bg-red-100 border-red-200",
+            CANCELLED: "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200",
         };
 
-        const config = variants[status] || { variant: "default" as const, color: "bg-primary" };
-
         return (
-            <Badge variant={config.variant} className="font-bold">
+            <Badge variant="outline" className={`font-bold ${styles[status]}`}>
                 {status}
             </Badge>
         );
@@ -237,6 +237,48 @@ export function LeaveRequestDetailsDialog({
                                 Reason
                             </Label>
                             <p className="text-sm mt-2 leading-relaxed">{request.reason}</p>
+                        </div>
+                    )}
+
+                    {/* Documents */}
+                    {request.documents && request.documents.length > 0 && (
+                        <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                            <Label className="text-xs font-bold text-neutral-500 mb-2 flex items-center gap-1.5">
+                                <IconFileText className="w-3.5 h-3.5" />
+                                Supporting Documents
+                            </Label>
+                            <div className="space-y-2 mt-2">
+                                {request.documents.map((doc, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/50">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                                <IconFileText className="w-4 h-4" />
+                                            </div>
+                                            <div className="truncate">
+                                                <div className="text-sm font-bold truncate">{doc.name}</div>
+                                                <div className="text-[10px] text-muted-foreground">{doc.size}</div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 rounded-lg"
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await StorageService.getUrl(doc.key);
+                                                    if (res.data) {
+                                                        window.open(res.data.url, '_blank');
+                                                    }
+                                                } catch (e) {
+                                                    toast.error("Failed to open document");
+                                                }
+                                            }}
+                                        >
+                                            <IconEye className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
