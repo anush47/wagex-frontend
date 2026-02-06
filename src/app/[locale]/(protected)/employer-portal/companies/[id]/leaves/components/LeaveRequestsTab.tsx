@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { IconCheck, IconX, IconRefresh, IconTrash } from "@tabler/icons-react";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import type { Employee } from "@/types/employee";
@@ -39,29 +40,16 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
     const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<LeaveStatus | "ALL">("ALL");
-    const [employeeFilter, setEmployeeFilter] = useState<string>("ALL");
-    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
+    // const [employees, setEmployees] = useState<Employee[]>([]); // Removed
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
 
-    // Fetch employees for filter
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                const response = await EmployeeService.getEmployees({ companyId });
-                setEmployees(response.data?.data?.data || []);
-            } catch (error) {
-                console.error("Failed to fetch employees:", error);
-            }
-        };
+    // Employee fetch useEffect removed
 
-        if (companyId) {
-            fetchEmployees();
-        }
-    }, [companyId]);
 
     // Fetch requests with backend filtering
     const fetchRequests = async () => {
@@ -71,7 +59,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
             if (statusFilter !== "ALL") {
                 filters.status = statusFilter;
             }
-            if (employeeFilter !== "ALL") {
+            if (employeeFilter) {
                 filters.employeeId = employeeFilter;
             }
 
@@ -208,19 +196,25 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <CardTitle>Leave Requests</CardTitle>
                         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
-                            <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
-                                <SelectTrigger className="w-[200px]">
-                                    <SelectValue placeholder="Filter by employee" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All Employees</SelectItem>
-                                    {employees.map((emp) => (
-                                        <SelectItem key={emp.id} value={emp.id}>
-                                            {emp.nameWithInitials} ({emp.employeeNo})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="w-[200px]">
+                                <SearchableEmployeeSelect
+                                    companyId={companyId}
+                                    value={employeeFilter || undefined} // Pass undefined for "All"
+                                    onSelect={(id) => setEmployeeFilter(id)}
+                                    placeholder="Filter by employee"
+                                />
+                            </div>
+                            {employeeFilter && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setEmployeeFilter(undefined)}
+                                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                                    title="Clear employee filter"
+                                >
+                                    <IconX className="h-4 w-4" />
+                                </Button>
+                            )}
                             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeaveStatus | "ALL")}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Filter by status" />

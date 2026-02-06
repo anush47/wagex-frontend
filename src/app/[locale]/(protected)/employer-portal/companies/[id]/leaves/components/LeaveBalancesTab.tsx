@@ -6,36 +6,21 @@ import { Progress } from "@/components/ui/progress";
 import { LeavesService } from "@/services/leaves.service";
 import { EmployeeService } from "@/services/employee.service";
 import type { LeaveBalance } from "@/types/leave";
-import type { Employee } from "@/types/employee";
+import type { LeaveBalance } from "@/types/leave";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 
 interface LeaveBalancesTabProps {
     companyId: string;
 }
 
 export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
-    const [employees, setEmployees] = useState<Employee[]>([]);
+    // const [employees, setEmployees] = useState<Employee[]>([]); // Removed
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
     const [balances, setBalances] = useState<LeaveBalance[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false); // Changed to false initially as we wait for selection
 
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                const response = await EmployeeService.getEmployees({ companyId });
-                // Backend returns {data: {data: [], meta: {}}}
-                const employees = response.data?.data?.data || [];
-                setEmployees(employees);
-                if (employees.length > 0) {
-                    setSelectedEmployeeId(employees[0].id);
-                }
-            } catch (error) {
-                console.error("Failed to fetch employees:", error);
-                setEmployees([]);
-            }
-        };
+    // Employee fetch useEffect removed
 
-        fetchEmployees();
-    }, [companyId]);
 
     useEffect(() => {
         const fetchBalances = async () => {
@@ -65,17 +50,11 @@ export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
                     <CardTitle>Select Employee</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <select
-                        className="w-full p-2 border rounded-md dark:bg-neutral-800 dark:border-neutral-700"
-                        value={selectedEmployeeId || ""}
-                        onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                    >
-                        {employees.map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                                {emp.nameWithInitials} ({emp.employeeNo})
-                            </option>
-                        ))}
-                    </select>
+                    <SearchableEmployeeSelect
+                        companyId={companyId}
+                        value={selectedEmployeeId || undefined}
+                        onSelect={(id) => setSelectedEmployeeId(id)}
+                    />
                 </CardContent>
             </Card>
 

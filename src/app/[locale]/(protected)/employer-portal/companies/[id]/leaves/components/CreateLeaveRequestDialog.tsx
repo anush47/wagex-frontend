@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { IconCalendarEvent, IconUser, IconCalendarStar, IconClock, IconCloudUpload, IconFileText, IconTrash } from "@tabler/icons-react";
@@ -45,7 +46,8 @@ export function CreateLeaveRequestDialog({
     companyId,
     onSuccess,
 }: CreateLeaveRequestDialogProps) {
-    const [employees, setEmployees] = useState<Employee[]>([]);
+    // const [employees, setEmployees] = useState<Employee[]>([]); // Removed
+
     const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
     const [balances, setBalances] = useState<LeaveBalance[]>([]);
     const [documents, setDocuments] = useState<CompanyFile[]>([]);
@@ -75,21 +77,8 @@ export function CreateLeaveRequestDialog({
         }
     }, [open, companyId]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await EmployeeService.getEmployees({ companyId });
-                setEmployees(response.data?.data?.data || []);
-            } catch (error) {
-                console.error("Failed to fetch employees:", error);
-                setEmployees([]);
-            }
-        };
+    // Employee fetching useEffect removed
 
-        if (open) {
-            fetchData();
-        }
-    }, [open, companyId]);
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -141,21 +130,29 @@ export function CreateLeaveRequestDialog({
                 companyId,
                 documents,
             });
+
+            if (response.error) {
+                toast.error(response.error.message || "Failed to create leave request");
+                return;
+            }
+
             if (response.data) {
                 toast.success("Leave request created successfully");
                 onSuccess();
                 onOpenChange(false);
+                setFormData({
+                    employeeId: "",
+                    leaveTypeId: "",
+                    type: "FULL_DAY" as LeaveRequestType,
+                    startDate: "",
+                    endDate: "",
+                    reason: "",
+                });
+                setDocuments([]);
             }
-            setFormData({
-                employeeId: "",
-                leaveTypeId: "",
-                type: "FULL_DAY",
-                startDate: "",
-                endDate: "",
-                reason: "",
-            });
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to create leave request");
+            console.error("Unexpected error:", error);
+            toast.error("An unexpected error occurred");
         } finally {
             setLoading(false);
         }
@@ -190,28 +187,13 @@ export function CreateLeaveRequestDialog({
                                 <IconUser className="w-3.5 h-3.5" />
                                 Employee
                             </Label>
-                            <Select
+                            <SearchableEmployeeSelect
+                                companyId={companyId}
                                 value={formData.employeeId}
-                                onValueChange={(value) => {
-                                    setFormData({ ...formData, employeeId: value, leaveTypeId: "" });
+                                onSelect={(id) => {
+                                    setFormData({ ...formData, employeeId: id, leaveTypeId: "" });
                                 }}
-                            >
-                                <SelectTrigger className="h-11 bg-muted/40 border-none rounded-xl px-4 font-bold text-sm shadow-sm">
-                                    <SelectValue placeholder="Select employee" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                    {employees.map((emp) => (
-                                        <SelectItem key={emp.id} value={emp.id}>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">{emp.nameWithInitials}</span>
-                                                <Badge variant="outline" className="text-[9px] font-mono">
-                                                    {emp.employeeNo}
-                                                </Badge>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            />
                         </div>
 
                     </div>
@@ -258,7 +240,7 @@ export function CreateLeaveRequestDialog({
                                     setFormData({
                                         ...formData,
                                         leaveTypeId: value,
-                                        type: selectedType?.isShortLeave ? "SHORT_LEAVE" : "FULL_DAY"
+                                        type: (selectedType?.isShortLeave ? "SHORT_LEAVE" : "FULL_DAY") as LeaveRequestType
                                     });
                                 }}
                                 disabled={!formData.employeeId || fetchingConfig}
@@ -476,7 +458,6 @@ export function CreateLeaveRequestDialog({
                             type="submit"
                             className="rounded-xl px-14 h-11 font-bold text-xs shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                             disabled={loading || !formData.employeeId || !formData.leaveTypeId}
-                            onClick={handleSubmit}
                         >
                             {loading ? "Creating..." : "Create Request"}
                         </Button>

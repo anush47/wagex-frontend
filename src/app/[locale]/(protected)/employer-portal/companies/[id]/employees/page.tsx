@@ -4,13 +4,12 @@ import { use, useEffect, useState } from "react";
 import { EmployeeService, EmployeeQuery } from "@/services/employee.service";
 import { Employee, EmployeeStatus } from "@/types/employee";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import {
     IconUsers,
-    IconSearch,
     IconPlus,
     IconFilter,
     IconSortAscending,
@@ -20,7 +19,7 @@ import {
     IconBriefcase,
     IconUserBolt,
     IconChevronRight,
-    IconLoader2
+    IconX,
 } from "@tabler/icons-react";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -32,7 +31,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
     const t = useTranslations("Common");
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchInput, setSearchInput] = useState("");
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
     const [query, setQuery] = useState<EmployeeQuery>({
         companyId,
         status: "ACTIVE",
@@ -41,14 +40,8 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
         search: ""
     });
 
-    // Debounce search input
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setQuery(prev => ({ ...prev, search: searchInput }));
-        }, 500);
+    // Debounce search input - Removed as we use SearchableEmployeeSelect now
 
-        return () => clearTimeout(timer);
-    }, [searchInput]);
 
     const fetchEmployees = async () => {
         setLoading(true);
@@ -70,8 +63,10 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
     };
 
     useEffect(() => {
-        fetchEmployees();
-    }, [query]);
+        if (!selectedEmployeeId) {
+            fetchEmployees();
+        }
+    }, [query, selectedEmployeeId]);
 
     const updateQuery = (updates: Partial<EmployeeQuery>) => {
         setQuery(prev => ({ ...prev, ...updates }));
@@ -104,20 +99,32 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
             {/* Search & Filter Bar */}
             <div className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4 items-center">
-                    <div className="relative w-full md:max-w-md group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-primary transition-colors">
-                            {loading && searchInput !== query.search ? (
-                                <IconLoader2 className="h-full w-full animate-spin text-primary" />
-                            ) : (
-                                <IconSearch className="h-full w-full" />
-                            )}
-                        </div>
-                        <Input
+                    <div className="relative w-full md:max-w-md flex items-center gap-2">
+                        <SearchableEmployeeSelect
+                            companyId={companyId}
+                            value={selectedEmployeeId || undefined}
                             placeholder="Search by name or member ID..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            className="pl-12 h-12 rounded-2xl border-none bg-white dark:bg-neutral-900 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.2)] focus-visible:ring-2 focus-visible:ring-primary/20 transition-all font-medium"
+                            onSelect={(id, employee) => {
+                                setSelectedEmployeeId(id);
+                                if (employee) {
+                                    setEmployees([employee]);
+                                }
+                            }}
                         />
+                        {selectedEmployeeId && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                    setSelectedEmployeeId(null);
+                                    // fetchEmployees will run due to useEffect
+                                }}
+                                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                                title="Clear filter"
+                            >
+                                <IconX className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap gap-3 items-center w-full md:w-auto ml-auto">
