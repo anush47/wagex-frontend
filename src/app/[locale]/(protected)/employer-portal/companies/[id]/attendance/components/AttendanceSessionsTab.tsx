@@ -84,7 +84,7 @@ export function AttendanceSessionsTab({
     const sessions = sessionsData?.items || [];
     const meta = sessionsData?.meta;
 
-    const { deleteSession } = useAttendanceMutations();
+    const { deleteSession, updateSession } = useAttendanceMutations();
 
     const executeDelete = async (id: string) => {
         try {
@@ -144,12 +144,15 @@ export function AttendanceSessionsTab({
     const handleQuickApprove = async (session: AttendanceSession, e: React.MouseEvent) => {
         e.stopPropagation();
         const updates: any = {};
+        const approvedItems: string[] = [];
 
         if (session.inApprovalStatus === 'PENDING') {
             updates.inApprovalStatus = 'APPROVED';
+            approvedItems.push('check-in');
         }
         if (session.outApprovalStatus === 'PENDING') {
             updates.outApprovalStatus = 'APPROVED';
+            approvedItems.push('check-out');
         }
 
         if (Object.keys(updates).length === 0) {
@@ -159,8 +162,11 @@ export function AttendanceSessionsTab({
 
         try {
             await updateSession.mutateAsync({ id: session.id, dto: updates });
+            const approvedText = approvedItems.join(' and ');
+            toast.success(`Successfully approved ${approvedText} for ${session.employee?.fullName || 'employee'}`);
         } catch (err) {
-            // Error already handled by mutation
+            console.error('Failed to approve session:', err);
+            toast.error('Failed to approve session. Please try again.');
         }
     };
 
@@ -336,7 +342,7 @@ export function AttendanceSessionsTab({
                                     </TableHeader>
                                     <TableBody>
                                         {sessions
-                                            .filter(session => {
+                                            .filter((session: AttendanceSession) => {
                                                 if (approvalFilter === "ALL") return true;
                                                 if (approvalFilter === "PENDING") {
                                                     return session.inApprovalStatus === 'PENDING' || session.outApprovalStatus === 'PENDING';
