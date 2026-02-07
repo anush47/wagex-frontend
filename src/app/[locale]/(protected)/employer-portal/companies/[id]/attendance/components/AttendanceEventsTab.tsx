@@ -56,8 +56,8 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
 
     const getEventTypeBadge = (type: EventType) => {
         const styles = {
-            IN: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
-            OUT: "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200",
+            IN: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            OUT: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
         };
 
         const icons = {
@@ -75,9 +75,9 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
 
     const getSourceBadge = (source: EventSource) => {
         const styles = {
-            WEB: "bg-purple-50 text-purple-700 border-purple-200",
-            API_KEY: "bg-cyan-50 text-cyan-700 border-cyan-200",
-            MANUAL: "bg-orange-50 text-orange-700 border-orange-200",
+            WEB: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+            API_KEY: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+            MANUAL: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
         };
 
         return (
@@ -89,9 +89,9 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
 
     const getStatusBadge = (status: EventStatus) => {
         const styles = {
-            ACTIVE: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
-            REJECTED: "bg-red-100 text-red-700 hover:bg-red-100 border-red-200",
-            IGNORED: "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200",
+            ACTIVE: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            REJECTED: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+            IGNORED: "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20",
         };
 
         return (

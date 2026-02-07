@@ -1,5 +1,4 @@
-import { CompanyFile } from "./company";
-import { EmploymentType, Gender } from "./policy";
+import { EmploymentType, Gender, MaritalStatus } from "./policy";
 
 export enum EmployeeStatus {
     ACTIVE = 'ACTIVE',
@@ -28,6 +27,28 @@ export interface Employee {
     managerId?: string;
     departmentId?: string;
     userId?: string;
+
+    // Split Details
+    details?: {
+        id: string;
+        employeeId: string;
+
+        // Bank Details
+        bankName?: string;
+        bankBranch?: string;
+        accountNumber?: string;
+
+        // Personal & Family Details
+        mothersName?: string;
+        fathersName?: string;
+        maritalStatus: MaritalStatus;
+        spouseName?: string;
+        nationality?: string;
+
+        // Emergency Contact
+        emergencyContactName?: string;
+        emergencyContactPhone?: string;
+    };
     // Optional joined data
     company?: {
         id: string;

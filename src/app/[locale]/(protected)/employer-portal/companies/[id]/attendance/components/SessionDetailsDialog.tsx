@@ -14,13 +14,21 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconClock, IconUser, IconX, IconTrash, IconCheck, IconMapPin } from "@tabler/icons-react";
-import type { AttendanceSession, ApprovalStatus, UpdateSessionDto } from "@/types/attendance";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { useAttendanceMutations } from "@/hooks/use-attendance";
+import { useEffectivePolicy } from "@/hooks/use-policies";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
+import { IconClock, IconUser, IconX, IconTrash, IconCheck, IconMapPin, IconCalendarEvent, IconBriefcase } from "@tabler/icons-react";
+import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus } from "@/types/attendance";
 
 interface SessionDetailsDialogProps {
     open: boolean;
@@ -43,8 +51,14 @@ export function SessionDetailsDialog({
     const [checkInTime, setCheckInTime] = useState("");
     const [checkOutTime, setCheckOutTime] = useState("");
     const [workMinutes, setWorkMinutes] = useState("");
+    const [breakMinutes, setBreakMinutes] = useState("");
     const [overtimeMinutes, setOvertimeMinutes] = useState("");
+    const [shiftId, setShiftId] = useState("");
+    const [workDayStatus, setWorkDayStatus] = useState<SessionWorkDayStatus>(SessionWorkDayStatus.FULL);
     const [remarks, setRemarks] = useState("");
+
+    const { data: policyData } = useEffectivePolicy(session?.employeeId || null);
+    const availableShifts = policyData?.effective?.shifts?.list || [];
 
     const { updateSession } = useAttendanceMutations();
 
@@ -55,11 +69,24 @@ export function SessionDetailsDialog({
             setCheckInTime(session.checkInTime ? format(new Date(session.checkInTime), "yyyy-MM-dd'T'HH:mm") : "");
             setCheckOutTime(session.checkOutTime ? format(new Date(session.checkOutTime), "yyyy-MM-dd'T'HH:mm") : "");
             setWorkMinutes(session.workMinutes?.toString() || "");
+            setBreakMinutes(session.breakMinutes?.toString() || "");
             setOvertimeMinutes(session.overtimeMinutes?.toString() || "");
+            setShiftId(session.shiftId || "");
+            setWorkDayStatus(session.workDayStatus || SessionWorkDayStatus.FULL);
             setRemarks(session.remarks || "");
             setEditing(false);
         }
     }, [open, session]);
+
+    // Recalculate workMinutes when breakMinutes changes
+    useEffect(() => {
+        if (editing) {
+            const total = session?.totalMinutes || 0;
+            const brk = parseInt(breakMinutes) || 0;
+            const work = Math.max(0, total - brk);
+            setWorkMinutes(work.toString());
+        }
+    }, [breakMinutes, editing, session?.totalMinutes]);
 
     if (!session) return null;
 
@@ -71,7 +98,10 @@ export function SessionDetailsDialog({
                 checkInTime: checkInTime ? new Date(checkInTime).toISOString() : null,
                 checkOutTime: checkOutTime ? new Date(checkOutTime).toISOString() : null,
                 workMinutes: workMinutes ? parseInt(workMinutes) : undefined,
+                breakMinutes: breakMinutes ? parseInt(breakMinutes) : undefined,
                 overtimeMinutes: overtimeMinutes ? parseInt(overtimeMinutes) : undefined,
+                shiftId: shiftId === "none" ? null : (shiftId || undefined),
+                workDayStatus,
                 remarks: remarks, // Allow empty string
             };
 
@@ -124,9 +154,9 @@ export function SessionDetailsDialog({
 
     const getApprovalBadge = (status: ApprovalStatus, type: "IN" | "OUT") => {
         const styles: Record<string, string> = {
-            PENDING: "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200",
-            APPROVED: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
-            REJECTED: "bg-red-100 text-red-700 hover:bg-red-100 border-red-200",
+            PENDING: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+            APPROVED: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            REJECTED: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
         };
 
         return (
@@ -209,40 +239,75 @@ export function SessionDetailsDialog({
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
-                    {/* Employee Information */}
-                    <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-4">
-                        <div className="flex items-center gap-2 text-neutral-500 mb-2">
-                            <IconUser className="w-4 h-4" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Employee Information</span>
-                        </div>
-                        <div className="flex items-center gap-3">
+                    {/* Shift & Employee Info */}
+                    <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                        <div className="flex items-center gap-4">
                             <EmployeeAvatar
-                                name={session.employee?.nameWithInitials}
-                                className="h-12 w-12 rounded-2xl text-lg shadow-lg"
+                                photo={session.employee?.photo}
+                                name={session.employee?.fullName}
+                                className="h-12 w-12 rounded-2xl border-2 border-background shadow-sm"
                             />
-                            <div>
-                                <div className="font-bold text-base">{session.employee?.nameWithInitials}</div>
-                                {session.employee?.employeeNo && (
-                                    <div className="text-xs text-muted-foreground">
-                                        Employee No: <span className="font-mono font-bold">{session.employee.employeeNo}</span>
-                                    </div>
-                                )}
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-base font-bold truncate">
+                                    {session.employee?.fullName || "Unknown"}
+                                </h3>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                    <Badge variant="secondary" className="font-mono text-[10px] h-4 text-zinc-600 dark:text-zinc-400">
+                                        EMP-{session.employee?.employeeNo || "N/A"}
+                                    </Badge>
+                                    <span>•</span>
+                                    <span>{format(new Date(session.date), "MMMM d, yyyy")}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Shift Information */}
-                    {session.shiftName && (
-                        <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                            <Label className="text-xs font-bold text-neutral-500 mb-2">Shift</Label>
-                            <div className="font-bold text-sm mt-1">{session.shiftName}</div>
-                            {session.shiftStartTime && session.shiftEndTime && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                    {session.shiftStartTime} - {session.shiftEndTime}
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                            <Label className="text-[10px] font-bold text-neutral-500 uppercase tracking-tight mb-2 block">Assigned Shift</Label>
+                            {editing ? (
+                                <Select
+                                    value={shiftId}
+                                    onValueChange={(v) => {
+                                        setShiftId(v);
+                                        // Auto-set break minutes if shift has them
+                                        if (v !== "none") {
+                                            const shift = availableShifts.find((s: any) => s.id === v);
+                                            if (shift && shift.breakMinutes) {
+                                                setBreakMinutes(shift.breakMinutes.toString());
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full h-9">
+                                        <SelectValue placeholder="Select shift" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No Shift</SelectItem>
+                                        {availableShifts.map((s: any) => (
+                                            <SelectItem key={s.id} value={s.id}>
+                                                {s.name} ({s.startTime} - {s.endTime})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <IconBriefcase className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-bold leading-none">
+                                            {session.shiftName || "No Shift Assigned"}
+                                        </div>
+                                        {session.shiftStartTime && (
+                                            <div className="text-[10px] text-muted-foreground mt-1">
+                                                {session.shiftStartTime} - {session.shiftEndTime}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
 
                     {/* Time Details */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,10 +315,11 @@ export function SessionDetailsDialog({
                             <Label className="text-xs font-bold text-neutral-500 mb-2">Check In</Label>
                             {editing ? (
                                 <Input
+                                    disabled
                                     type="datetime-local"
                                     value={checkInTime}
                                     onChange={(e) => setCheckInTime(e.target.value)}
-                                    className="mt-1"
+                                    className="mt-1 opacity-60 cursor-not-allowed"
                                 />
                             ) : (
                                 <div className="flex flex-col gap-1">
@@ -275,10 +341,11 @@ export function SessionDetailsDialog({
                             <Label className="text-xs font-bold text-neutral-500 mb-2">Check Out</Label>
                             {editing ? (
                                 <Input
+                                    disabled
                                     type="datetime-local"
                                     value={checkOutTime}
                                     onChange={(e) => setCheckOutTime(e.target.value)}
-                                    className="mt-1"
+                                    className="mt-1 opacity-60 cursor-not-allowed"
                                 />
                             ) : (
                                 <div className="flex flex-col gap-1">
@@ -309,17 +376,28 @@ export function SessionDetailsDialog({
                             </div>
                             <div>
                                 <Label className="text-[10px] text-muted-foreground mb-1 block">Break</Label>
-                                <div className="font-black text-lg">{formatMinutes(session.breakMinutes)}</div>
+                                {editing ? (
+                                    <Input
+                                        type="number"
+                                        value={breakMinutes}
+                                        onChange={(e) => setBreakMinutes(e.target.value)}
+                                        placeholder="Min"
+                                        className="h-8 text-sm"
+                                    />
+                                ) : (
+                                    <div className="font-black text-lg">{formatMinutes(session.breakMinutes)}</div>
+                                )}
                             </div>
                             <div>
                                 <Label className="text-[10px] text-muted-foreground mb-1 block">Work Time</Label>
                                 {editing ? (
                                     <Input
+                                        disabled
                                         type="number"
                                         value={workMinutes}
                                         onChange={(e) => setWorkMinutes(e.target.value)}
                                         placeholder="Minutes"
-                                        className="h-8 text-sm"
+                                        className="h-8 text-sm opacity-60 cursor-not-allowed"
                                     />
                                 ) : (
                                     <div className="font-black text-lg text-primary">{formatMinutes(session.workMinutes)}</div>
@@ -329,11 +407,12 @@ export function SessionDetailsDialog({
                                 <Label className="text-[10px] text-muted-foreground mb-1 block">Overtime</Label>
                                 {editing ? (
                                     <Input
+                                        disabled
                                         type="number"
                                         value={overtimeMinutes}
                                         onChange={(e) => setOvertimeMinutes(e.target.value)}
                                         placeholder="Minutes"
-                                        className="h-8 text-sm"
+                                        className="h-8 text-sm opacity-60 cursor-not-allowed"
                                     />
                                 ) : (
                                     <div className="font-black text-lg text-orange-600">{formatMinutes(session.overtimeMinutes)}</div>
@@ -341,43 +420,76 @@ export function SessionDetailsDialog({
                             </div>
                         </div>
                     </div>
+                    {/* Work Day Status */}
+                    <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                        <div className="flex items-center justify-between mb-2">
+                            <Label className="text-xs font-bold text-neutral-500">Work Day Type</Label>
+                            {!editing && (
+                                <Badge variant="outline" className="bg-primary/10 text-primary text-xs border-primary/20">
+                                    {session.workDayStatus}
+                                </Badge>
+                            )}
+                        </div>
+                        {editing ? (
+                            <Select value={workDayStatus} onValueChange={(v) => setWorkDayStatus(v as SessionWorkDayStatus)}>
+                                <SelectTrigger className="w-full mt-1">
+                                    <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={SessionWorkDayStatus.FULL}>Full Day</SelectItem>
+                                    <SelectItem value={SessionWorkDayStatus.HALF_FIRST}>Half Day (First Shift)</SelectItem>
+                                    <SelectItem value={SessionWorkDayStatus.HALF_LAST}>Half Day (Last Shift)</SelectItem>
+                                    <SelectItem value={SessionWorkDayStatus.OFF}>Off Day</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <div className="flex items-center gap-2 mt-1">
+                                <IconCalendarEvent className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-medium">
+                                    {session.workDayStatus === SessionWorkDayStatus.FULL && "Full Working Day"}
+                                    {session.workDayStatus === SessionWorkDayStatus.HALF_FIRST && "Half Day (First Shift)"}
+                                    {session.workDayStatus === SessionWorkDayStatus.HALF_LAST && "Half Day (Last Shift)"}
+                                    {session.workDayStatus === SessionWorkDayStatus.OFF && "Off Day / Holiday"}
+                                </span>
+                            </div>
+                        )}
+                    </div>
 
-                    {/* Status Flags */}
                     <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
                         <Label className="text-xs font-bold text-neutral-500 mb-3">Status Flags</Label>
                         <div className="flex flex-wrap gap-2">
                             {session.isLate && (
-                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                                <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">
                                     Late
                                 </Badge>
                             )}
                             {session.isEarlyLeave && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
                                     Early Leave
                                 </Badge>
                             )}
                             {session.isOnLeave && (
-                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
                                     On Leave
                                 </Badge>
                             )}
                             {session.isHalfDay && (
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20">
                                     Half Day
                                 </Badge>
                             )}
                             {session.hasShortLeave && (
-                                <Badge variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
+                                <Badge variant="outline" className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20">
                                     Short Leave
                                 </Badge>
                             )}
                             {session.manuallyEdited && (
-                                <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                                <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20">
                                     Manually Edited
                                 </Badge>
                             )}
                             {session.autoCheckout && (
-                                <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">
+                                <Badge variant="outline" className="bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20">
                                     Auto Checkout
                                 </Badge>
                             )}

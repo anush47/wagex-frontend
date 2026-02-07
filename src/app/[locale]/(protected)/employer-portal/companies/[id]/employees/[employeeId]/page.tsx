@@ -111,7 +111,24 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                 payload.fullName = payload.fullName.toUpperCase();
             }
 
-            await updateEmployee.mutateAsync({ id: employeeId, data: payload });
+            // Flatten details into payload if they exist, but strip internal fields
+            const { details, ...rest } = payload;
+
+            // Destructure to remove database-internal fields
+            const {
+                id: _dId,
+                employeeId: _eId,
+                createdAt: _cAt,
+                updatedAt: _uAt,
+                ...cleanDetails
+            } = details || {};
+
+            const flattenedPayload = {
+                ...rest,
+                ...cleanDetails
+            };
+
+            await updateEmployee.mutateAsync({ id: employeeId, data: flattenedPayload });
         }
 
         if (isPolicyDirty) {
@@ -240,6 +257,18 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     <EmployeeGeneralTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
+                        onDetailChange={(field, value) => {
+                            setEmployeeForm(prev => {
+                                if (!prev) return null;
+                                return {
+                                    ...prev,
+                                    details: {
+                                        ...(prev.details || {}),
+                                        [field]: value
+                                    } as any
+                                };
+                            });
+                        }}
                         departments={departments}
                     />
                 </TabsContent>

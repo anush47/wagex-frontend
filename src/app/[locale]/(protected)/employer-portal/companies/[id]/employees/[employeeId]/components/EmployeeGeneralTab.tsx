@@ -11,8 +11,15 @@ import {
     IconBriefcase,
     IconUserBolt,
     IconCalendar,
-    IconCurrencyDollar
+    IconCurrencyDollar,
+    IconUsers,
+    IconHeart,
+    IconBuildingBank,
+    IconPhone,
+    IconGlobe,
+    IconShieldCheck
 } from "@tabler/icons-react";
+import { MaritalStatus } from "@/types/policy";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Gender, EmploymentType } from "@/types/policy";
@@ -23,10 +30,11 @@ import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-se
 interface EmployeeGeneralTabProps {
     formData: Employee;
     onChange: (field: keyof Employee, value: any) => void;
+    onDetailChange: (field: string, value: any) => void;
     departments?: any[];
 }
 
-export function EmployeeGeneralTab({ formData, onChange, departments = [] }: EmployeeGeneralTabProps) {
+export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departments = [] }: EmployeeGeneralTabProps) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
@@ -172,6 +180,105 @@ export function EmployeeGeneralTab({ formData, onChange, departments = [] }: Emp
                 <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
                     <CardContent className="p-10 space-y-10">
                         <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                                <IconUsers className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-2xl font-black tracking-tight uppercase">Family & Personal</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Fathers Name</Label>
+                                <Input
+                                    value={formData.details?.fathersName || ""}
+                                    onChange={e => onDetailChange('fathersName', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Mothers Name</Label>
+                                <Input
+                                    value={formData.details?.mothersName || ""}
+                                    onChange={e => onDetailChange('mothersName', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Marital Status</Label>
+                                <Select value={formData.details?.maritalStatus} onValueChange={v => onDetailChange('maritalStatus', v)}>
+                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                        <SelectItem value={MaritalStatus.SINGLE}>Single</SelectItem>
+                                        <SelectItem value={MaritalStatus.MARRIED}>Married</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {formData.details?.maritalStatus === MaritalStatus.MARRIED && (
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Spouse Name</Label>
+                                    <Input
+                                        value={formData.details?.spouseName || ""}
+                                        onChange={e => onDetailChange('spouseName', e.target.value)}
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Nationality</Label>
+                            <div className="relative">
+                                <IconGlobe className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                                <Input
+                                    value={formData.details?.nationality || ""}
+                                    onChange={e => onDetailChange('nationality', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-bold text-base shadow-inner"
+                                />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
+                    <CardContent className="p-10 space-y-10">
+                        <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-600">
+                                <IconPhone className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-2xl font-black tracking-tight uppercase">Emergency Contact</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Contact Person Name</Label>
+                                <Input
+                                    value={formData.details?.emergencyContactName || ""}
+                                    onChange={e => onDetailChange('emergencyContactName', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    placeholder="Full name of emergency contact"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Contact Phone</Label>
+                                <Input
+                                    value={formData.details?.emergencyContactPhone || ""}
+                                    onChange={e => onDetailChange('emergencyContactPhone', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    placeholder="+94"
+                                />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
+                    <CardContent className="p-10 space-y-10">
+                        <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600">
                                 <IconBriefcase className="h-6 w-6" />
                             </div>
@@ -226,18 +333,53 @@ export function EmployeeGeneralTab({ formData, onChange, departments = [] }: Emp
                             <h3 className="text-2xl font-black tracking-tight uppercase">Compensation</h3>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Basic Salary (LKR)</Label>
-                            <div className="relative">
-                                <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-neutral-300">LKR</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Basic Salary (LKR)</Label>
+                                <div className="relative">
+                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-neutral-300">LKR</span>
+                                    <Input
+                                        type="text"
+                                        value={formData.basicSalary?.toLocaleString() || '0'}
+                                        onChange={e => {
+                                            const value = e.target.value.replace(/,/g, '');
+                                            onChange('basicSalary', parseFloat(value) || 0);
+                                        }}
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-black text-xl shadow-inner text-emerald-600"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Bank Name</Label>
+                                <div className="relative">
+                                    <IconBuildingBank className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                                    <Input
+                                        value={formData.details?.bankName || ""}
+                                        onChange={e => onDetailChange('bankName', e.target.value)}
+                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-bold text-base shadow-inner"
+                                        placeholder="Bank Name"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Bank Branch</Label>
                                 <Input
-                                    type="text"
-                                    value={formData.basicSalary?.toLocaleString() || '0'}
-                                    onChange={e => {
-                                        const value = e.target.value.replace(/,/g, '');
-                                        onChange('basicSalary', parseFloat(value) || 0);
-                                    }}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-black text-xl shadow-inner text-emerald-600"
+                                    value={formData.details?.bankBranch || ""}
+                                    onChange={e => onDetailChange('bankBranch', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    placeholder="Branch Name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Account Number</Label>
+                                <Input
+                                    value={formData.details?.accountNumber || ""}
+                                    onChange={e => onDetailChange('accountNumber', e.target.value)}
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    placeholder="0000000000"
                                 />
                             </div>
                         </div>

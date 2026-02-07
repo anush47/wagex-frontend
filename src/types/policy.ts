@@ -30,6 +30,11 @@ export enum Gender {
     FEMALE = 'FEMALE',
 }
 
+export enum MaritalStatus {
+    SINGLE = 'SINGLE',
+    MARRIED = 'MARRIED',
+}
+
 export enum AccrualFrequency {
     WEEKLY = 'WEEKLY',
     MONTHLY = 'MONTHLY',

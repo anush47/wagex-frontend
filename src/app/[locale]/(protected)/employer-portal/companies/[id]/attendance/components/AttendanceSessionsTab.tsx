@@ -84,9 +84,9 @@ export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps)
 
     const getApprovalBadge = (status: ApprovalStatus) => {
         const styles: Record<string, string> = {
-            PENDING: "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200",
-            APPROVED: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
-            REJECTED: "bg-red-100 text-red-700 hover:bg-red-100 border-red-200",
+            PENDING: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+            APPROVED: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            REJECTED: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
         };
 
         return (
@@ -277,27 +277,27 @@ export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps)
                                                 <TableCell>
                                                     <div className="flex flex-wrap gap-1">
                                                         {session.isLate && (
-                                                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[10px]">
+                                                            <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[10px]">
                                                                 Late
                                                             </Badge>
                                                         )}
                                                         {session.isEarlyLeave && (
-                                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px]">
+                                                            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px]">
                                                                 Early
                                                             </Badge>
                                                         )}
                                                         {session.isOnLeave && (
-                                                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px]">
+                                                            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 text-[10px]">
                                                                 Leave
                                                             </Badge>
                                                         )}
                                                         {session.isHalfDay && (
-                                                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px]">
+                                                            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20 text-[10px]">
                                                                 Half
                                                             </Badge>
                                                         )}
                                                         {session.manuallyEdited && (
-                                                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 text-[10px]">
+                                                            <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 text-[10px]">
                                                                 Edited
                                                             </Badge>
                                                         )}

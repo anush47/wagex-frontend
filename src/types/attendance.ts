@@ -22,6 +22,13 @@ export enum ApprovalStatus {
     REJECTED = 'REJECTED'
 }
 
+export enum SessionWorkDayStatus {
+    FULL = 'FULL',
+    HALF_FIRST = 'HALF_FIRST',
+    HALF_LAST = 'HALF_LAST',
+    OFF = 'OFF'
+}
+
 // Attendance Event (Raw Log)
 export interface AttendanceEvent {
     id: string;
@@ -47,6 +54,7 @@ export interface AttendanceEvent {
         employeeNo: number;
         nameWithInitials: string;
         fullName: string;
+        photo?: string;
     };
 }
 
@@ -86,6 +94,7 @@ export interface AttendanceSession {
     // Additional flags
     manuallyEdited: boolean;
     autoCheckout: boolean;
+    workDayStatus: SessionWorkDayStatus;
     // Approval
     inApprovalStatus: ApprovalStatus;
     outApprovalStatus: ApprovalStatus;
@@ -101,6 +110,7 @@ export interface AttendanceSession {
         employeeNo: number;
         nameWithInitials: string;
         fullName: string;
+        photo?: string;
     };
 }
 
@@ -129,6 +139,8 @@ export interface UpdateSessionDto {
     remarks?: string;
     inApprovalStatus?: ApprovalStatus;
     outApprovalStatus?: ApprovalStatus;
+    workDayStatus?: SessionWorkDayStatus;
+    shiftId?: string | null;
 }
 
 // Query params
