@@ -20,16 +20,26 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink } from "@tabler/icons-react";
+import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink, IconCalendarStats } from "@tabler/icons-react";
 import type { AttendanceEvent, EventType, EventSource, EventStatus } from "@/types/attendance";
 import { useAttendanceEvents } from "@/hooks/use-attendance";
 import { format } from "date-fns";
+import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
 
 interface AttendanceEventsTabProps {
     companyId: string;
     initialEmployeeId?: string;
     initialDate?: string;
-    onFilterChange?: (filters: { employeeId?: string; date?: string; sessionId?: string; tab?: string }) => void;
+    startDate?: string;
+    endDate?: string;
+    onFilterChange?: (filters: {
+        employeeId?: string;
+        date?: string;
+        startDate?: string;
+        endDate?: string;
+        sessionId?: string;
+        tab?: string
+    }) => void;
     onOpenSession: (id: string) => void;
 }
 
@@ -37,6 +47,8 @@ export function AttendanceEventsTab({
     companyId,
     initialEmployeeId,
     initialDate,
+    startDate,
+    endDate,
     onFilterChange,
     onOpenSession
 }: AttendanceEventsTabProps) {
@@ -59,8 +71,8 @@ export function AttendanceEventsTab({
     } = useAttendanceEvents({
         companyId,
         employeeId: employeeFilter,
-        startDate: initialDate,
-        endDate: initialDate,
+        startDate: startDate || initialDate,
+        endDate: endDate || initialDate,
         status: statusFilter === "ALL" ? undefined : statusFilter,
         page,
         limit: 20
@@ -122,7 +134,36 @@ export function AttendanceEventsTab({
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <CardTitle>Raw Event Logs</CardTitle>
                     <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
-                        <div className="w-[200px]">
+                        <SalaryPeriodQuickSelect
+                            companyId={companyId}
+                            onRangeSelect={(start, end) => onFilterChange?.({ startDate: start, endDate: end })}
+                            currentStart={startDate || initialDate}
+                            currentEnd={endDate || initialDate}
+                        />
+
+                        <div className="flex items-center gap-2 p-1 bg-neutral-100/50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200/50 dark:border-neutral-700/50 shadow-inner">
+                            <div className="flex items-center gap-1.5 px-2">
+                                <span className="text-[10px] font-black uppercase text-neutral-400">From</span>
+                                <input
+                                    type="date"
+                                    value={startDate || initialDate || ""}
+                                    onChange={(e) => onFilterChange?.({ startDate: e.target.value })}
+                                    className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[110px]"
+                                />
+                            </div>
+                            <div className="h-4 w-[1px] bg-neutral-200 dark:bg-neutral-700" />
+                            <div className="flex items-center gap-1.5 px-2">
+                                <span className="text-[10px] font-black uppercase text-neutral-400">To</span>
+                                <input
+                                    type="date"
+                                    value={endDate || initialDate || ""}
+                                    onChange={(e) => onFilterChange?.({ endDate: e.target.value })}
+                                    className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[110px]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="w-[180px]">
                             <SearchableEmployeeSelect
                                 companyId={companyId}
                                 value={employeeFilter || undefined}
@@ -130,16 +171,22 @@ export function AttendanceEventsTab({
                                     setEmployeeFilter(id);
                                     onFilterChange?.({ employeeId: id || "" });
                                 }}
-                                placeholder="Filter by employee"
+                                placeholder="Employee"
                             />
                         </div>
-                        {(employeeFilter || initialDate) && (
+                        {(employeeFilter || startDate || endDate || initialDate || statusFilter !== "ALL") && (
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => {
                                     setEmployeeFilter(undefined);
-                                    onFilterChange?.({ employeeId: "", date: "" });
+                                    setStatusFilter("ALL");
+                                    onFilterChange?.({
+                                        employeeId: "",
+                                        date: "",
+                                        startDate: "",
+                                        endDate: ""
+                                    });
                                 }}
                                 className="h-9 w-9 text-muted-foreground hover:text-foreground"
                                 title="Clear filters"
@@ -151,17 +198,17 @@ export function AttendanceEventsTab({
                             setStatusFilter(v as EventStatus | "ALL");
                             setPage(1);
                         }}>
-                            <SelectTrigger className="w-[150px]">
-                                <SelectValue placeholder="Filter by status" />
+                            <SelectTrigger className="w-[140px] rounded-xl">
+                                <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="ALL">All Statuses</SelectItem>
+                                <SelectItem value="ALL">All Status</SelectItem>
                                 <SelectItem value="ACTIVE">Active</SelectItem>
                                 <SelectItem value="REJECTED">Rejected</SelectItem>
                                 <SelectItem value="IGNORED">Ignored</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button variant="outline" size="icon" onClick={() => fetchEvents()} disabled={loading}>
+                        <Button variant="outline" size="icon" onClick={() => fetchEvents()} disabled={loading} className="rounded-xl shadow-sm">
                             <IconRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>

@@ -4,7 +4,7 @@ import React from "react";
 import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { IconMapPin } from "@tabler/icons-react";
+import { IconMapPin, IconLogin, IconLogout } from "@tabler/icons-react";
 import { AttendanceSession, ApprovalStatus } from "@/types/attendance";
 
 interface SessionTimeDetailsProps {
@@ -29,7 +29,10 @@ export function SessionTimeDetails({
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                <Label className="text-xs font-bold text-neutral-500 mb-2">Check In</Label>
+                <div className="flex items-center gap-1.5 mb-2">
+                    <IconLogin className="h-3.5 w-3.5 text-green-600" />
+                    <Label className="text-xs font-bold text-neutral-500">Check In</Label>
+                </div>
                 {editing ? (
                     <Input
                         disabled
@@ -55,7 +58,10 @@ export function SessionTimeDetails({
             </div>
 
             <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                <Label className="text-xs font-bold text-neutral-500 mb-2">Check Out</Label>
+                <div className="flex items-center gap-1.5 mb-2">
+                    <IconLogout className="h-3.5 w-3.5 text-red-600" />
+                    <Label className="text-xs font-bold text-neutral-500">Check Out</Label>
+                </div>
                 {editing ? (
                     <Input
                         disabled

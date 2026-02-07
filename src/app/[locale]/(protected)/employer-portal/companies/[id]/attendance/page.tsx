@@ -22,7 +22,9 @@ export default function AttendancePage() {
 
     // Filters from URL
     const employeeId = searchParams.get("employeeId") || undefined;
-    const date = searchParams.get("date") || undefined;
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
+    const date = searchParams.get("date") || undefined; // Fallback for single date
     const initialSessionId = searchParams.get("sessionId") || undefined;
 
     const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(initialSessionId);
@@ -44,16 +46,46 @@ export default function AttendancePage() {
         router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
     };
 
-    const handleFilterChange = (filters: { employeeId?: string; date?: string; sessionId?: string; tab?: string }) => {
+    const handleFilterChange = (filters: {
+        employeeId?: string;
+        date?: string;
+        startDate?: string;
+        endDate?: string;
+        sessionId?: string;
+        tab?: string
+    }) => {
         const params = new URLSearchParams(searchParams.toString());
+
         if (filters.employeeId !== undefined) {
             if (filters.employeeId) params.set("employeeId", filters.employeeId);
             else params.delete("employeeId");
         }
-        if (filters.date !== undefined) {
-            if (filters.date) params.set("date", filters.date);
-            else params.delete("date");
+
+        if (filters.startDate !== undefined) {
+            if (filters.startDate) params.set("startDate", filters.startDate);
+            else params.delete("startDate");
+            // If we set range, remove single date
+            params.delete("date");
         }
+
+        if (filters.endDate !== undefined) {
+            if (filters.endDate) params.set("endDate", filters.endDate);
+            else params.delete("endDate");
+            // If we set range, remove single date
+            params.delete("date");
+        }
+
+        if (filters.date !== undefined) {
+            if (filters.date) {
+                params.set("date", filters.date);
+                // If we set single date, remove range
+                params.delete("startDate");
+                params.delete("endDate");
+            } else {
+                params.delete("date");
+            }
+        }
+
         if (filters.sessionId !== undefined) {
             if (filters.sessionId) params.set("sessionId", filters.sessionId);
             else params.delete("sessionId");
@@ -124,6 +156,8 @@ export default function AttendancePage() {
                         companyId={companyId}
                         initialEmployeeId={employeeId}
                         initialDate={date}
+                        startDate={startDate}
+                        endDate={endDate}
                         onFilterChange={handleFilterChange}
                         onOpenSession={handleOpenSession}
                     />
@@ -134,6 +168,8 @@ export default function AttendancePage() {
                         companyId={companyId}
                         initialEmployeeId={employeeId}
                         initialDate={date}
+                        startDate={startDate}
+                        endDate={endDate}
                         onFilterChange={handleFilterChange}
                         onOpenSession={handleOpenSession}
                     />

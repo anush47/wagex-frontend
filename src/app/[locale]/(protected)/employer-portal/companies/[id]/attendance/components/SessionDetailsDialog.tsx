@@ -153,31 +153,33 @@ export function SessionDetailsDialog({
         };
 
         return (
-            <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`font-bold text-[10px] ${styles[status]}`}>
+            <div className="flex flex-col gap-2 w-full">
+                <Badge variant="outline" className={`font-bold text-[10px] w-fit ${styles[status]}`}>
                     {status}
                 </Badge>
                 {!editing && status === "PENDING" && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-2 w-full">
                         <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 rounded-full text-green-600 hover:text-green-700 hover:bg-green-50"
+                            variant="default"
+                            size="sm"
+                            className="flex-1 h-9 rounded-lg shadow-md hover:shadow-lg transition-all"
                             onClick={() => handleApproval(type, "APPROVED" as ApprovalStatus)}
                             disabled={processing}
                             title="Approve"
                         >
-                            <IconCheck className="h-3 w-3" />
+                            <IconCheck className="h-3.5 w-3.5 mr-1.5" />
+                            <span className="text-xs font-bold">Approve</span>
                         </Button>
                         <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 rounded-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1 h-9 rounded-lg shadow-md hover:shadow-lg transition-all"
                             onClick={() => handleApproval(type, "REJECTED" as ApprovalStatus)}
                             disabled={processing}
                             title="Reject"
                         >
-                            <IconX className="h-3 w-3" />
+                            <IconX className="h-3.5 w-3.5 mr-1.5" />
+                            <span className="text-xs font-bold">Reject</span>
                         </Button>
                     </div>
                 )}
