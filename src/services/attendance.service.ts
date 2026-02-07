@@ -1,46 +1,68 @@
-import { backendApiClient } from "@/lib/api/client";
-import { AttendanceSession, AttendanceSyncRecord, AttendanceSyncResponse } from "@/types/attendance";
-import { PaginatedResponse } from "@/types/api";
+import { backendApiClient } from '@/lib/api/client';
+import type { ApiResponse } from '@/types/api/api.types';
+import {
+    AttendanceEvent,
+    AttendanceSession,
+    CreateEventDto,
+    UpdateSessionDto,
+    SessionQueryParams,
+    EventQueryParams,
+    PaginatedResponse
+} from '@/types/attendance';
 
 export class AttendanceService {
-    static async getSessions(params: {
-        companyId: string;
-        page?: number;
-        limit?: number;
-        employeeId?: string;
-        startDate?: string;
-        endDate?: string;
-        status?: string;
-        approvalStatus?: string;
-    }) {
-        const query = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined) query.append(key, value.toString());
-        });
-        return backendApiClient.get<PaginatedResponse<AttendanceSession>>(`/attendance/sessions?${query.toString()}`);
+    /**
+     * Get attendance sessions (paginated)
+     */
+    static async getSessions(params: SessionQueryParams): Promise<ApiResponse<PaginatedResponse<AttendanceSession>>> {
+        const searchParams = new URLSearchParams();
+        if (params.companyId) searchParams.append('companyId', params.companyId);
+        if (params.employeeId) searchParams.append('employeeId', params.employeeId);
+        if (params.startDate) searchParams.append('startDate', params.startDate);
+        if (params.endDate) searchParams.append('endDate', params.endDate);
+        if (params.page) searchParams.append('page', params.page.toString());
+        if (params.limit) searchParams.append('limit', params.limit.toString());
+
+        return backendApiClient.get<PaginatedResponse<AttendanceSession>>(
+            `/attendance/manual/sessions?${searchParams.toString()}`
+        );
     }
 
-    static async syncManual(companyId: string, records: AttendanceSyncRecord[]) {
-        return backendApiClient.post<AttendanceSyncResponse[]>(`/attendance/manual?companyId=${companyId}`, { records });
+    /**
+     * Get attendance events (paginated)
+     */
+    static async getEvents(params: EventQueryParams): Promise<ApiResponse<PaginatedResponse<AttendanceEvent>>> {
+        const searchParams = new URLSearchParams();
+        if (params.companyId) searchParams.append('companyId', params.companyId);
+        if (params.employeeId) searchParams.append('employeeId', params.employeeId);
+        if (params.startDate) searchParams.append('startDate', params.startDate);
+        if (params.endDate) searchParams.append('endDate', params.endDate);
+        if (params.page) searchParams.append('page', params.page.toString());
+        if (params.limit) searchParams.append('limit', params.limit.toString());
+
+        return backendApiClient.get<PaginatedResponse<AttendanceEvent>>(
+            `/attendance/manual/events?${searchParams.toString()}`
+        );
     }
 
-    static async verifyApiKey(companyId: string, apiKey: string) {
-        return backendApiClient.post(`/attendance/verify?companyId=${companyId}`, { apiKey });
+    /**
+     * Create a manual attendance event
+     */
+    static async createEvent(dto: CreateEventDto): Promise<ApiResponse<AttendanceEvent>> {
+        return backendApiClient.post<AttendanceEvent>('/attendance/manual/events', dto);
     }
 
-    static async updateSession(companyId: string, sessionId: string, data: any) {
-        return backendApiClient.patch(`/attendance/sessions/${sessionId}?companyId=${data.companyId}`, data);
+    /**
+     * Update an attendance session
+     */
+    static async updateSession(id: string, dto: UpdateSessionDto): Promise<ApiResponse<AttendanceSession>> {
+        return backendApiClient.patch<AttendanceSession>(`/attendance/manual/sessions/${id}`, dto);
     }
 
-    static async deleteSession(companyId: string, sessionId: string) {
-        return backendApiClient.delete(`/attendance/sessions/${sessionId}?companyId=${companyId}`);
-    }
-
-    static async approveSession(companyId: string, sessionId: string, status: string) {
-
-
-        return backendApiClient.patch(`/attendance/sessions/${sessionId}/approve?companyId=${companyId}`, { status });
+    /**
+     * Delete an attendance session
+     */
+    static async deleteSession(id: string): Promise<ApiResponse<{ message: string }>> {
+        return backendApiClient.delete<{ message: string }>(`/attendance/manual/sessions/${id}`);
     }
 }
-
-

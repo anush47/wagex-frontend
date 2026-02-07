@@ -1,101 +1,99 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AttendanceService } from "@/services/attendance.service";
-import { AttendanceSyncRecord } from "@/types/attendance";
-import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AttendanceService } from '@/services/attendance.service';
+import { toast } from 'sonner';
+import type {
+    SessionQueryParams,
+    EventQueryParams,
+    CreateEventDto,
+    UpdateSessionDto
+} from '@/types/attendance';
 
-export const useAttendance = (companyId: string) => {
+/**
+ * Hook to fetch attendance sessions (paginated)
+ */
+export const useAttendanceSessions = (params: SessionQueryParams) => {
+    return useQuery({
+        queryKey: ['attendance', 'sessions', params],
+        queryFn: async () => {
+            const response = await AttendanceService.getSessions(params);
+            if (response.error) {
+                throw new Error(response.error.message);
+            }
+            const data = response.data as any;
+            // Handle nested response structure from backend
+            return data?.data || data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
+        },
+        enabled: !!params.companyId,
+    });
+};
+
+/**
+ * Hook to fetch attendance events (paginated)
+ */
+export const useAttendanceEvents = (params: EventQueryParams) => {
+    return useQuery({
+        queryKey: ['attendance', 'events', params],
+        queryFn: async () => {
+            const response = await AttendanceService.getEvents(params);
+            if (response.error) {
+                throw new Error(response.error.message);
+            }
+            const data = response.data as any;
+            // Handle nested response structure from backend
+            return data?.data || data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
+        },
+        enabled: !!params.companyId,
+    });
+};
+
+/**
+ * Hook for attendance mutations (create event, update/delete session)
+ */
+export const useAttendanceMutations = () => {
     const queryClient = useQueryClient();
 
-    const useSessions = (filters: {
-        page?: number;
-        limit?: number;
-        employeeId?: string;
-        startDate?: string;
-        endDate?: string;
-        status?: string;
-        approvalStatus?: string;
-    }) => {
-        return useQuery({
-            queryKey: ["attendance-sessions", companyId, filters],
-            queryFn: async () => {
-                const response = await AttendanceService.getSessions({
-                    companyId,
-                    ...filters,
-                });
-                if (response.error) {
-                    throw new Error(response.error.message);
-                }
-                const data = response.data as any;
-                // Handle NestJS wrapper: data.data is the actual payload
-                return data?.data || data;
-            },
-            enabled: !!companyId,
-
-        });
-    };
-
-    const manualSyncMutation = useMutation({
-        mutationFn: (records: AttendanceSyncRecord[]) =>
-            AttendanceService.syncManual(companyId, records),
+    const createEvent = useMutation({
+        mutationFn: async (dto: CreateEventDto) => {
+            const response = await AttendanceService.createEvent(dto);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance-sessions", companyId] });
-            toast.success("Attendance records updated successfully");
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Attendance event created');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Failed to update attendance");
-        },
+        onError: (err: any) => toast.error(err.message || 'Failed to create event'),
     });
 
-    const updateMutation = useMutation({
-        mutationFn: ({ sessionId, data }: { sessionId: string; data: any }) =>
-            AttendanceService.updateSession(companyId, sessionId, { ...data, companyId }),
+    const updateSession = useMutation({
+        mutationFn: async ({ id, dto }: { id: string; dto: UpdateSessionDto }) => {
+            const response = await AttendanceService.updateSession(id, dto);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance-sessions", companyId] });
-            toast.success("Attendance session updated");
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Session updated');
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to update record");
-        },
+        onError: (err: any) => toast.error(err.message || 'Failed to update session'),
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: (sessionId: string) =>
-            AttendanceService.deleteSession(companyId, sessionId),
+    const deleteSession = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await AttendanceService.deleteSession(id);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance-sessions", companyId] });
-            toast.success("Attendance session deleted");
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Session deleted');
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to delete record");
-        },
-    });
-
-    const approveMutation = useMutation({
-
-
-        mutationFn: ({ sessionId, status }: { sessionId: string; status: string }) =>
-            AttendanceService.approveSession(companyId, sessionId, status),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance-sessions", companyId] });
-            toast.success("Attendance session updated");
-        },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to update status");
-        },
+        onError: (err: any) => toast.error(err.message || 'Failed to delete session'),
     });
 
     return {
-        useSessions,
-        syncManual: manualSyncMutation.mutate,
-        isSyncing: manualSyncMutation.isPending,
-        update: updateMutation.mutate,
-        isUpdating: updateMutation.isPending,
-        remove: deleteMutation.mutate,
-        isDeleting: deleteMutation.isPending,
-        approve: approveMutation.mutate,
-        isApproving: approveMutation.isPending,
+        createEvent,
+        updateSession,
+        deleteSession
     };
 };
-
-
-
