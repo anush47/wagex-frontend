@@ -8,6 +8,8 @@ import { IconPlus, IconClock, IconFileText } from "@tabler/icons-react";
 import { AttendanceSessionsTab } from "./components/AttendanceSessionsTab";
 import { AttendanceEventsTab } from "./components/AttendanceEventsTab";
 import { CreateEventDialog } from "./components/CreateEventDialog";
+import { SessionDetailsDialog } from "./components/SessionDetailsDialog";
+import { useAttendanceSession } from "@/hooks/use-attendance";
 
 export default function AttendancePage() {
     const params = useParams();
@@ -15,9 +17,19 @@ export default function AttendancePage() {
     const searchParams = useSearchParams();
     const companyId = params?.id as string;
 
-    const tabFromUrl = searchParams.get("tab") || "sessions";
-    const [activeTab, setActiveTab] = useState(tabFromUrl);
+    const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "sessions");
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+    // Filters from URL
+    const employeeId = searchParams.get("employeeId") || undefined;
+    const date = searchParams.get("date") || undefined;
+    const initialSessionId = searchParams.get("sessionId") || undefined;
+
+    const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(initialSessionId);
+    const [detailsOpen, setDetailsOpen] = useState(!!initialSessionId);
+
+    // Fetch session data if ID is present
+    const { data: sessionData, isLoading: loadingSession } = useAttendanceSession(selectedSessionId);
 
     // Sync tab state with URL parameter
     useEffect(() => {
@@ -27,9 +39,44 @@ export default function AttendancePage() {
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
-        // Update URL without page reload
-        const newUrl = `${window.location.pathname}?tab=${value}`;
-        router.push(newUrl, { scroll: false });
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", value);
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const handleFilterChange = (filters: { employeeId?: string; date?: string; sessionId?: string; tab?: string }) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (filters.employeeId !== undefined) {
+            if (filters.employeeId) params.set("employeeId", filters.employeeId);
+            else params.delete("employeeId");
+        }
+        if (filters.date !== undefined) {
+            if (filters.date) params.set("date", filters.date);
+            else params.delete("date");
+        }
+        if (filters.sessionId !== undefined) {
+            if (filters.sessionId) params.set("sessionId", filters.sessionId);
+            else params.delete("sessionId");
+        }
+        if (filters.tab) params.set("tab", filters.tab);
+
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const handleOpenSession = (id: string) => {
+        setSelectedSessionId(id);
+        setDetailsOpen(true);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("sessionId", id);
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const handleCloseSession = () => {
+        setDetailsOpen(false);
+        setSelectedSessionId(undefined);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("sessionId");
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
     };
 
     return (
@@ -73,13 +120,36 @@ export default function AttendancePage() {
                 </TabsList>
 
                 <TabsContent value="sessions" className="mt-6">
-                    <AttendanceSessionsTab companyId={companyId} />
+                    <AttendanceSessionsTab
+                        companyId={companyId}
+                        initialEmployeeId={employeeId}
+                        initialDate={date}
+                        onFilterChange={handleFilterChange}
+                        onOpenSession={handleOpenSession}
+                    />
                 </TabsContent>
 
                 <TabsContent value="events" className="mt-6">
-                    <AttendanceEventsTab companyId={companyId} />
+                    <AttendanceEventsTab
+                        companyId={companyId}
+                        initialEmployeeId={employeeId}
+                        initialDate={date}
+                        onFilterChange={handleFilterChange}
+                        onOpenSession={handleOpenSession}
+                    />
                 </TabsContent>
             </Tabs>
+
+            {/* Session Details Dialog */}
+            <SessionDetailsDialog
+                open={detailsOpen}
+                onOpenChange={(v) => {
+                    if (!v) handleCloseSession();
+                    else setDetailsOpen(true);
+                }}
+                session={sessionData || null}
+                isLoading={loadingSession}
+            />
 
             {/* Create Dialog */}
             <CreateEventDialog

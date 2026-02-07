@@ -28,6 +28,23 @@ export const useAttendanceSessions = (params: SessionQueryParams) => {
 };
 
 /**
+ * Hook to fetch a single attendance session
+ */
+export const useAttendanceSession = (id?: string) => {
+    return useQuery({
+        queryKey: ['attendance', 'session', id],
+        queryFn: async () => {
+            if (!id) return null;
+            const response = await AttendanceService.getSessionById(id);
+            if (response.error) throw new Error(response.error.message);
+            const data = response.data as any;
+            return data?.data || data;
+        },
+        enabled: !!id,
+    });
+};
+
+/**
  * Hook to fetch attendance events (paginated)
  */
 export const useAttendanceEvents = (params: EventQueryParams) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,22 +23,35 @@ import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-se
 import { IconRefresh, IconX, IconEdit, IconTrash, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import type { AttendanceSession, ApprovalStatus } from "@/types/attendance";
 import { useAttendanceSessions, useAttendanceMutations } from "@/hooks/use-attendance";
-import { SessionDetailsDialog } from "./SessionDetailsDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
-
 interface AttendanceSessionsTabProps {
     companyId: string;
+    initialEmployeeId?: string;
+    initialDate?: string;
+    onFilterChange?: (filters: { employeeId?: string; date?: string; sessionId?: string; tab?: string }) => void;
+    onOpenSession: (id: string) => void;
 }
 
-export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps) {
-    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
+export function AttendanceSessionsTab({
+    companyId,
+    initialEmployeeId,
+    initialDate,
+    onFilterChange,
+    onOpenSession
+}: AttendanceSessionsTabProps) {
+    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(initialEmployeeId);
     const [page, setPage] = useState(1);
-    const [selectedSession, setSelectedSession] = useState<AttendanceSession | null>(null);
-    const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+
+    // Sync with initial filters
+    useEffect(() => {
+        if (initialEmployeeId !== employeeFilter) {
+            setEmployeeFilter(initialEmployeeId);
+        }
+    }, [initialEmployeeId]);
 
     // Fetch sessions with pagination
     const {
@@ -48,6 +61,8 @@ export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps)
     } = useAttendanceSessions({
         companyId,
         employeeId: employeeFilter,
+        startDate: initialDate,
+        endDate: initialDate,
         page,
         limit: 20
     });
@@ -109,21 +124,11 @@ export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps)
     };
 
     const handleRowClick = (session: AttendanceSession) => {
-        setSelectedSession(session);
-        setDetailsOpen(true);
+        onOpenSession(session.id);
     };
 
     return (
         <>
-            <SessionDetailsDialog
-                open={detailsOpen}
-                onOpenChange={setDetailsOpen}
-                session={selectedSession}
-                onDelete={async (id) => {
-                    await executeDelete(id);
-                    setDetailsOpen(false);
-                }}
-            />
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -133,7 +138,10 @@ export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps)
                                 <SearchableEmployeeSelect
                                     companyId={companyId}
                                     value={employeeFilter || undefined}
-                                    onSelect={(id) => setEmployeeFilter(id)}
+                                    onSelect={(id) => {
+                                        setEmployeeFilter(id);
+                                        onFilterChange?.({ employeeId: id || "" });
+                                    }}
                                     placeholder="Filter by employee"
                                 />
                             </div>
@@ -141,7 +149,10 @@ export function AttendanceSessionsTab({ companyId }: AttendanceSessionsTabProps)
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setEmployeeFilter(undefined)}
+                                    onClick={() => {
+                                        setEmployeeFilter(undefined);
+                                        onFilterChange?.({ employeeId: "", date: "" });
+                                    }}
                                     className="h-9 w-9 text-muted-foreground hover:text-foreground"
                                     title="Clear employee filter"
                                 >

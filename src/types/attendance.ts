@@ -158,6 +158,7 @@ export interface EventQueryParams {
     employeeId?: string;
     startDate?: string;
     endDate?: string;
+    status?: EventStatus;
     page?: number;
     limit?: number;
 }

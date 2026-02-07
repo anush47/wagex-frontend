@@ -174,6 +174,16 @@ export default function EmployeeProfilePage() {
                             if (['employeeNo', 'basicSalary', 'status', 'joinedDate', 'resignedDate'].includes(field as string)) return;
                             setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null);
                         }}
+                        onDetailChange={(field, value) => {
+                            if (!canSelfEdit) return;
+                            setEmployeeForm(prev => prev ? ({
+                                ...prev,
+                                details: {
+                                    ...(prev.details || {}),
+                                    [field]: value
+                                }
+                            } as Employee) : null);
+                        }}
                     />
                 </TabsContent>
 

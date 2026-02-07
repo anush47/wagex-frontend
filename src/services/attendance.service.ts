@@ -29,6 +29,13 @@ export class AttendanceService {
     }
 
     /**
+     * Get a single attendance session
+     */
+    static async getSessionById(id: string): Promise<ApiResponse<AttendanceSession>> {
+        return backendApiClient.get<AttendanceSession>(`/attendance/manual/sessions/${id}`);
+    }
+
+    /**
      * Get attendance events (paginated)
      */
     static async getEvents(params: EventQueryParams): Promise<ApiResponse<PaginatedResponse<AttendanceEvent>>> {
@@ -37,6 +44,7 @@ export class AttendanceService {
         if (params.employeeId) searchParams.append('employeeId', params.employeeId);
         if (params.startDate) searchParams.append('startDate', params.startDate);
         if (params.endDate) searchParams.append('endDate', params.endDate);
+        if (params.status) searchParams.append('status', params.status);
         if (params.page) searchParams.append('page', params.page.toString());
         if (params.limit) searchParams.append('limit', params.limit.toString());
 

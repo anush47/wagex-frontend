@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,19 +20,36 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft } from "@tabler/icons-react";
+import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink } from "@tabler/icons-react";
 import type { AttendanceEvent, EventType, EventSource, EventStatus } from "@/types/attendance";
 import { useAttendanceEvents } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 
 interface AttendanceEventsTabProps {
     companyId: string;
+    initialEmployeeId?: string;
+    initialDate?: string;
+    onFilterChange?: (filters: { employeeId?: string; date?: string; sessionId?: string; tab?: string }) => void;
+    onOpenSession: (id: string) => void;
 }
 
-export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
-    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
+export function AttendanceEventsTab({
+    companyId,
+    initialEmployeeId,
+    initialDate,
+    onFilterChange,
+    onOpenSession
+}: AttendanceEventsTabProps) {
+    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(initialEmployeeId);
     const [statusFilter, setStatusFilter] = useState<EventStatus | "ALL">("ALL");
     const [page, setPage] = useState(1);
+
+    // Sync with initial filters
+    useEffect(() => {
+        if (initialEmployeeId !== employeeFilter) {
+            setEmployeeFilter(initialEmployeeId);
+        }
+    }, [initialEmployeeId]);
 
     // Fetch events with pagination
     const {
@@ -42,17 +59,15 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
     } = useAttendanceEvents({
         companyId,
         employeeId: employeeFilter,
+        startDate: initialDate,
+        endDate: initialDate,
+        status: statusFilter === "ALL" ? undefined : statusFilter,
         page,
         limit: 20
     });
 
     const events = eventsData?.items || [];
     const meta = eventsData?.meta;
-
-    // Filter by status on client side (or add to backend if needed)
-    const filteredEvents = statusFilter === "ALL"
-        ? events
-        : events.filter(e => e.status === statusFilter);
 
     const getEventTypeBadge = (type: EventType) => {
         const styles = {
@@ -111,22 +126,31 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
                             <SearchableEmployeeSelect
                                 companyId={companyId}
                                 value={employeeFilter || undefined}
-                                onSelect={(id) => setEmployeeFilter(id)}
+                                onSelect={(id) => {
+                                    setEmployeeFilter(id);
+                                    onFilterChange?.({ employeeId: id || "" });
+                                }}
                                 placeholder="Filter by employee"
                             />
                         </div>
-                        {employeeFilter && (
+                        {(employeeFilter || initialDate) && (
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => setEmployeeFilter(undefined)}
+                                onClick={() => {
+                                    setEmployeeFilter(undefined);
+                                    onFilterChange?.({ employeeId: "", date: "" });
+                                }}
                                 className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                                title="Clear employee filter"
+                                title="Clear filters"
                             >
                                 <IconX className="h-4 w-4" />
                             </Button>
                         )}
-                        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as EventStatus | "ALL")}>
+                        <Select value={statusFilter} onValueChange={(v) => {
+                            setStatusFilter(v as EventStatus | "ALL");
+                            setPage(1);
+                        }}>
                             <SelectTrigger className="w-[150px]">
                                 <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
@@ -180,7 +204,7 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
                             </TableBody>
                         </Table>
                     </div>
-                ) : filteredEvents.length === 0 ? (
+                ) : events.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">No attendance events found</div>
                 ) : (
                     <>
@@ -196,13 +220,19 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
                                         <TableHead>Location</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Remark</TableHead>
+                                        <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredEvents.map((event: AttendanceEvent) => (
+                                    {events.map((event: AttendanceEvent) => (
                                         <TableRow
                                             key={event.id}
-                                            className="hover:bg-muted/50 transition-colors"
+                                            className={event.sessionId ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}
+                                            onClick={() => {
+                                                if (event.sessionId) {
+                                                    onOpenSession(event.sessionId);
+                                                }
+                                            }}
                                         >
                                             <TableCell>
                                                 <div className="font-medium">
@@ -244,6 +274,11 @@ export function AttendanceEventsTab({ companyId }: AttendanceEventsTabProps) {
                                             <TableCell>{getStatusBadge(event.status)}</TableCell>
                                             <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate" title={event.remark}>
                                                 {event.remark || "-"}
+                                            </TableCell>
+                                            <TableCell>
+                                                {event.sessionId && (
+                                                    <IconExternalLink className="h-4 w-4 text-muted-foreground opacity-50" />
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}

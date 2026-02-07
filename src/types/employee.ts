@@ -1,4 +1,5 @@
 import { EmploymentType, Gender, MaritalStatus } from "./policy";
+import { CompanyFile } from "./company";
 
 export enum EmployeeStatus {
     ACTIVE = 'ACTIVE',
