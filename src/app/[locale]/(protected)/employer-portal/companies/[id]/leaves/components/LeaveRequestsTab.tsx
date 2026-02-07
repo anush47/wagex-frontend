@@ -199,7 +199,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                         <TableHead>Leave Type</TableHead>
                                         <TableHead>Dates</TableHead>
                                         <TableHead>Duration</TableHead>
-                                        <TableHead className="w-[200px]">Reason</TableHead>
+                                        <TableHead>Reason</TableHead>
                                         <TableHead>Created</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Actions</TableHead>

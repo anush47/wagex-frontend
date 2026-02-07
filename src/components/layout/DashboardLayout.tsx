@@ -20,8 +20,10 @@ import {
     IconArrowLeft,
     IconSitemap,
     IconChartBar,
-    IconCalendarTime
+    IconCalendarTime,
+    IconCalendarCheck
 } from "@tabler/icons-react";
+
 import { CompanyService } from "@/services/company.service";
 import { Company } from "@/types/company";
 
@@ -140,7 +142,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             ),
         },
         {
+            label: "Attendance", // TODO: Add translation key
+            href: `/employer-portal/companies/${companyId}/attendance`,
+            icon: (
+                <IconCalendarCheck className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            ),
+        },
+        {
             label: t("settings"),
+
             href: `/employer-portal/companies/${companyId}/settings`,
             icon: (
                 <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
