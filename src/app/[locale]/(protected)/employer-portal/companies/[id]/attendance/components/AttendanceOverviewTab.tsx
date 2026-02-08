@@ -24,6 +24,7 @@ import { useLeaveRequests } from "@/hooks/use-leaves";
 import { useEmployees } from "@/hooks/use-employees";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceSession } from "@/types/attendance";
 import { LeaveStatus, type LeaveRequest } from "@/types/leave";
 import type { Employee } from "@/types/employee";
@@ -57,6 +58,7 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
     const today = new Date();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState<"PRESENT" | "LEAVE" | "ABSENT" | "COMPLETED">("PRESENT");
 
     // Update time every minute for the "worked duration" counter
     useEffect(() => {
@@ -106,8 +108,9 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
         !presentIds.has(emp.id) && !finishedIds.has(emp.id) && !leaveIds.has(emp.id)
     );
 
-    const stats = [
+    const statsList = [
         {
+            id: "PRESENT" as const,
             label: "Present Now",
             value: clockedInSessions.length,
             icon: IconLogin,
@@ -117,6 +120,7 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
             description: "Currently clocked in"
         },
         {
+            id: "LEAVE" as const,
             label: "On Leave",
             value: todayLeaves.length,
             icon: IconBeach,
@@ -126,6 +130,7 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
             description: "Approved leave today"
         },
         {
+            id: "ABSENT" as const,
             label: "Absent",
             value: absentEmployees.length,
             icon: IconAlertCircle,
@@ -135,6 +140,7 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
             description: "Not in, no leave"
         },
         {
+            id: "COMPLETED" as const,
             label: "Total Completed",
             value: clockedOutSessions.length,
             icon: IconClockStop,
@@ -165,25 +171,54 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
         String(s.employee?.employeeNo || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const filteredClockedOut = clockedOutSessions.filter((s: AttendanceSession) =>
+        String(s.employee?.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(s.employee?.employeeNo || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const filteredLeaves = todayLeaves.filter((l: LeaveRequest) =>
+        String(l.employee?.nameWithInitials || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(l.employee?.employeeNo || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const filteredAbsents = absentEmployees.filter((e: Employee) =>
+        String(e.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(e.employeeNo || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Stats Overview */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, idx) => (
+                {statsList.map((stat, idx) => (
                     <motion.div
                         key={idx}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.05 }}
                     >
-                        <Card className={`p-4 rounded-xl border relative group hover:shadow-md transition-all duration-500 ${stat.bg}`}>
-                            <div className="relative z-10 flex flex-col justify-between h-full space-y-3">
+                        <Card
+                            onClick={() => setActiveTab(stat.id)}
+                            className={cn(
+                                `p-4 h-full rounded-2xl border transition-all duration-300 cursor-pointer group`,
+                                activeTab === stat.id
+                                    ? `bg-card border-primary shadow-lg ring-1 ring-primary/20`
+                                    : `${stat.bg} border-transparent hover:border-primary/20 hover:shadow-md`
+                            )}
+                        >
+                            <div className="flex flex-col justify-between h-full space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <div className={`p-2 rounded-xl ${stat.bg} ${stat.color}`}>
+                                    <div className={cn(
+                                        "p-2 rounded-xl transition-colors",
+                                        activeTab === stat.id ? "bg-primary text-white" : `${stat.bg} ${stat.color}`
+                                    )}>
                                         <stat.icon className="w-5 h-5" />
                                     </div>
-                                    <Badge variant="outline" className={`${stat.color} border-current/20 font-black text-[9px] uppercase px-1.5 py-0 rounded-md opacity-70`}>
-                                        Live
+                                    <Badge variant="outline" className={cn(
+                                        "font-black text-[9px] uppercase px-1.5 py-0 rounded-md",
+                                        activeTab === stat.id ? "border-primary/20 text-primary" : `${stat.color} border-current/20 opacity-70`
+                                    )}>
+                                        {stat.id === "PRESENT" ? "Live" : "Dynamic"}
                                     </Badge>
                                 </div>
                                 <div>
@@ -191,44 +226,43 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</div>
                                 </div>
                             </div>
-                            {/* Decorative background element */}
-                            <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-5 group-hover:scale-150 transition-transform duration-700 ${stat.color.replace('text-', 'bg-')}`} />
                         </Card>
                     </motion.div>
                 ))}
             </div>
 
-            {/* Main Content Area */}
+            {/* Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Side: Live Activity */}
-                <Card className="lg:col-span-2 p-6 md:p-8 rounded-xl border shadow-sm overflow-hidden relative">
+                {/* Main List Column */}
+                <Card className="lg:col-span-2 p-6 md:p-8 rounded-[2rem] border bg-card/50 shadow-sm min-h-[600px] flex flex-col">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
-                                <span className="relative flex h-3 w-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                                </span>
-                                Present Now
+                            <h2 className="text-xl font-black italic uppercase tracking-tight flex items-center gap-2">
+                                {activeTab === "PRESENT" && <><IconLogin className="w-6 h-6 text-green-500" /> Active Sessions</>}
+                                {activeTab === "LEAVE" && <><IconBeach className="w-6 h-6 text-blue-500" /> Employees on Leave</>}
+                                {activeTab === "ABSENT" && <><IconAlertCircle className="w-6 h-6 text-red-500" /> Absent Today</>}
+                                {activeTab === "COMPLETED" && <><IconClockStop className="w-6 h-6 text-orange-500" /> Completed Logs</>}
                             </h2>
-                            <p className="text-sm text-neutral-500 font-medium">Real-time presence tracking</p>
+                            <p className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
+                                Workforce breakdown for today, {format(today, "MMMM dd")}
+                            </p>
                         </div>
-
-                        <div className="relative group min-w-[240px]">
-                            <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-focus-within:text-primary transition-colors" />
+                        <div className="relative w-full md:w-64">
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                             <Input
-                                placeholder="Search active employees..."
-                                className="pl-11 h-11 rounded-2xl border-border/60 bg-muted/30 focus-visible:ring-primary/20 transition-all font-medium text-sm"
+                                placeholder="Filter by name..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 h-10 rounded-xl bg-card border-border/60 text-xs font-medium focus:ring-primary/20"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3 flex-1">
                         <AnimatePresence mode="popLayout">
-                            {filteredClockedIn.length > 0 ? (
-                                filteredClockedIn.map((session: AttendanceSession, idx) => {
+                            {/* Present List */}
+                            {activeTab === "PRESENT" && (
+                                filteredClockedIn.length > 0 ? filteredClockedIn.map((session: AttendanceSession) => {
                                     const clockIn = new Date(session.checkInTime!);
                                     const minsWorked = differenceInMinutes(currentTime, clockIn);
                                     const hours = Math.floor(minsWorked / 60);
@@ -237,211 +271,202 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                     return (
                                         <motion.div
                                             key={session.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 20 }}
-                                            layout
-                                            className="group relative p-4 rounded-[1.5rem] bg-muted/20 hover:bg-muted/40 border border-transparent hover:border-border/60 transition-all cursor-pointer overflow-hidden"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
                                             onClick={() => onOpenSession(session.id)}
                                         >
-                                            <div className="flex items-center justify-between gap-4 relative z-10">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="relative">
-                                                        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-lg overflow-hidden border-2 border-primary/20">
-                                                            {session.employee?.avatarUrl ? (
-                                                                <img src={session.employee.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                session.employee?.fullName?.charAt(0) || "E"
-                                                            )}
-                                                        </div>
-                                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background bg-green-500 shadow-sm" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-black text-sm uppercase tracking-tight group-hover:text-primary transition-colors">
-                                                            {session.employee?.fullName}
-                                                        </div>
-                                                        <div className="flex flex-col gap-1 mt-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{session.employee?.employeeNo || "EMP-000"}</div>
-                                                                <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                                                                <div className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 leading-none">
-                                                                    <IconClock className="w-3 h-3" />
-                                                                    In at {safeFormatTime(session.checkInTime)}
-                                                                </div>
-                                                            </div>
-                                                            {session.shiftName && (
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <Badge variant="outline" className="text-[9px] font-black uppercase px-1.5 py-0 border-primary/20 bg-primary/5 text-primary rounded-md h-4 flex items-center">
-                                                                        {session.shiftName}
-                                                                    </Badge>
-                                                                    <div className="text-[9px] font-bold text-muted-foreground tabular-nums">
-                                                                        ({session.shiftStartTime} - {session.shiftEndTime})
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                            <div className="flex items-center gap-4">
+                                                <EmployeeAvatar photo={session.employee?.photo} name={session.employee?.fullName} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                                <div>
+                                                    <div className="text-[13px] font-black uppercase tracking-tight group-hover:text-primary transition-colors">{session.employee?.fullName}</div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge variant="outline" className="text-[9px] font-black uppercase px-1.5 py-0">#{session.employee?.employeeNo}</Badge>
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                                                            {session.shiftName || "Standard"}
+                                                            <span className="text-primary/70 ml-1">
+                                                                {session.shiftStartTime && `[${session.shiftStartTime} - ${session.shiftEndTime}]`}
+                                                            </span>
+                                                        </span>
                                                     </div>
                                                 </div>
-
-                                                <div className="flex flex-col items-end gap-2 text-right">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="text-sm font-black text-primary tabular-nums">
-                                                            {hours}h {mins}m
-                                                        </div>
-                                                        <IconPlayerPlay className="w-3 h-3 text-green-500 fill-current" />
-                                                    </div>
-                                                    <div className="w-32 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                                                        <motion.div
-                                                            className="h-full bg-primary"
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${Math.min(100, (minsWorked / 480) * 100)}%` }} // 8h target
-                                                            transition={{ duration: 1 }}
-                                                        />
-                                                    </div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2 text-right">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-sm font-black text-primary tabular-nums">{hours}h {mins}m</div>
+                                                    <IconPlayerPlay className="w-3 h-3 text-green-500 fill-current animate-pulse" />
+                                                </div>
+                                                <div className="w-24 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden border border-border/40 shadow-inner">
+                                                    <motion.div className="h-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.4)]" initial={{ width: 0 }} animate={{ width: `${Math.min(100, (minsWorked / 480) * 100)}%` }} />
                                                 </div>
                                             </div>
                                         </motion.div>
                                     );
-                                })
-                            ) : (
-                                <div className="text-center py-20 bg-muted/10 rounded-[2rem] border border-dashed border-border/60">
-                                    <div className="inline-flex p-4 rounded-3xl bg-muted/30 text-muted-foreground mb-4">
-                                        <IconLogin className="w-8 h-8" />
-                                    </div>
-                                    <div className="font-black uppercase tracking-tight text-neutral-400">No active sessions</div>
-                                    <p className="text-sm text-neutral-500 max-w-[250px] mx-auto mt-2 font-medium">Employees haven't clocked in yet for the day.</p>
-                                </div>
+                                }) : (
+                                    <EmptyPool icon={IconLogin} label="No active sessions" sub="Nobody is currently clocked in." />
+                                )
+                            )}
+
+                            {/* Completed List */}
+                            {activeTab === "COMPLETED" && (
+                                filteredClockedOut.length > 0 ? filteredClockedOut.map((session: AttendanceSession) => (
+                                    <motion.div
+                                        key={session.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
+                                        onClick={() => onOpenSession(session.id)}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <EmployeeAvatar photo={session.employee?.photo} name={session.employee?.fullName} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                            <div>
+                                                <div className="text-[13px] font-black uppercase tracking-tight group-hover:text-primary transition-colors">{session.employee?.fullName}</div>
+                                                <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Shift {session.shiftStartTime} - {session.shiftEndTime}</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-black text-primary tabular-nums">Completed</div>
+                                            <div className="text-[9px] font-black text-muted-foreground uppercase mt-1">OUT AT {safeFormatTime(session.checkOutTime)}</div>
+                                        </div>
+                                    </motion.div>
+                                )) : (
+                                    <EmptyPool icon={IconClockStop} label="No completed logs" sub="Employees haven't clocked out yet." />
+                                )
+                            )}
+
+                            {/* Leave List */}
+                            {activeTab === "LEAVE" && (
+                                filteredLeaves.length > 0 ? filteredLeaves.map((leave: LeaveRequest) => (
+                                    <motion.div
+                                        key={leave.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card transition-all"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <EmployeeAvatar photo={leave.employee?.photo} name={leave.employee?.nameWithInitials} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                            <div>
+                                                <div className="text-[13px] font-black uppercase tracking-tight">{leave.employee?.nameWithInitials}</div>
+                                                <div className="text-[10px] font-bold text-blue-600 uppercase mt-1">{leave.leaveTypeName || "General"} Leave</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <Badge className="bg-blue-500/10 text-blue-600 border-none font-black text-[9px] uppercase px-2">Approved</Badge>
+                                            <div className="text-[9px] font-black text-muted-foreground uppercase mt-1">Returning Tomorrow</div>
+                                        </div>
+                                    </motion.div>
+                                )) : (
+                                    <EmptyPool icon={IconBeach} label="No leaves today" sub="All approved employees are accounted for." />
+                                )
+                            )}
+
+                            {/* Absent List */}
+                            {activeTab === "ABSENT" && (
+                                filteredAbsents.length > 0 ? filteredAbsents.map((emp: Employee) => (
+                                    <motion.div
+                                        key={emp.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card transition-all"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <EmployeeAvatar photo={emp.photo} name={emp.fullName} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                            <div>
+                                                <div className="text-[13px] font-black uppercase tracking-tight">{emp.fullName}</div>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Badge variant="outline" className="text-[9px] font-black uppercase px-1.5 py-0">#{emp.employeeNo}</Badge>
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                                                        {(emp as any).shiftName || "Assigned Shift"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <Badge className="bg-red-500/10 text-red-600 border-none font-black text-[9px] uppercase px-2">No Status</Badge>
+                                            <div className="text-[9px] font-black text-muted-foreground uppercase mt-1">Expected today</div>
+                                        </div>
+                                    </motion.div>
+                                )) : (
+                                    <EmptyPool icon={IconAlertCircle} label="Zero Absentees" sub="Everybody is present or on leave. Great job!" />
+                                )
                             )}
                         </AnimatePresence>
                     </div>
                 </Card>
 
-                {/* Right Side: Charts & Lists */}
+                {/* Right Side: Visual Context */}
                 <div className="space-y-6">
-                    {/* Attendance Visualization */}
-                    <Card className="p-8 rounded-xl border shadow-sm overflow-hidden bg-card text-card-foreground relative">
-                        <h3 className="text-lg font-black uppercase tracking-tight mb-8">Workforce Split</h3>
-
-                        <div className="flex items-center justify-center py-4 relative">
-                            {/* Custom CSS Circular segments */}
-                            <div className="relative w-48 h-48 flex items-center justify-center">
-                                <svg className="w-full h-full transform -rotate-90">
-                                    {/* Total / Absent Segment (Background) */}
-                                    <circle
-                                        cx="96" cy="96" r="88"
-                                        stroke="currentColor" strokeWidth="16" fill="transparent"
-                                        className="text-muted/30"
-                                    />
-
-                                    {/* Present Segment */}
-                                    <motion.circle
-                                        cx="96" cy="96" r="88"
-                                        stroke="currentColor" strokeWidth="16" fill="transparent"
-                                        strokeDasharray={2 * Math.PI * 88}
-                                        initial={{ strokeDashoffset: 2 * Math.PI * 88 }}
-                                        animate={{ strokeDashoffset: 2 * Math.PI * 88 * (1 - clockedInSessions.length / (employees.length || 1)) }}
-                                        transition={{ duration: 1.5, ease: "easeOut" }}
-                                        className="text-primary"
-                                        strokeLinecap="round"
-                                    />
-
-                                    {/* Leave Segment */}
-                                    {todayLeaves.length > 0 && (
-                                        <motion.circle
-                                            cx="96" cy="96" r="88"
-                                            stroke="currentColor" strokeWidth="16" fill="transparent"
-                                            strokeDasharray={2 * Math.PI * 88}
-                                            initial={{ strokeDashoffset: 2 * Math.PI * 88 }}
-                                            animate={{
-                                                strokeDashoffset: 2 * Math.PI * 88 * (1 - todayLeaves.length / (employees.length || 1))
-                                            }}
-                                            style={{
-                                                rotate: `${(clockedInSessions.length / (employees.length || 1)) * 360}deg`,
-                                                transformOrigin: '96px 96px'
-                                            }}
-                                            transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                                            className="text-blue-500"
-                                            strokeLinecap="round"
-                                        />
-                                    )}
-                                </svg>
-                                <div className="absolute text-center">
-                                    <div className="text-4xl font-black">
-                                        {employees.length > 0 ? Math.round((clockedInSessions.length / employees.length) * 100) : 0}%
-                                    </div>
-                                    <div className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Attendance</div>
-                                </div>
+                    <Card className="p-8 rounded-[2rem] border bg-card/40 shadow-sm flex flex-col items-center justify-center text-center">
+                        <h3 className="text-sm font-black uppercase tracking-tight mb-8">Attendance Split</h3>
+                        <div className="relative w-48 h-48 flex items-center justify-center mb-8">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-muted/20" />
+                                <motion.circle
+                                    cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent"
+                                    strokeDasharray={2 * Math.PI * 80}
+                                    initial={{ strokeDashoffset: 2 * Math.PI * 80 }}
+                                    animate={{ strokeDashoffset: 2 * Math.PI * 80 * (1 - (clockedInSessions.length + clockedOutSessions.length) / (employees.length || 1)) }}
+                                    transition={{ duration: 1.5, ease: "easeOut" }}
+                                    className="text-primary" strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="absolute">
+                                <div className="text-4xl font-black">{Math.round(((clockedInSessions.length + clockedOutSessions.length) / (employees.length || 1)) * 100)}%</div>
+                                <div className="text-[9px] uppercase font-black tracking-widest text-muted-foreground">Present</div>
                             </div>
                         </div>
-
-                        <div className="mt-8 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2.5 w-2.5 rounded-full bg-primary" />
-                                    <span className="text-xs font-bold uppercase text-muted-foreground">Clocked In</span>
-                                </div>
-                                <span className="font-black text-sm">{clockedInSessions.length}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                                    <span className="text-xs font-bold uppercase text-muted-foreground">On Leave</span>
-                                </div>
-                                <span className="font-black text-sm">{todayLeaves.length}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2.5 w-2.5 rounded-full bg-muted" />
-                                    <span className="text-xs font-bold uppercase text-muted-foreground">Absent</span>
-                                </div>
-                                <span className="font-black text-sm">{absentEmployees.length}</span>
-                            </div>
+                        <div className="w-full space-y-3">
+                            <SplitMetric label="Clocked In" count={clockedInSessions.length} color="bg-primary" />
+                            <SplitMetric label="Completed" count={clockedOutSessions.length} color="bg-orange-500" />
+                            <SplitMetric label="On Leave" count={todayLeaves.length} color="bg-blue-500" />
+                            <SplitMetric label="Absent" count={absentEmployees.length} color="bg-neutral-300" />
                         </div>
                     </Card>
 
-                    {/* Quick Absentees List (Critical Feedback) */}
-                    <Card className="p-6 rounded-xl border shadow-sm overflow-hidden">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
-                                <IconAlertCircle className="w-4 h-4 text-destructive" />
-                                Critical Absents
-                            </h3>
-                            <Badge variant="outline" className="text-[10px] font-black rounded-lg bg-destructive/10 text-destructive border-destructive/20" >
-                                {absentEmployees.length}
-                            </Badge>
-                        </div>
-
-                        <div className="space-y-3">
-                            {absentEmployees.slice(0, 5).map((emp: Employee) => (
-                                <div key={emp.id} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center font-black text-[10px]">
-                                            {emp.fullName?.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <div className="text-[11px] font-black uppercase leading-none">{emp.fullName}</div>
-                                            <div className="text-[9px] font-bold text-muted-foreground mt-1 uppercase">{emp.employeeNo}</div>
-                                        </div>
-                                    </div>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary">
-                                        <IconExternalLink className="h-3 w-3" />
-                                    </Button>
-                                </div>
-                            ))}
-                            {absentEmployees.length > 5 && (
-                                <Button variant="link" className="w-full text-xs font-black uppercase text-primary tracking-widest hover:no-underline">
-                                    View All {absentEmployees.length}
-                                </Button>
-                            )}
-                            {absentEmployees.length === 0 && (
-                                <div className="text-center py-6 text-muted-foreground text-[10px] font-black uppercase italic">
-                                    Everybody is accounted for! 👏
+                    <Card className="p-8 rounded-[2rem] border bg-card/40 shadow-sm flex flex-col justify-center">
+                        <h3 className="text-sm font-black uppercase tracking-tight mb-4 flex items-center gap-2">
+                            <IconAlertCircle className="w-4 h-4 text-red-500" /> Key Insights
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-2xl bg-muted/20 border border-border/40">
+                                <div className="text-xs font-black uppercase tracking-tight mb-1 text-primary">Peak Hour</div>
+                                <p className="text-[10px] font-bold text-muted-foreground leading-snug">Highest volume of clock-ins occurred at 08:45 AM today.</p>
+                            </div>
+                            {absentEmployees.length > 0 && (
+                                <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10">
+                                    <div className="text-xs font-black uppercase tracking-tight mb-1 text-red-600">Action Required</div>
+                                    <p className="text-[10px] font-bold text-red-600/70 leading-snug">{absentEmployees.length} employees are missing without approved leave.</p>
                                 </div>
                             )}
                         </div>
                     </Card>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function SplitMetric({ label, count, color }: { label: string, count: number, color: string }) {
+    return (
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <div className={cn("h-2 w-2 rounded-full", color)} />
+                <span className="text-[10px] font-black uppercase text-muted-foreground">{label}</span>
+            </div>
+            <span className="text-xs font-black">{count}</span>
+        </div>
+    );
+}
+
+function EmptyPool({ icon: Icon, label, sub }: { icon: any, label: string, sub: string }) {
+    return (
+        <div className="flex-1 flex flex-col items-center justify-center py-20 bg-muted/5 rounded-[2rem] border border-dashed border-border/60 mt-4">
+            <div className="p-5 rounded-3xl bg-muted/20 mb-4">
+                <Icon className="w-10 h-10 text-muted-foreground/30" />
+            </div>
+            <h3 className="text-lg font-black uppercase tracking-tight text-muted-foreground/40 italic">{label}</h3>
+            <p className="text-[11px] font-bold text-muted-foreground/30 uppercase mt-1">{sub}</p>
         </div>
     );
 }

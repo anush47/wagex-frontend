@@ -4,10 +4,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { IconPlus, IconClock, IconFileText, IconChartBar } from "@tabler/icons-react";
+import { IconPlus, IconClock, IconFileText, IconChartBar, IconCalendarStats } from "@tabler/icons-react";
 import { AttendanceOverviewTab } from "./components/AttendanceOverviewTab";
 import { AttendanceSessionsTab } from "./components/AttendanceSessionsTab";
 import { AttendanceEventsTab } from "./components/AttendanceEventsTab";
+import { AttendanceStatsTab } from "./components/AttendanceStatsTab";
 import { CreateEventDialog } from "./components/CreateEventDialog";
 import { SessionDetailsDialog } from "./components/SessionDetailsDialog";
 import { useAttendanceSession } from "@/hooks/use-attendance";
@@ -141,7 +142,7 @@ export default function AttendancePage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="grid w-full max-w-lg grid-cols-3">
+                <TabsList className="grid w-full max-w-2xl grid-cols-4">
                     <TabsTrigger value="overview" className="flex items-center gap-2">
                         <IconChartBar className="h-4 w-4" />
                         Overview
@@ -153,6 +154,10 @@ export default function AttendancePage() {
                     <TabsTrigger value="events" className="flex items-center gap-2">
                         <IconFileText className="h-4 w-4" />
                         Raw Events
+                    </TabsTrigger>
+                    <TabsTrigger value="stats" className="flex items-center gap-2">
+                        <IconCalendarStats className="h-4 w-4" />
+                        Statistics
                     </TabsTrigger>
                 </TabsList>
 
@@ -184,6 +189,17 @@ export default function AttendancePage() {
                         endDate={endDate}
                         onFilterChange={handleFilterChange}
                         onOpenSession={handleOpenSession}
+                    />
+                </TabsContent>
+
+                <TabsContent value="stats" className="mt-6">
+                    <AttendanceStatsTab
+                        companyId={companyId}
+                        startDate={startDate}
+                        endDate={endDate}
+                        initialDate={date}
+                        employeeId={employeeId}
+                        onFilterChange={handleFilterChange}
                     />
                 </TabsContent>
             </Tabs>

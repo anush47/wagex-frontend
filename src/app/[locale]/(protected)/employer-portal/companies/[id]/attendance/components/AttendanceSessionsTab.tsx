@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { IconRefresh, IconX, IconEdit, IconTrash, IconChevronLeft, IconChevronRight, IconCalendarStats, IconCheck, IconFilter } from "@tabler/icons-react";
+import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceSession, ApprovalStatus } from "@/types/attendance";
 import { useAttendanceSessions, useAttendanceMutations } from "@/hooks/use-attendance";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -356,13 +357,22 @@ export function AttendanceSessionsTab({
                                                     onClick={() => handleRowClick(session)}
                                                 >
                                                     <TableCell>
-                                                        <div className="font-medium">
-                                                            {session.employee?.nameWithInitials}{" "}
-                                                            {session.employee?.employeeNo && (
-                                                                <span className="text-muted-foreground font-mono text-xs">
-                                                                    ({session.employee.employeeNo})
-                                                                </span>
-                                                            )}
+                                                        <div className="flex items-center gap-3">
+                                                            <EmployeeAvatar
+                                                                photo={session.employee?.photo}
+                                                                name={session.employee?.fullName || session.employee?.nameWithInitials}
+                                                                className="h-8 w-8 rounded-lg border border-border/40"
+                                                            />
+                                                            <div>
+                                                                <div className="font-bold text-[13px] uppercase tracking-tight">
+                                                                    {session.employee?.nameWithInitials}
+                                                                </div>
+                                                                {session.employee?.employeeNo && (
+                                                                    <div className="text-muted-foreground font-mono text-[9px] opacity-60">
+                                                                        #{session.employee.employeeNo}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">

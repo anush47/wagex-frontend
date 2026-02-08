@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink, IconCalendarStats, IconFilter } from "@tabler/icons-react";
+import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceEvent, EventType, EventSource, EventStatus } from "@/types/attendance";
 import { useAttendanceEvents } from "@/hooks/use-attendance";
 import { format } from "date-fns";
@@ -304,13 +305,22 @@ export function AttendanceEventsTab({
                                             }}
                                         >
                                             <TableCell>
-                                                <div className="font-medium">
-                                                    {event.employee?.nameWithInitials}{" "}
-                                                    {event.employee?.employeeNo && (
-                                                        <span className="text-muted-foreground font-mono text-xs">
-                                                            ({event.employee.employeeNo})
-                                                        </span>
-                                                    )}
+                                                <div className="flex items-center gap-3">
+                                                    <EmployeeAvatar
+                                                        photo={event.employee?.photo}
+                                                        name={event.employee?.fullName || event.employee?.nameWithInitials}
+                                                        className="h-8 w-8 rounded-lg border border-border/40"
+                                                    />
+                                                    <div>
+                                                        <div className="font-bold text-[13px] uppercase tracking-tight">
+                                                            {event.employee?.nameWithInitials}
+                                                        </div>
+                                                        {event.employee?.employeeNo && (
+                                                            <div className="text-muted-foreground font-mono text-[9px] opacity-60">
+                                                                #{event.employee.employeeNo}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
