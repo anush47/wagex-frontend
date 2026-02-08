@@ -162,11 +162,8 @@ export function AttendanceSessionsTab({
 
         try {
             await updateSession.mutateAsync({ id: session.id, dto: updates });
-            const approvedText = approvedItems.join(' and ');
-            toast.success(`Successfully approved ${approvedText} for ${session.employee?.fullName || 'employee'}`);
         } catch (err) {
             console.error('Failed to approve session:', err);
-            toast.error('Failed to approve session. Please try again.');
         }
     };
 

@@ -34,12 +34,15 @@ export function SessionTimeDetails({
                     <Label className="text-xs font-bold text-neutral-500">Check In</Label>
                 </div>
                 {editing ? (
-                    <Input
-                        type="datetime-local"
-                        value={checkInTime}
-                        onChange={(e) => onCheckInChange(e.target.value)}
-                        className="mt-1"
-                    />
+                    <div className="flex flex-col gap-2">
+                        <Input
+                            type="datetime-local"
+                            value={checkInTime}
+                            onChange={(e) => onCheckInChange(e.target.value)}
+                            className="mt-1"
+                        />
+                        {getApprovalBadge(session.inApprovalStatus, "IN")}
+                    </div>
                 ) : (
                     <div className="flex flex-col gap-1">
                         <div className="font-bold text-sm mt-1">
@@ -62,12 +65,15 @@ export function SessionTimeDetails({
                     <Label className="text-xs font-bold text-neutral-500">Check Out</Label>
                 </div>
                 {editing ? (
-                    <Input
-                        type="datetime-local"
-                        value={checkOutTime}
-                        onChange={(e) => onCheckOutChange(e.target.value)}
-                        className="mt-1"
-                    />
+                    <div className="flex flex-col gap-2">
+                        <Input
+                            type="datetime-local"
+                            value={checkOutTime}
+                            onChange={(e) => onCheckOutChange(e.target.value)}
+                            className="mt-1"
+                        />
+                        {getApprovalBadge(session.outApprovalStatus, "OUT")}
+                    </div>
                 ) : (
                     <div className="flex flex-col gap-1">
                         <div className="font-bold text-sm mt-1">

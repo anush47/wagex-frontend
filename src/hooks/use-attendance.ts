@@ -75,11 +75,16 @@ export const useAttendanceMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['attendance'] });
-            toast.success('Attendance event created');
+        onMutate: () => {
+            return { toastId: toast.loading('Creating attendance event...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to create event'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Attendance event created', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to create event', { id: context?.toastId });
+        },
     });
 
     const updateSession = useMutation({
@@ -88,11 +93,16 @@ export const useAttendanceMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['attendance'] });
-            toast.success('Session updated');
+        onMutate: () => {
+            return { toastId: toast.loading('Updating attendance session...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to update session'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Session updated', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to update session', { id: context?.toastId });
+        },
     });
 
     const deleteSession = useMutation({
@@ -101,11 +111,16 @@ export const useAttendanceMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['attendance'] });
-            toast.success('Session deleted');
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting attendance session...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete session'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Session deleted', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to delete session', { id: context?.toastId });
+        },
     });
 
     return {

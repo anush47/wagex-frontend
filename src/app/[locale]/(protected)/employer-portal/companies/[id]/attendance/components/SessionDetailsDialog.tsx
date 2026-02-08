@@ -88,12 +88,12 @@ export function SessionDetailsDialog({
             const brk = parseInt(breakMinutes) || 0;
             const work = Math.max(0, totalMins - brk);
 
-            // Calculate overtime if shift is assigned
+            // Calculate overtime if shift times are available
             let overtime = 0;
-            if (session?.shift) {
+            if (session?.shiftStartTime && session?.shiftEndTime) {
                 // Parse shift times (format: "HH:mm:ss")
-                const [startHours, startMinutes] = session.shift.startTime.split(':').map(Number);
-                const [endHours, endMinutes] = session.shift.endTime.split(':').map(Number);
+                const [startHours, startMinutes] = session.shiftStartTime.split(':').map(Number);
+                const [endHours, endMinutes] = session.shiftEndTime.split(':').map(Number);
 
                 const shiftStartMins = startHours * 60 + startMinutes;
                 const shiftEndMins = endHours * 60 + endMinutes;
@@ -109,7 +109,7 @@ export function SessionDetailsDialog({
             setWorkMinutes(work.toString());
             setOvertimeMinutes(overtime.toString());
         }
-    }, [checkInTime, checkOutTime, breakMinutes, editing, session?.shift]);
+    }, [checkInTime, checkOutTime, breakMinutes, editing, session?.shiftStartTime, session?.shiftEndTime]);
 
     // Recalculate workMinutes when breakMinutes changes
     useEffect(() => {
@@ -157,10 +157,10 @@ export function SessionDetailsDialog({
             else dto.outApprovalStatus = status;
 
             await updateSession.mutateAsync({ id: session.id, dto });
-            toast.success(`Session ${type} ${status === "APPROVED" ? "approved" : "rejected"} successfully`);
+            // Toast is shown by the mutation hook
         } catch (error) {
-            console.error(`Failed to ${status.toLowerCase()} session`, error);
-            toast.error(`Failed to ${status.toLowerCase()} session`);
+            console.error(`Failed to update session ${type}`, error);
+            toast.error(`Failed to update session ${type}`);
         } finally {
             setProcessing(false);
         }
@@ -220,6 +220,19 @@ export function SessionDetailsDialog({
                             <span className="text-xs font-bold">Reject</span>
                         </Button>
                     </div>
+                )}
+                {editing && status !== "PENDING" && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-9 rounded-lg shadow-sm hover:shadow-md transition-all"
+                        onClick={() => handleApproval(type, "PENDING" as ApprovalStatus)}
+                        disabled={processing}
+                        title="Reset to Pending"
+                    >
+                        <IconClock className="h-3.5 w-3.5 mr-1.5" />
+                        <span className="text-xs font-bold">Reset to Pending</span>
+                    </Button>
                 )}
             </div>
         );
