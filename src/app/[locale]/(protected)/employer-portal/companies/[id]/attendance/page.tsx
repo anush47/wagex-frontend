@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { IconPlus, IconClock, IconFileText } from "@tabler/icons-react";
+import { IconPlus, IconClock, IconFileText, IconChartBar } from "@tabler/icons-react";
+import { AttendanceOverviewTab } from "./components/AttendanceOverviewTab";
 import { AttendanceSessionsTab } from "./components/AttendanceSessionsTab";
 import { AttendanceEventsTab } from "./components/AttendanceEventsTab";
 import { CreateEventDialog } from "./components/CreateEventDialog";
@@ -17,7 +18,7 @@ export default function AttendancePage() {
     const searchParams = useSearchParams();
     const companyId = params?.id as string;
 
-    const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "sessions");
+    const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
     // Filters from URL
@@ -35,7 +36,7 @@ export default function AttendancePage() {
 
     // Sync tab state with URL parameter
     useEffect(() => {
-        const tabFromUrl = searchParams.get("tab") || "sessions";
+        const tabFromUrl = searchParams.get("tab") || "overview";
         setActiveTab(tabFromUrl);
     }, [searchParams]);
 
@@ -140,7 +141,11 @@ export default function AttendancePage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsList className="grid w-full max-w-lg grid-cols-3">
+                    <TabsTrigger value="overview" className="flex items-center gap-2">
+                        <IconChartBar className="h-4 w-4" />
+                        Overview
+                    </TabsTrigger>
                     <TabsTrigger value="sessions" className="flex items-center gap-2">
                         <IconClock className="h-4 w-4" />
                         Sessions
@@ -150,6 +155,13 @@ export default function AttendancePage() {
                         Raw Events
                     </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="overview" className="mt-6">
+                    <AttendanceOverviewTab
+                        companyId={companyId}
+                        onOpenSession={handleOpenSession}
+                    />
+                </TabsContent>
 
                 <TabsContent value="sessions" className="mt-6">
                     <AttendanceSessionsTab
