@@ -68,11 +68,16 @@ export const useEmployeeMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['employees'] });
-            toast.success('Employee created successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Creating employee...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to create employee'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['employees'] });
+            toast.success('Employee created successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to create employee', { id: context?.toastId });
+        },
     });
 
     const updateEmployee = useMutation({
@@ -81,14 +86,19 @@ export const useEmployeeMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (data) => {
+        onMutate: () => {
+            return { toastId: toast.loading('Updating employee...') };
+        },
+        onSuccess: (data, _variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['employees'] });
             if (data?.id) {
                 queryClient.invalidateQueries({ queryKey: ['employees', 'detail', data.id] });
             }
-            toast.success('Employee updated successfully');
+            toast.success('Employee updated successfully', { id: context?.toastId });
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to update employee'),
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to update employee', { id: context?.toastId });
+        },
     });
 
     const deleteEmployee = useMutation({
@@ -97,11 +107,16 @@ export const useEmployeeMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['employees'] });
-            toast.success('Employee deleted successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting employee...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete employee'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['employees'] });
+            toast.success('Employee deleted successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to delete employee', { id: context?.toastId });
+        },
     });
 
     const provisionUser = useMutation({
@@ -110,11 +125,16 @@ export const useEmployeeMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: ['employees', 'detail', id] });
-            toast.success('User account provisioned successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Provisioning user account...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to provision user'),
+        onSuccess: (_, { id }, context) => {
+            queryClient.invalidateQueries({ queryKey: ['employees', 'detail', id] });
+            toast.success('User account provisioned successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to provision user', { id: context?.toastId });
+        },
     });
 
     return {

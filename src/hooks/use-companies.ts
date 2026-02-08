@@ -59,11 +59,16 @@ export const useCompanyMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['companies'] });
-            toast.success('Company created successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Creating company...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to create company'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            toast.success('Company created successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to create company', { id: context?.toastId });
+        },
     });
 
     const updateCompany = useMutation({
@@ -72,14 +77,19 @@ export const useCompanyMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (data) => {
+        onMutate: () => {
+            return { toastId: toast.loading('Updating company...') };
+        },
+        onSuccess: (data, _variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['companies'] });
             if (data?.id) {
                 queryClient.invalidateQueries({ queryKey: ['companies', 'detail', data.id] });
             }
-            toast.success('Company updated successfully');
+            toast.success('Company updated successfully', { id: context?.toastId });
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to update company'),
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to update company', { id: context?.toastId });
+        },
     });
 
     const deleteCompany = useMutation({
@@ -88,11 +98,16 @@ export const useCompanyMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['companies'] });
-            toast.success('Company deleted successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting company...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete company'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            toast.success('Company deleted successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to delete company', { id: context?.toastId });
+        },
     });
 
     return {

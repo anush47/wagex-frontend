@@ -56,11 +56,16 @@ export const usePolicyMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (_, { companyId }) => {
-            queryClient.invalidateQueries({ queryKey: ['policies', 'company', companyId] });
-            toast.success('Company policy saved successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Saving company policy...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to save company policy'),
+        onSuccess: (_, { companyId }, context) => {
+            queryClient.invalidateQueries({ queryKey: ['policies', 'company', companyId] });
+            toast.success('Company policy saved successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to save company policy', { id: context?.toastId });
+        },
     });
 
     const saveEmployeePolicy = useMutation({
@@ -69,11 +74,16 @@ export const usePolicyMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (_, { employeeId }) => {
-            queryClient.invalidateQueries({ queryKey: ['policies', 'effective', employeeId] });
-            toast.success('Employee policy override saved successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Saving employee policy override...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to save employee policy override'),
+        onSuccess: (_, { employeeId }, context) => {
+            queryClient.invalidateQueries({ queryKey: ['policies', 'effective', employeeId] });
+            toast.success('Employee policy override saved successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to save employee policy override', { id: context?.toastId });
+        },
     });
 
     const deleteEmployeePolicy = useMutation({
@@ -82,11 +92,16 @@ export const usePolicyMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (_, { employeeId }) => {
-            queryClient.invalidateQueries({ queryKey: ['policies', 'effective', employeeId] });
-            toast.success('Employee policy override removed');
+        onMutate: () => {
+            return { toastId: toast.loading('Removing policy override...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete employee policy override'),
+        onSuccess: (_, { employeeId }, context) => {
+            queryClient.invalidateQueries({ queryKey: ['policies', 'effective', employeeId] });
+            toast.success('Employee policy override removed', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to delete employee policy override', { id: context?.toastId });
+        },
     });
 
     return {

@@ -73,11 +73,16 @@ export const useLeaveMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['leaves'] });
-            toast.success('Leave request approved');
+        onMutate: () => {
+            return { toastId: toast.loading('Approving leave request...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to approve request'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['leaves'] });
+            toast.success('Leave request approved', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to approve request', { id: context?.toastId });
+        },
     });
 
     const rejectRequest = useMutation({
@@ -86,11 +91,16 @@ export const useLeaveMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['leaves'] });
-            toast.success('Leave request rejected');
+        onMutate: () => {
+            return { toastId: toast.loading('Rejecting leave request...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to reject request'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['leaves'] });
+            toast.success('Leave request rejected', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to reject request', { id: context?.toastId });
+        },
     });
 
     const createRequest = useMutation({
@@ -99,11 +109,16 @@ export const useLeaveMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['leaves'] });
-            toast.success('Leave request created');
+        onMutate: () => {
+            return { toastId: toast.loading('Creating leave request...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to create request'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['leaves'] });
+            toast.success('Leave request created', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to create request', { id: context?.toastId });
+        },
     });
 
     const deleteRequest = useMutation({
@@ -112,11 +127,16 @@ export const useLeaveMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['leaves'] });
-            toast.success('Leave request deleted');
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting leave request...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete request'),
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['leaves'] });
+            toast.success('Leave request deleted', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to delete request', { id: context?.toastId });
+        },
     });
 
     return {

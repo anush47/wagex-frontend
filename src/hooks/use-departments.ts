@@ -52,11 +52,16 @@ export const useDepartmentMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['departments', 'list', variables.companyId] });
-            toast.success('Department created successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Creating department...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to create department'),
+        onSuccess: (_, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['departments', 'list', variables.companyId] });
+            toast.success('Department created successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to create department', { id: context?.toastId });
+        },
     });
 
     const updateDepartment = useMutation({
@@ -65,14 +70,19 @@ export const useDepartmentMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (data) => {
+        onMutate: () => {
+            return { toastId: toast.loading('Updating department...') };
+        },
+        onSuccess: (data, _variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['departments'] });
             if (data?.id) {
                 queryClient.invalidateQueries({ queryKey: ['departments', 'detail', data.id] });
             }
-            toast.success('Department updated successfully');
+            toast.success('Department updated successfully', { id: context?.toastId });
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to update department'),
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to update department', { id: context?.toastId });
+        },
     });
 
     const deleteDepartment = useMutation({
@@ -81,11 +91,16 @@ export const useDepartmentMutations = () => {
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
-        onSuccess: (_, { companyId }) => {
-            queryClient.invalidateQueries({ queryKey: ['departments'] });
-            toast.success('Department deleted successfully');
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting department...') };
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to delete department'),
+        onSuccess: (_, { companyId }, context) => {
+            queryClient.invalidateQueries({ queryKey: ['departments'] });
+            toast.success('Department deleted successfully', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to delete department', { id: context?.toastId });
+        },
     });
 
     return {
