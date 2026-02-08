@@ -75,15 +75,53 @@ export function SessionDetailsDialog({
         }
     }, [open, session]);
 
+    // Recalculate times when check-in or check-out changes
+    useEffect(() => {
+        if (editing && checkInTime && checkOutTime) {
+            const checkIn = new Date(checkInTime);
+            const checkOut = new Date(checkOutTime);
+
+            // Calculate total minutes
+            const totalMins = Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60)));
+
+            // Calculate work minutes (total - break)
+            const brk = parseInt(breakMinutes) || 0;
+            const work = Math.max(0, totalMins - brk);
+
+            // Calculate overtime if shift is assigned
+            let overtime = 0;
+            if (session?.shift) {
+                // Parse shift times (format: "HH:mm:ss")
+                const [startHours, startMinutes] = session.shift.startTime.split(':').map(Number);
+                const [endHours, endMinutes] = session.shift.endTime.split(':').map(Number);
+
+                const shiftStartMins = startHours * 60 + startMinutes;
+                const shiftEndMins = endHours * 60 + endMinutes;
+
+                // Handle overnight shifts
+                let expectedWorkMins = shiftEndMins >= shiftStartMins
+                    ? shiftEndMins - shiftStartMins
+                    : (24 * 60 - shiftStartMins) + shiftEndMins;
+
+                overtime = Math.max(0, work - expectedWorkMins);
+            }
+
+            setWorkMinutes(work.toString());
+            setOvertimeMinutes(overtime.toString());
+        }
+    }, [checkInTime, checkOutTime, breakMinutes, editing, session?.shift]);
+
     // Recalculate workMinutes when breakMinutes changes
     useEffect(() => {
-        if (editing) {
-            const total = session?.totalMinutes || 0;
+        if (editing && checkInTime && checkOutTime) {
+            const checkIn = new Date(checkInTime);
+            const checkOut = new Date(checkOutTime);
+            const totalMins = Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60)));
             const brk = parseInt(breakMinutes) || 0;
-            const work = Math.max(0, total - brk);
+            const work = Math.max(0, totalMins - brk);
             setWorkMinutes(work.toString());
         }
-    }, [breakMinutes, editing, session?.totalMinutes]);
+    }, [breakMinutes, editing, checkInTime, checkOutTime]);
 
     const handleSave = async () => {
         if (!session) return;

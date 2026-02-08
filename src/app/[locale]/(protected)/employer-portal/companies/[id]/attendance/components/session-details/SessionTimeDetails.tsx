@@ -35,11 +35,10 @@ export function SessionTimeDetails({
                 </div>
                 {editing ? (
                     <Input
-                        disabled
                         type="datetime-local"
                         value={checkInTime}
                         onChange={(e) => onCheckInChange(e.target.value)}
-                        className="mt-1 opacity-60 cursor-not-allowed"
+                        className="mt-1"
                     />
                 ) : (
                     <div className="flex flex-col gap-1">
@@ -64,11 +63,10 @@ export function SessionTimeDetails({
                 </div>
                 {editing ? (
                     <Input
-                        disabled
                         type="datetime-local"
                         value={checkOutTime}
                         onChange={(e) => onCheckOutChange(e.target.value)}
-                        className="mt-1 opacity-60 cursor-not-allowed"
+                        className="mt-1"
                     />
                 ) : (
                     <div className="flex flex-col gap-1">
