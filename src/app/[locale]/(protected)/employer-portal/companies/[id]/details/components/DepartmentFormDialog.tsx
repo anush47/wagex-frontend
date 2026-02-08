@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { CreateDepartmentDto, Department } from "@/types/department";
 import { Employee } from "@/types/employee";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,33 @@ export function DepartmentFormDialog({
     const handleChange = (field: keyof CreateDepartmentDto, value: any) => {
         setFormData({ ...formData, [field]: value });
     };
+
+    // Important: If the current parentId is not in the list of available departments,
+    // we should sync the formData state to clear it, otherwise the backend will error on save.
+    // Use an effect to ensure state consistency before submission.
+    useEffect(() => {
+        if (formData.parentId && !allDepartments.some(d => d.id === formData.parentId)) {
+            setFormData(prev => ({ ...prev, parentId: null }));
+        }
+    }, [formData.parentId, allDepartments, setFormData]);
+
+    // Helper to get all descendant IDs to prevent circular hierarchy
+    const getDescendantIds = (deptId: string): string[] => {
+        const descendants: string[] = [];
+        const children = allDepartments.filter(d => d.parentId === deptId);
+        children.forEach(child => {
+            descendants.push(child.id);
+            descendants.push(...getDescendantIds(child.id));
+        });
+        return descendants;
+    };
+
+    const excludedIds = editingDept ? [editingDept.id, ...getDescendantIds(editingDept.id)] : [];
+
+    // Ensure parentId is valid or fallback to root
+    const currentParentId = formData.parentId && allDepartments.some(d => d.id === formData.parentId)
+        ? formData.parentId
+        : "root";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,25 +122,36 @@ export function DepartmentFormDialog({
                         )}
                     </div>
 
-                    <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl flex items-center gap-3 border border-neutral-100 dark:border-neutral-700/50">
-                        <IconHierarchy className="h-5 w-5 text-neutral-400" />
-                        <div className="flex-1">
-                            <span className="text-xs font-bold uppercase tracking-wide text-neutral-400 block mb-0.5">Parent Department</span>
-                            <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                {formData.parentId
-                                    ? allDepartments.find(d => d.id === formData.parentId)?.name
-                                    : "Root (Top Level)"}
+                    <div className="space-y-2">
+                        <Label className="uppercase text-[10px] font-black tracking-widest text-neutral-400">Parent Department</Label>
+                        <Select
+                            value={currentParentId}
+                            onValueChange={(val) => handleChange('parentId', val === "root" ? null : val)}
+                        >
+                            <SelectTrigger className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-800 border-none font-bold shadow-inner focus:ring-primary/20">
+                                <SelectValue placeholder="Select parent department" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                <SelectItem value="root" className="font-bold text-primary italic text-xs uppercase tracking-tight">
+                                    Top Level (Root)
+                                </SelectItem>
+                                {allDepartments
+                                    .filter(d => !excludedIds.includes(d.id))
+                                    .map(dept => (
+                                        <SelectItem key={dept.id} value={dept.id} className="font-medium">
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))
+                                }
+                            </SelectContent>
+                        </Select>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-1">
+                            Current: <span className="text-primary italic">
+                                {currentParentId !== "root"
+                                    ? allDepartments.find(d => d.id === currentParentId)?.name
+                                    : "No Parent (Root)"}
                             </span>
-                        </div>
-                        {formData.parentId && (
-                            <Button
-                                size="sm" variant="ghost"
-                                onClick={() => handleChange('parentId', null)}
-                                className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
-                            >
-                                Detach
-                            </Button>
-                        )}
+                        </p>
                     </div>
                 </div>
 
