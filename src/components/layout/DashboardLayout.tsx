@@ -7,6 +7,7 @@ import {
     IconUserBolt,
     IconBuildingSkyscraper,
 } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Link, usePathname } from "@/i18n/routing";
@@ -21,8 +22,17 @@ import {
     IconSitemap,
     IconChartBar,
     IconCalendarTime,
-    IconCalendarCheck
+    IconCalendarCheck,
+    IconLogout
 } from "@tabler/icons-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { CompanyService } from "@/services/company.service";
 import { Company } from "@/types/company";
@@ -223,17 +233,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <div className="flex flex-col gap-2 border-t border-neutral-200 dark:border-neutral-800 pt-4">
                         <ThemeToggle />
                         <LanguageSwitcher />
-                        <SidebarLink
-                            link={{
-                                label: user?.email || "User",
-                                href: user?.role === 'EMPLOYEE' ? "/employee-portal/profile" : "/profile",
-                                icon: (
-                                    <div className="h-7 w-7 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold text-neutral-500 dark:text-neutral-300">
-                                        {user?.email?.[0]?.toUpperCase() || "U"}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="w-full flex justify-start gap-2 h-10 px-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors">
+                                    <div className="shrink-0 flex items-center justify-center w-5 h-5">
+                                        <div className="h-6 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-[10px] font-bold text-neutral-500 dark:text-neutral-300">
+                                            {user?.email?.[0]?.toUpperCase() || "U"}
+                                        </div>
                                     </div>
-                                ),
-                            }}
-                        />
+                                    <span
+                                        className={cn(
+                                            "text-sm font-medium transition-opacity duration-200 text-neutral-700 dark:text-neutral-200",
+                                            !open ? "opacity-0 hidden" : "opacity-100"
+                                        )}
+                                    >
+                                        {user?.email || "User"}
+                                    </span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href={user?.role === 'EMPLOYEE' ? "/employee-portal/profile" : "/profile"} className="cursor-pointer">
+                                        <IconUserBolt className="mr-2 h-4 w-4" />
+                                        <span>{t("profile")}</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href="/signout" className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20 w-full flex items-center">
+                                        <IconLogout className="mr-2 h-4 w-4" />
+                                        <span>Log out</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </SidebarBody>
             </Sidebar>
