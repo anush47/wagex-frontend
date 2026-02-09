@@ -31,7 +31,6 @@ import { useEmployees, useEmployee } from "@/hooks/use-employees";
 export default function EmployeesListPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: companyId } = use(params);
     const t = useTranslations("Common");
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
     const [query, setQuery] = useState<EmployeeQuery>({
         companyId,
         status: "ACTIVE",
@@ -42,20 +41,15 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
 
     const {
         data: resp,
-        isLoading: listLoading,
-    } = useEmployees(query, !selectedEmployeeId);
+        isLoading,
+        isFetching
+    } = useEmployees(query);
 
     // Handle paginated response structure
     const employees = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
     const meta = (resp as any)?.meta;
 
-    const {
-        data: selectedEmployee,
-        isLoading: selectedLoading
-    } = useEmployee(selectedEmployeeId);
-
-    const displayEmployees = selectedEmployeeId ? (selectedEmployee ? [selectedEmployee] : []) : employees;
-    const loading = selectedEmployeeId ? selectedLoading : listLoading;
+    const displayEmployees = employees;
 
     const updateQuery = (updates: Partial<EmployeeQuery>) => {
         setQuery(prev => ({ ...prev, ...updates }));
@@ -90,28 +84,24 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
             {/* Search & Filter Bar */}
             <div className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4 items-center">
-                    <div className="relative w-full md:max-w-md flex items-center gap-2">
-                        <SearchableEmployeeSelect
-                            companyId={companyId}
-                            value={selectedEmployeeId || undefined}
+                    <div className="relative w-full md:max-w-md">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+                            <IconUsers className="h-4 w-4" />
+                        </div>
+                        <input
+                            type="text"
                             placeholder="Search by name or member ID..."
-                            onSelect={(id) => {
-                                setSelectedEmployeeId(id);
-                            }}
+                            value={query.search || ""}
+                            onChange={(e) => updateQuery({ search: e.target.value })}
+                            className="w-full h-11 pl-11 pr-11 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
                         />
-                        {selectedEmployeeId && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                    setSelectedEmployeeId(null);
-                                    // fetchEmployees will run due to useEffect
-                                }}
-                                className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                                title="Clear filter"
+                        {query.search && (
+                            <button
+                                onClick={() => updateQuery({ search: "" })}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-600 transition-colors"
                             >
                                 <IconX className="h-4 w-4" />
-                            </Button>
+                            </button>
                         )}
                     </div>
 
@@ -155,9 +145,9 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
 
             {/* List Content */}
             <div className="relative min-h-[400px]">
-                <DataLoadingOverlay isLoading={loading} />
+                <DataLoadingOverlay isLoading={isFetching} />
 
-                {loading && displayEmployees.length === 0 ? (
+                {isLoading && displayEmployees.length === 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={i} className="bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-100 dark:border-neutral-800 p-6 space-y-6 animate-pulse">
@@ -190,12 +180,12 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                     </div>
                 ) : (
                     <div className={cn(
-                        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8",
-                        loading && "blur-[1px]"
+                        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-500",
+                        isFetching && "blur-[1.5px] grayscale-[0.1]"
                     )}>
                         {displayEmployees.map((emp: Employee) => (
                             <Link key={emp.id} href={`/employer-portal/companies/${companyId}/employees/${emp.id}`}>
-                                <Card className="group border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-2xl hover:shadow-primary/5 bg-white dark:bg-neutral-900 rounded-[2rem] overflow-hidden transition-all duration-300 hover:border-primary/20">
+                                <Card className="group border border-neutral-200/50 dark:border-neutral-800/50 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.22)] bg-white/70 dark:bg-neutral-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-primary/20">
                                     <CardContent className="p-0">
                                         <div className="p-6 space-y-6">
                                             <div className="flex items-start justify-between">
@@ -252,7 +242,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                             </Link>
                         ))}
 
-                        {employees.length === 0 && !loading && (
+                        {employees.length === 0 && !isLoading && (
                             <div className="col-span-full py-32 flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-900 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-[3rem]">
                                 <div className="p-6 rounded-full bg-neutral-100 dark:bg-neutral-800 mb-6">
                                     <IconUsers className="h-10 w-10 text-neutral-300" />
@@ -267,6 +257,6 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
