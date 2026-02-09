@@ -460,7 +460,7 @@ export function AttendanceSessionsTab({
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
-                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex items-center gap-1">
                                                             {hasPendingApproval(session) && (
                                                                 <Button
                                                                     size="sm"
@@ -473,14 +473,6 @@ export function AttendanceSessionsTab({
                                                                     <span className="text-xs font-black uppercase tracking-tighter">Approve</span>
                                                                 </Button>
                                                             )}
-                                                            <Button
-                                                                size="icon"
-                                                                variant="ghost"
-                                                                className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                                                onClick={() => handleRowClick(session)}
-                                                            >
-                                                                <IconEdit className="h-4 w-4 text-neutral-500" />
-                                                            </Button>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
