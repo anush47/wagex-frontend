@@ -10,6 +10,7 @@ export interface ValidationContext {
         endDate: string;
         leaveTypeId: string;
         type: LeaveRequestType;
+        holidayId?: string;
     };
     selectedLeaveType: any; // Using any for now to avoid extensive type imports, preferably use LeaveType
     documents: CompanyFile[];
@@ -23,6 +24,11 @@ export const validateLeaveRequest = (ctx: ValidationContext): string | null => {
 
     if (!formData.startDate || !formData.endDate) return "Start and End dates are required";
     if (!selectedLeaveType) return "Invalid Leave Type";
+
+    // Holiday Replacement Check
+    if (selectedLeaveType.isHolidayReplacement && !formData.holidayId) {
+        return "Please select the holiday you worked on to claim this leave.";
+    }
 
     const start = new Date(formData.startDate);
     const end = new Date(formData.endDate);

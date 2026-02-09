@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { addMinutes, format } from "date-fns";
 import { LeaveBalanceDisplay } from "./LeaveBalanceDisplay";
 import { LeaveDocumentSection } from "./LeaveDocumentSection";
+import { HolidaySelect } from "@/components/calendar/HolidaySelect";
+import { IconCalendar } from "@tabler/icons-react";
 import { CreatorRole } from "@/lib/validations/leave-request";
 
 interface CreateLeaveRequestFormProps {
@@ -26,6 +28,7 @@ interface CreateLeaveRequestFormProps {
     onSubmit: (formData: any, documents: CompanyFile[]) => Promise<void>;
     onCancel: () => void;
     onEmployeeChange?: (id: string) => void;
+    calendarId?: string;
 }
 
 export function CreateLeaveRequestForm({
@@ -38,7 +41,8 @@ export function CreateLeaveRequestForm({
     fetchingConfig,
     onSubmit,
     onCancel,
-    onEmployeeChange
+    onEmployeeChange,
+    calendarId
 }: CreateLeaveRequestFormProps) {
     const [documents, setDocuments] = useState<CompanyFile[]>([]);
 
@@ -54,6 +58,7 @@ export function CreateLeaveRequestForm({
         startDate: "",
         endDate: "",
         reason: "",
+        holidayId: "",
     });
 
     const selectedLeaveType = leaveTypes.find(lt => lt.id === formData.leaveTypeId);
@@ -247,6 +252,25 @@ export function CreateLeaveRequestForm({
                     </Select>
                 </div>
             </div>
+
+            {selectedLeaveType?.isHolidayReplacement && (
+                <div className="bg-indigo-50/50 dark:bg-indigo-950/20 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 space-y-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-2">
+                        <IconCalendar className="w-4 h-4 text-indigo-600" />
+                        <Label className="text-xs font-black uppercase tracking-widest text-indigo-700">Substitute Holiday</Label>
+                    </div>
+                    <p className="text-[10px] text-indigo-600/70 font-medium -mt-1">
+                        Select the holiday you worked on to claim this substitution leave.
+                    </p>
+                    <HolidaySelect
+                        calendarId={calendarId}
+                        value={formData.holidayId}
+                        onValueChange={(id) => setFormData({ ...formData, holidayId: id })}
+                        placeholder="Search for holiday worked..."
+                        className="bg-background/80"
+                    />
+                </div>
+            )}
 
             {/* Inputs Section */}
             {(formData.type === "SHORT_LEAVE" || isShortLeaveType) ? (

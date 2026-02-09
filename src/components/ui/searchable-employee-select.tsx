@@ -49,11 +49,14 @@ export function SearchableEmployeeSelect({
     const { data: selectedEmployee } = useEmployee(value || null);
 
     // Fetch the list of employees based on search
-    const { data: resp, isLoading: loading } = useEmployees({
+    const { data: resp, isLoading, isFetching } = useEmployees({
         companyId,
         search: typeof debouncedSearch === 'string' ? debouncedSearch : "",
         limit: 20
     }, open); // Only enabled when dropdown is open
+
+    const loading = isLoading;
+    const searching = isFetching && !isLoading;
 
     // Handle paginated or raw array response
     let employees = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
@@ -92,44 +95,54 @@ export function SearchableEmployeeSelect({
                         placeholder="Search employees..."
                         value={searchQuery}
                         onValueChange={setSearchQuery}
+                        isSearching={isFetching}
                     />
                     <CommandList>
-                        {loading && (
-                            <div className="p-2 space-y-2">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="flex flex-col gap-2 p-2 px-3 animate-pulse">
-                                        <div className="h-4 w-3/4 bg-neutral-100 dark:bg-neutral-800 rounded" />
-                                        <div className="h-3 w-1/4 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
-                                    </div>
-                                ))}
+                        {isFetching ? (
+                            <div className="flex items-center justify-center py-6">
+                                <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                <span className="ml-2 text-xs text-muted-foreground">Searching employees...</span>
                             </div>
-                        )}
-                        {!loading && employees.length === 0 && (
+                        ) : employees.length === 0 ? (
                             <CommandEmpty>No employees found.</CommandEmpty>
+                        ) : (
+                            <CommandGroup>
+                                {employees.map((employee: Employee) => (
+                                    <CommandItem
+                                        key={employee.id}
+                                        value={employee.id} // Standard value prop for command item
+                                        onSelect={() => {
+                                            if (onSelect) onSelect(employee.id, employee);
+                                            setOpen(false);
+                                        }}
+                                    >
+                                        <Check
+                                            className={cn(
+                                                "mr-2 h-4 w-4",
+                                                value === employee.id ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                        <div className="flex flex-col gap-1 w-full">
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="font-bold text-sm truncate">{employee.nameWithInitials}</span>
+                                                <Badge variant="outline" className="text-[9px] font-mono h-4 px-1 rounded-sm shrink-0">
+                                                    {employee.employeeNo}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                                <span className="truncate">{employee.fullName}</span>
+                                                {employee.nic && (
+                                                    <>
+                                                        <span className="opacity-30">•</span>
+                                                        <span className="shrink-0">{employee.nic}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
                         )}
-                        <CommandGroup>
-                            {employees.map((employee: Employee) => (
-                                <CommandItem
-                                    key={employee.id}
-                                    value={employee.id} // Standard value prop for command item
-                                    onSelect={() => {
-                                        if (onSelect) onSelect(employee.id, employee);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            value === employee.id ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    <div className="flex flex-col">
-                                        <span className="font-medium">{employee.nameWithInitials}</span>
-                                        <span className="text-xs text-muted-foreground">{employee.employeeNo}</span>
-                                    </div>
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
                     </CommandList>
                 </Command>
             </PopoverContent>

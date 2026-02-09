@@ -106,6 +106,7 @@ export function CreateLeaveRequestDialog({
                     onSubmit={handleFormSubmit}
                     onCancel={() => onOpenChange(false)}
                     onEmployeeChange={setEmployeeId}
+                    calendarId={(policyData as any)?.employee?.calendarId}
                 />
             </DialogContent>
         </Dialog>

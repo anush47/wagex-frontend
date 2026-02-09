@@ -35,6 +35,7 @@ export interface LeaveRequest {
     approvalRemarks?: string;
     rejectionRemarks?: string;
     documents?: CompanyFile[];
+    holidayId?: string;
     createdAt: string;
     updatedAt: string;
     employee?: {
@@ -69,6 +70,7 @@ export interface CreateLeaveRequestDto {
     endDate: string;   // ISO DateTime
     reason?: string;
     documents?: CompanyFile[];
+    holidayId?: string;
 }
 
 export interface UpdateLeaveRequestDto {
