@@ -27,10 +27,22 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
     if (loading) {
         return (
             <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-pulse">
-                <div className="h-12 w-64 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="col-span-2 h-[400px] bg-neutral-100 dark:bg-neutral-900 rounded-3xl" />
-                    <div className="h-[400px] bg-neutral-100 dark:bg-neutral-900 rounded-3xl" />
+                {/* Banner Skeleton */}
+                <div className="h-64 md:h-80 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
+                    <div className="h-24 w-24 md:h-32 md:w-32 rounded-3xl bg-neutral-200 dark:bg-neutral-800 shrink-0" />
+                    <div className="space-y-4 flex-1">
+                        <div className="h-12 w-3/4 bg-neutral-200 dark:bg-neutral-800 rounded-2xl" />
+                        <div className="flex gap-4">
+                            <div className="h-6 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-lg" />
+                            <div className="h-6 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Grid Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="h-44 bg-neutral-100 dark:bg-neutral-900 rounded-[1.5rem]" />
+                    <div className="h-44 bg-neutral-100 dark:bg-neutral-900 rounded-[1.5rem]" />
                 </div>
             </div>
         );

@@ -13,6 +13,7 @@ export const useCompanies = (params: {
     search?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
+    status?: string;
 } = {}) => {
     return useQuery({
         queryKey: ['companies', 'list', params],

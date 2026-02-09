@@ -13,6 +13,7 @@ export const CompanyService = {
         search?: string;
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
+        status?: string;
     }): Promise<ApiResponse<{
         data: Company[];
         meta: {
@@ -28,6 +29,7 @@ export const CompanyService = {
         if (params?.search) queryParams.search = params.search;
         if (params?.sortBy) queryParams.sortBy = params.sortBy;
         if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
+        if (params?.status) queryParams.status = params.status;
 
         return backendApiClient.get<any>('companies', { params: queryParams });
     },

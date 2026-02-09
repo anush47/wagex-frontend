@@ -116,9 +116,16 @@ export function DepartmentsTab({ company }: DepartmentsTabProps) {
             <Card className="border-none shadow-none bg-transparent">
                 <CardContent className="p-0">
                     {loading ? (
-                        <div className="p-20 text-center animate-pulse">
-                            <div className="h-12 w-12 bg-neutral-200 dark:bg-neutral-800 rounded-full mx-auto mb-4" />
-                            <div className="h-4 w-48 bg-neutral-200 dark:bg-neutral-800 rounded-full mx-auto" />
+                        <div className="space-y-4 animate-pulse p-4">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="flex flex-col gap-4">
+                                    <div className="h-20 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[1.5rem]" />
+                                    <div className="pl-8 space-y-3 border-l-2 border-neutral-100 dark:border-neutral-800 ml-4">
+                                        <div className="h-16 w-3/4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl" />
+                                        <div className="h-16 w-1/2 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : rootDepartments.length === 0 ? (
                         <div className="flex flex-col items-center justify-center p-20 text-center border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-[2.5rem] bg-neutral-50/50 dark:bg-neutral-900/50">

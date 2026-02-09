@@ -151,28 +151,28 @@ export default function AttendancePage() {
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <div className="overflow-x-auto no-scrollbar pb-2">
-                    <TabsList className="w-full h-11 h-auto p-1 bg-muted/50 rounded-2xl md:grid md:grid-cols-4 md:max-w-2xl flex whitespace-nowrap min-w-max md:min-w-0">
-                        <TabsTrigger value="overview" className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:shadow-sm">
+                    <TabsList className="w-full h-12 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl md:grid md:grid-cols-4 md:max-w-3xl flex whitespace-nowrap min-w-max md:min-w-0">
+                        <TabsTrigger value="overview" className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all">
                             <IconChartBar className="h-4 w-4" />
-                            <span className="text-[11px] md:text-sm">Overview</span>
+                            <span>Overview</span>
                         </TabsTrigger>
-                        <TabsTrigger value="sessions" className="flex items-center gap-2 px-4 py-2 rounded-xl relative data-[state=active]:shadow-sm">
+                        <TabsTrigger value="sessions" className="flex items-center justify-center gap-2 h-full rounded-xl relative data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all">
                             <IconClock className="h-4 w-4" />
-                            <span className="text-[11px] md:text-sm">Sessions</span>
+                            <span>Sessions</span>
                             {hasPending && (
-                                <span className="absolute top-1 right-1 flex h-2 w-2">
+                                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
                                 </span>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="events" className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:shadow-sm">
+                        <TabsTrigger value="events" className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all">
                             <IconFileText className="h-4 w-4" />
-                            <span className="text-[11px] md:text-sm">Raw Events</span>
+                            <span>Raw Events</span>
                         </TabsTrigger>
-                        <TabsTrigger value="stats" className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:shadow-sm">
+                        <TabsTrigger value="stats" className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all">
                             <IconCalendarStats className="h-4 w-4" />
-                            <span className="text-[11px] md:text-sm">Statistics</span>
+                            <span>Statistics</span>
                         </TabsTrigger>
                     </TabsList>
                 </div>

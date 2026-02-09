@@ -147,7 +147,30 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     if (loading) {
         return (
             <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-pulse">
-                <div className="h-64 w-full bg-neutral-200 dark:bg-neutral-800 rounded-[2.5rem]" />
+                {/* Header Skeleton */}
+                <div className="flex flex-col gap-4">
+                    <div className="h-8 w-8 rounded-xl bg-neutral-200 dark:bg-neutral-800" />
+                    <div className="h-10 w-64 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                    <div className="h-4 w-48 bg-neutral-100 dark:bg-neutral-900 rounded-lg" />
+                </div>
+
+                {/* Tabs Skeleton */}
+                <div className="flex gap-2 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                    <div className="h-10 w-24 bg-neutral-100 dark:bg-neutral-900 rounded-xl" />
+                    <div className="h-10 w-24 bg-neutral-100 dark:bg-neutral-900 rounded-xl" />
+                    <div className="h-10 w-24 bg-neutral-100 dark:bg-neutral-900 rounded-xl" />
+                </div>
+
+                {/* Content Area Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <div className="h-32 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[2rem]" />
+                        <div className="h-64 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[2rem]" />
+                    </div>
+                    <div className="space-y-6">
+                        <div className="h-96 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[2rem]" />
+                    </div>
+                </div>
             </div>
         );
     }

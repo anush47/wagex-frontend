@@ -12,7 +12,8 @@ import {
     IconSearch,
     IconChevronLeft,
     IconChevronRight,
-    IconLoader2
+    IconLoader2,
+    IconFilter
 } from "@tabler/icons-react";
 import { Link } from "@/i18n/routing";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,13 @@ import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import { StorageImage } from "@/components/ui/storage-image";
 import { DataLoadingOverlay } from "@/components/ui/data-loading-overlay";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 export default function CompaniesPage() {
     const t = useTranslations("Companies");
@@ -32,6 +40,7 @@ export default function CompaniesPage() {
     const [page, setPage] = useState(1);
     const [searchInput, setSearchInput] = useState("");
     const [search, setSearch] = useState("");
+    const [status, setStatus] = useState("active");
     const limit = 6;
 
     // Debounce search input
@@ -47,7 +56,8 @@ export default function CompaniesPage() {
     const { data: response, isLoading, isFetching } = useCompanies({
         page,
         limit,
-        search
+        search,
+        status: status === "all" ? undefined : status.toUpperCase()
     });
 
     // Handle standardized response structure
@@ -91,7 +101,7 @@ export default function CompaniesPage() {
                 </Link>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar & Filters */}
             <div className="flex flex-col sm:flex-row gap-4 items-center">
                 <div className="relative w-full sm:max-w-md group">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-primary transition-colors">
@@ -108,6 +118,20 @@ export default function CompaniesPage() {
                         className="pl-12 h-11 md:h-12 rounded-xl md:rounded-2xl border-none bg-white dark:bg-neutral-900 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.2)] focus-visible:ring-2 focus-visible:ring-primary/20 transition-all font-medium"
                     />
                 </div>
+
+                <Select value={status} onValueChange={(val) => { setStatus(val); setPage(1); }}>
+                    <SelectTrigger className="w-full sm:w-[180px] h-11 md:h-12 rounded-xl md:rounded-2xl border-none bg-white dark:bg-neutral-900 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.2)] font-bold text-xs uppercase tracking-wide">
+                        <div className="flex items-center gap-2">
+                            <IconFilter className="h-4 w-4 text-neutral-400" />
+                            <SelectValue placeholder="Status" />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="active" className="font-medium text-xs">Active Only</SelectItem>
+                        <SelectItem value="inactive" className="font-medium text-xs">Inactive Only</SelectItem>
+                        <SelectItem value="all" className="font-medium text-xs">All Companies</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
 
             {/* Companies Grid */}
@@ -133,14 +157,19 @@ export default function CompaniesPage() {
                                     : "You haven't added any companies yet. Click the button above to get started."}
                             </p>
                         </div>
-                        {search && (
-                            <Button
-                                variant="outline"
-                                onClick={() => setSearchInput("")}
-                                className="h-10 rounded-xl px-4 text-xs font-bold"
-                            >
-                                Clear search
-                            </Button>
+                        {(search || status !== "active") && (
+                            <Link href="#" onClick={(e) => {
+                                e.preventDefault();
+                                setSearchInput("");
+                                setStatus("active");
+                            }}>
+                                <Button
+                                    variant="outline"
+                                    className="h-10 rounded-xl px-4 text-xs font-bold"
+                                >
+                                    Clear filters
+                                </Button>
+                            </Link>
                         )}
                     </motion.div>
                 ) : (

@@ -185,7 +185,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                     )}>
                         {displayEmployees.map((emp: Employee) => (
                             <Link key={emp.id} href={`/employer-portal/companies/${companyId}/employees/${emp.id}`}>
-                                <Card className="group border border-neutral-200/50 dark:border-neutral-800/50 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.22)] bg-white/70 dark:bg-neutral-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-primary/20">
+                                <Card className="group border border-neutral-200 dark:border-neutral-800 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_10px_30px_rgb(0,0,0,0.22)] bg-white/70 dark:bg-neutral-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-primary/20">
                                     <CardContent className="p-0">
                                         <div className="p-6 space-y-6">
                                             <div className="flex items-start justify-between">
