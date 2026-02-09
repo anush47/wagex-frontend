@@ -19,7 +19,7 @@ interface DepartmentFormDialogProps {
     onOpenChange: (open: boolean) => void;
     editingDept: Department | null;
     formData: CreateDepartmentDto;
-    setFormData: (data: CreateDepartmentDto) => void;
+    setFormData: React.Dispatch<React.SetStateAction<CreateDepartmentDto>>;
     onSubmit: () => void;
     submitting: boolean;
     allDepartments: Department[];
