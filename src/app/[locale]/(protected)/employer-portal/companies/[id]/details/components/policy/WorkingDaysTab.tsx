@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { IconCalendar, IconInfoCircle } from "@tabler/icons-react";
+import { IconCalendar, IconInfoCircle, IconLoader2 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { useCalendars } from "@/hooks/use-calendars";
+import { Calendar } from "@/types/calendar";
 
 interface WorkingDaysTabProps {
     value?: WorkingDaysConfig;
@@ -17,24 +19,40 @@ const CalendarSelect = ({
     label,
     value,
     onChange,
-    description
+    description,
+    calendars,
+    isLoading
 }: {
     label: string,
     value: string,
     onChange: (val: string) => void,
-    description: string
+    description: string,
+    calendars?: Calendar[],
+    isLoading?: boolean
 }) => (
     <div className="space-y-2">
         <Label className="text-sm font-bold">{label}</Label>
         <Select
             value={value}
             onValueChange={onChange}
+            disabled={isLoading}
         >
             <SelectTrigger className="bg-background border-none h-11 rounded-xl">
-                <SelectValue />
+                {isLoading ? (
+                    <div className="flex items-center gap-2">
+                        <IconLoader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-xs">Loading...</span>
+                    </div>
+                ) : (
+                    <SelectValue placeholder="Select a calendar" />
+                )}
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="sl_default">Sri Lanka Default Calendar</SelectItem>
+                {calendars?.map(calendar => (
+                    <SelectItem key={calendar.id} value={calendar.id}>
+                        {calendar.name}
+                    </SelectItem>
+                ))}
             </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -63,6 +81,7 @@ const DEFAULT_CONFIG: WorkingDaysConfig = {
 
 export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
     const [config, setConfig] = useState<WorkingDaysConfig>(value || DEFAULT_CONFIG);
+    const { data: calendars, isLoading: isCalendarsLoading } = useCalendars();
 
     useEffect(() => {
         if (value) setConfig(value);
@@ -186,16 +205,20 @@ export function WorkingDaysTab({ value, onChange }: WorkingDaysTabProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <CalendarSelect
                                 label="Working Calendar"
-                                value={config.workingCalendar || "sl_default"}
+                                value={config.workingCalendar || ""}
                                 onChange={(v) => handleConfigChange({ ...config, workingCalendar: v })}
                                 description="Determines holidays for working."
+                                calendars={calendars}
+                                isLoading={isCalendarsLoading}
                             />
 
                             <CalendarSelect
                                 label="Payroll Calendar"
-                                value={config.payrollCalendar || "sl_default"}
+                                value={config.payrollCalendar || ""}
                                 onChange={(v) => handleConfigChange({ ...config, payrollCalendar: v })}
                                 description="Determines holidays for payroll calculation."
+                                calendars={calendars}
+                                isLoading={isCalendarsLoading}
                             />
                         </div>
                     </CardContent>

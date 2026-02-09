@@ -16,6 +16,7 @@ export interface Company {
     logo?: string;
     active?: boolean;
     files?: CompanyFile[];
+    calendarId?: string;
     createdAt: string;
     updatedAt: string;
 }

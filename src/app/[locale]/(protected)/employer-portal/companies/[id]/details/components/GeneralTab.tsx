@@ -1,9 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Company } from "@/types/company";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IconBuildingSkyscraper, IconMail, IconMapPin, IconCalendar, IconId } from "@tabler/icons-react";
+import { IconBuildingSkyscraper, IconMail, IconMapPin, IconCalendar, IconId, IconLoader2, IconCalendarStats } from "@tabler/icons-react";
 import { CompanyService } from "@/services/company.service";
 import { ImageUpload } from "@/components/ui/image-upload"; // Assuming this component exists or we'll create/mock it
 import { Calendar } from "@/components/ui/calendar";
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { LabelInputContainer } from "@/components/ui/form-elements";
 import { Separator } from "@/components/ui/separator";
+import { useCalendars } from "@/hooks/use-calendars";
 
 interface GeneralTabProps {
     formData: Company;
@@ -21,6 +23,8 @@ interface GeneralTabProps {
 }
 
 export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps) {
+    const { data: calendars, isLoading: isCalendarsLoading } = useCalendars();
+
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -141,6 +145,50 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                     checked={formData.active}
                                     onCheckedChange={(checked) => handleChange("active", checked)}
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Default Calendar Card */}
+                    <Card className="border border-neutral-100 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-[2rem]">
+                        <CardContent className="p-8">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-3xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                                        <IconCalendarStats className="h-6 w-6" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-lg font-bold">Default Calendar</Label>
+                                        <p className="text-sm text-neutral-500 font-medium">
+                                            The primary holiday schedule for this organization.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="w-full md:w-64">
+                                    <Select
+                                        value={formData.calendarId || ""}
+                                        onValueChange={(v) => handleChange("calendarId", v)}
+                                        disabled={isCalendarsLoading}
+                                    >
+                                        <SelectTrigger className="h-12 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-2xl px-4 font-medium shadow-inner">
+                                            {isCalendarsLoading ? (
+                                                <div className="flex items-center gap-2">
+                                                    <IconLoader2 className="w-4 h-4 animate-spin" />
+                                                    <span className="text-sm text-neutral-400">Loading...</span>
+                                                </div>
+                                            ) : (
+                                                <SelectValue placeholder="Select calendar" />
+                                            )}
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            {calendars?.map((calendar: any) => (
+                                                <SelectItem key={calendar.id} value={calendar.id}>
+                                                    {calendar.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

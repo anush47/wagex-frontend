@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LeaveType, AccrualFrequency, AccrualMethod, EncashmentType, EmploymentType, Gender } from "@/types/policy";
+import { LeaveType, AccrualFrequency, AccrualMethod, EncashmentType, EmploymentType, Gender, HolidayEarnCategory } from "@/types/policy";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { IconCalendarStar, IconClock, IconUsers, IconSettings, IconCoin, IconCheck, IconFileCheck, IconHistory, IconAlertCircle } from "@tabler/icons-react";
+import { IconCalendarStar, IconClock, IconUsers, IconSettings, IconCoin, IconCheck, IconFileCheck, IconHistory, IconAlertCircle, IconCalendarStats } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
 interface LeaveEditDialogProps {
@@ -24,7 +24,11 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
 
     useEffect(() => {
         if (open && initialData) {
-            setEditingLeave({ ...initialData });
+            setEditingLeave({
+                ...initialData,
+                isHolidayReplacement: initialData.isHolidayReplacement ?? false,
+                earnedOnHolidayCategories: initialData.earnedOnHolidayCategories ?? []
+            });
         }
     }, [open, initialData]);
 
@@ -177,8 +181,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                     </Label>
                                     <Input
                                         type="number"
-                                        value={editingLeave.baseAmount}
-                                        onChange={e => updateField('baseAmount', parseFloat(e.target.value))}
+                                        value={isNaN(editingLeave.baseAmount) ? "" : editingLeave.baseAmount}
+                                        onChange={e => updateField('baseAmount', e.target.value === "" ? 0 : parseFloat(e.target.value))}
                                         className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm"
                                     />
                                 </div>
@@ -207,8 +211,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         <Label className="text-xs font-bold text-amber-600">Cycle Duration (Days)</Label>
                                         <Input
                                             type="number"
-                                            value={editingLeave.customFrequencyDays || ""}
-                                            onChange={e => updateField('customFrequencyDays', parseInt(e.target.value) || 0)}
+                                            value={editingLeave.customFrequencyDays ?? ""}
+                                            onChange={e => updateField('customFrequencyDays', e.target.value === "" ? undefined : parseInt(e.target.value))}
                                             className="h-9 bg-background/50 border-none rounded-lg text-center font-bold text-xs"
                                             placeholder="e.g. 45"
                                         />
@@ -275,8 +279,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                             <Input
                                                 type="number"
                                                 className="w-16 h-8 bg-background border-none rounded-lg text-center font-bold text-xs"
-                                                value={editingLeave.approvalRequiredIfConsecutiveMoreThan || ""}
-                                                onChange={e => updateField('approvalRequiredIfConsecutiveMoreThan', parseInt(e.target.value) || undefined)}
+                                                value={editingLeave.approvalRequiredIfConsecutiveMoreThan ?? ""}
+                                                onChange={e => updateField('approvalRequiredIfConsecutiveMoreThan', e.target.value === "" ? undefined : parseInt(e.target.value))}
                                                 placeholder="Off"
                                             />
                                         </div>
@@ -310,8 +314,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         <Input
                                             type="number"
                                             className="w-20 h-8 bg-background border-none rounded-lg text-center font-bold text-xs"
-                                            value={editingLeave.maxDurationMinutes || ""}
-                                            onChange={e => updateField('maxDurationMinutes', parseInt(e.target.value) || 0)}
+                                            value={editingLeave.maxDurationMinutes ?? ""}
+                                            onChange={e => updateField('maxDurationMinutes', e.target.value === "" ? 0 : parseInt(e.target.value))}
                                             placeholder="90"
                                         />
                                     </div>
@@ -335,8 +339,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                     <Input
                                         type="number"
                                         className="h-9 w-full bg-muted/40 border-none rounded-lg font-bold text-sm px-3"
-                                        value={editingLeave.maxConsecutiveDays || ""}
-                                        onChange={e => updateField('maxConsecutiveDays', parseInt(e.target.value) || undefined)}
+                                        value={editingLeave.maxConsecutiveDays ?? ""}
+                                        onChange={e => updateField('maxConsecutiveDays', e.target.value === "" ? undefined : parseInt(e.target.value))}
                                         placeholder="No limit"
                                     />
                                 </div>
@@ -348,8 +352,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                     <Input
                                         type="number"
                                         className="h-9 w-full bg-muted/40 border-none rounded-lg font-bold text-sm px-3"
-                                        value={editingLeave.minDelayBetweenRequestsDays || ""}
-                                        onChange={e => updateField('minDelayBetweenRequestsDays', parseInt(e.target.value) || undefined)}
+                                        value={editingLeave.minDelayBetweenRequestsDays ?? ""}
+                                        onChange={e => updateField('minDelayBetweenRequestsDays', e.target.value === "" ? undefined : parseInt(e.target.value))}
                                         placeholder="None"
                                     />
                                 </div>
@@ -361,8 +365,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                     <Input
                                         type="number"
                                         className="h-9 w-full bg-muted/40 border-none rounded-lg font-bold text-sm px-3"
-                                        value={editingLeave.minNoticeDays || ""}
-                                        onChange={e => updateField('minNoticeDays', parseInt(e.target.value) || undefined)}
+                                        value={editingLeave.minNoticeDays ?? ""}
+                                        onChange={e => updateField('minNoticeDays', e.target.value === "" ? undefined : parseInt(e.target.value))}
                                         placeholder="None"
                                     />
                                 </div>
@@ -385,8 +389,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         <Input
                                             type="number"
                                             className="w-16 h-8 bg-background border-none rounded-lg text-center font-bold text-xs"
-                                            value={editingLeave.requireDocumentsIfConsecutiveMoreThan || ""}
-                                            onChange={e => updateField('requireDocumentsIfConsecutiveMoreThan', parseInt(e.target.value) || undefined)}
+                                            value={editingLeave.requireDocumentsIfConsecutiveMoreThan ?? ""}
+                                            onChange={e => updateField('requireDocumentsIfConsecutiveMoreThan', e.target.value === "" ? undefined : parseInt(e.target.value))}
                                             placeholder="Always"
                                         />
                                     </div>
@@ -416,8 +420,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                         <Input
                                             type="number"
                                             className="w-20 h-9 bg-muted/40 border-none rounded-xl text-center font-bold text-sm"
-                                            value={editingLeave.maxCarryOverDays || ""}
-                                            onChange={e => updateField('maxCarryOverDays', parseFloat(e.target.value) || 0)}
+                                            value={editingLeave.maxCarryOverDays ?? ""}
+                                            onChange={e => updateField('maxCarryOverDays', e.target.value === "" ? 0 : parseFloat(e.target.value))}
                                             placeholder="5"
                                         />
                                     </div>
@@ -462,10 +466,57 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                                             <Input
                                                 type="number"
                                                 className="h-9 bg-background border-none rounded-xl font-black text-xs px-3"
-                                                value={editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? editingLeave.fixedAmount : editingLeave.encashmentMultiplier}
-                                                onChange={e => updateField(editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? 'fixedAmount' : 'encashmentMultiplier', parseFloat(e.target.value) || 0)}
+                                                value={(editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? editingLeave.fixedAmount : editingLeave.encashmentMultiplier) ?? ""}
+                                                onChange={e => updateField(editingLeave.encashmentType === EncashmentType.FIXED_AMOUNT ? 'fixedAmount' : 'encashmentMultiplier', e.target.value === "" ? 0 : parseFloat(e.target.value))}
                                             />
                                         </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* HOLIDAY REPLACEMENT SECTION */}
+                    <div className="p-5 bg-indigo-50/30 dark:bg-indigo-950/10 rounded-3xl border border-indigo-100/50 dark:border-indigo-900/50 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                                <IconCalendarStats className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Holiday Substitution (Earned Leave)</span>
+                            </div>
+                            <Switch
+                                checked={editingLeave.isHolidayReplacement}
+                                onCheckedChange={v => updateField('isHolidayReplacement', v)}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <p className="text-[10px] text-muted-foreground leading-relaxed px-1">
+                                Automatically grant this leave type when an employee works on specific holiday types.
+                                This is typically used for "Compensatory Off" or "Holiday Pay" policies.
+                            </p>
+                            {editingLeave.isHolidayReplacement && (
+                                <div className="space-y-2 animate-in slide-in-from-right-2 duration-200">
+                                    <Label className="text-[9px] font-black text-neutral-400 ml-1 uppercase tracking-tighter">Trigger on categories</Label>
+                                    <div className="flex gap-2">
+                                        {[HolidayEarnCategory.PUBLIC, HolidayEarnCategory.MERCANTILE, HolidayEarnCategory.BANK].map((cat) => {
+                                            const selected = editingLeave.earnedOnHolidayCategories?.includes(cat);
+                                            return (
+                                                <Button
+                                                    key={cat}
+                                                    variant={selected ? "default" : "secondary"}
+                                                    size="sm"
+                                                    className={cn(
+                                                        "flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-tight",
+                                                        selected ? "bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20" : "bg-background border border-border/50 text-neutral-400"
+                                                    )}
+                                                    onClick={() => {
+                                                        const current = editingLeave.earnedOnHolidayCategories || [];
+                                                        updateField('earnedOnHolidayCategories', selected ? current.filter(c => c !== cat) : [...current, cat]);
+                                                    }}
+                                                >
+                                                    {cat}
+                                                </Button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}

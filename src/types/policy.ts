@@ -54,6 +54,12 @@ export enum AccrualMethod {
     FULL_UPFRONT = 'FULL_UPFRONT'    // Grant full amount at period start
 }
 
+export enum HolidayEarnCategory {
+    PUBLIC = 'PUBLIC',
+    MERCANTILE = 'MERCANTILE',
+    BANK = 'BANK'
+}
+
 
 
 export interface Shift {
@@ -261,6 +267,10 @@ export interface LeaveType {
     encashmentType?: EncashmentType;
     encashmentMultiplier?: number;
     fixedAmount?: number;
+
+    // Holiday Replacement
+    isHolidayReplacement: boolean;
+    earnedOnHolidayCategories?: HolidayEarnCategory[];
 }
 
 export interface LeavesConfig {
