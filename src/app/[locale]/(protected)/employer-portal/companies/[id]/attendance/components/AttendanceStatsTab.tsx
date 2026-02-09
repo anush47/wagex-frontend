@@ -296,13 +296,13 @@ export function AttendanceStatsTab({
                             )}
                             onClick={() => setActiveSection("workload")}
                         >
-                            <div className="flex gap-4 items-start">
-                                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                                    <IconBriefcase className="w-6 h-6" />
+                            <div className="flex gap-3 md:gap-4 items-center md:items-start">
+                                <div className="p-2 md:p-3 rounded-2xl bg-primary/10 text-primary shrink-0">
+                                    <IconBriefcase className="w-5 h-5 md:w-6 md:h-6" />
                                 </div>
-                                <div>
-                                    <div className="text-2xl font-black tracking-tight">{formatMins(stats.totalWorkMinutes)}</div>
-                                    <div className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 whitespace-nowrap">
+                                <div className="min-w-0">
+                                    <div className="text-lg md:text-2xl font-black tracking-tight truncate">{formatMins(stats.totalWorkMinutes)}</div>
+                                    <div className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 leading-tight">
                                         Work Volume
                                     </div>
                                 </div>
@@ -316,13 +316,13 @@ export function AttendanceStatsTab({
                             )}
                             onClick={() => setActiveSection("overtime")}
                         >
-                            <div className="flex gap-4 items-start">
-                                <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
-                                    <IconClock className="w-6 h-6" />
+                            <div className="flex gap-3 md:gap-4 items-center md:items-start">
+                                <div className="p-2 md:p-3 rounded-2xl bg-blue-500/10 text-blue-500 shrink-0">
+                                    <IconClock className="w-5 h-5 md:w-6 md:h-6" />
                                 </div>
-                                <div>
-                                    <div className="text-2xl font-black tracking-tight">{formatMins(stats.totalOvertimeMinutes)}</div>
-                                    <div className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 whitespace-nowrap">
+                                <div className="min-w-0">
+                                    <div className="text-lg md:text-2xl font-black tracking-tight truncate">{formatMins(stats.totalOvertimeMinutes)}</div>
+                                    <div className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 leading-tight">
                                         Overtime
                                     </div>
                                 </div>
@@ -336,13 +336,13 @@ export function AttendanceStatsTab({
                             )}
                             onClick={() => setActiveSection("punctuality")}
                         >
-                            <div className="flex gap-4 items-start">
-                                <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500">
-                                    <IconAlertCircle className="w-6 h-6" />
+                            <div className="flex gap-3 md:gap-4 items-center md:items-start">
+                                <div className="p-2 md:p-3 rounded-2xl bg-orange-500/10 text-orange-500 shrink-0">
+                                    <IconAlertCircle className="w-5 h-5 md:w-6 md:h-6" />
                                 </div>
-                                <div>
-                                    <div className="text-2xl font-black tracking-tight">{stats.lateEmployees.length}</div>
-                                    <div className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 whitespace-nowrap">
+                                <div className="min-w-0">
+                                    <div className="text-lg md:text-2xl font-black tracking-tight truncate">{stats.lateEmployees.length}</div>
+                                    <div className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 leading-tight">
                                         Late Comers
                                     </div>
                                 </div>
@@ -356,13 +356,13 @@ export function AttendanceStatsTab({
                             )}
                             onClick={() => setActiveSection("leaves")}
                         >
-                            <div className="flex gap-4 items-start">
-                                <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
-                                    <IconBeach className="w-6 h-6" />
+                            <div className="flex gap-3 md:gap-4 items-center md:items-start">
+                                <div className="p-2 md:p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 shrink-0">
+                                    <IconBeach className="w-5 h-5 md:w-6 md:h-6" />
                                 </div>
-                                <div>
-                                    <div className="text-2xl font-black tracking-tight">{stats.leaves.totalApproved}d</div>
-                                    <div className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 whitespace-nowrap">
+                                <div className="min-w-0">
+                                    <div className="text-lg md:text-2xl font-black tracking-tight truncate">{stats.leaves.totalApproved}d</div>
+                                    <div className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground mt-0.5 leading-tight">
                                         Leaves Approved
                                     </div>
                                 </div>
@@ -398,13 +398,13 @@ export function AttendanceStatsTab({
                                             <span className="text-sm font-black text-orange-600 group-hover:underline">{stats.lateEmployees.length + stats.earlyLeaveEmployees.length} People</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-0.5">
+                                            <div className="space-y-0.5 min-w-0">
                                                 <div className="text-sm font-black">{stats.lateEmployees.length}</div>
-                                                <div className="text-[8px] font-black uppercase text-muted-foreground/60 tracking-widest truncate">Late Clock-ins</div>
+                                                <div className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground/60 tracking-tight md:tracking-widest truncate">Late Clock-ins</div>
                                             </div>
-                                            <div className="space-y-0.5 border-l pl-4 border-border/50">
+                                            <div className="space-y-0.5 border-l pl-4 border-border/50 min-w-0">
                                                 <div className="text-sm font-black">{stats.earlyLeaveEmployees.length}</div>
-                                                <div className="text-[8px] font-black uppercase text-muted-foreground/60 tracking-widest truncate">Early Leaves</div>
+                                                <div className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground/60 tracking-tight md:tracking-widest truncate">Early Leaves</div>
                                             </div>
                                         </div>
                                     </div>
@@ -415,17 +415,17 @@ export function AttendanceStatsTab({
                                             <span className="text-sm font-black text-emerald-600 group-hover:underline">{stats.leaves.totalApproved} Days</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
-                                            <div className="text-center">
+                                            <div className="text-center min-w-0">
                                                 <div className="text-xs font-black">{stats.leaves.fullDays}</div>
-                                                <div className="text-[8px] font-black uppercase text-muted-foreground/60">Full</div>
+                                                <div className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground/60">Full</div>
                                             </div>
-                                            <div className="text-center border-l pl-2 border-border/50">
+                                            <div className="text-center border-l pl-2 border-border/50 min-w-0">
                                                 <div className="text-xs font-black">{stats.leaves.halfDays}</div>
-                                                <div className="text-[8px] font-black uppercase text-muted-foreground/60">Half</div>
+                                                <div className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground/60">Half</div>
                                             </div>
-                                            <div className="text-center border-l pl-2 border-border/50">
+                                            <div className="text-center border-l pl-2 border-border/50 min-w-0">
                                                 <div className="text-xs font-black">{stats.leaves.shortLeaves}</div>
-                                                <div className="text-[8px] font-black uppercase text-muted-foreground/60">Short</div>
+                                                <div className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground/60">Short</div>
                                             </div>
                                         </div>
                                     </div>
@@ -507,22 +507,30 @@ function EmployeeListRow({ employee, metric, subMetric, color = "text-primary" }
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="group flex items-center justify-between p-4 px-5 rounded-2xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
+            className="group flex items-center justify-between p-3 md:p-4 md:px-5 rounded-2xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all cursor-pointer gap-3"
         >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
                 <EmployeeAvatar
                     photo={employee.photo}
                     name={employee.fullName}
-                    className="h-11 w-11 rounded-xl shadow-sm border border-border/40"
+                    className="h-10 w-10 md:h-11 md:w-11 rounded-xl shadow-sm border border-border/40 shrink-0"
                 />
-                <div>
-                    <div className="text-[13px] font-black uppercase tracking-tight group-hover:text-primary transition-colors">{employee.fullName}</div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">#{employee.employeeNo}</div>
+                <div className="min-w-0 flex-1">
+                    <div className="text-[12px] md:text-[13px] font-black uppercase tracking-tight group-hover:text-primary transition-colors truncate">
+                        {employee.fullName}
+                    </div>
+                    <div className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                        #{employee.employeeNo}
+                    </div>
                 </div>
             </div>
-            <div className="text-right">
-                <div className={cn("text-sm font-black tracking-tight", color)}>{metric}</div>
-                <div className="text-[9px] font-black text-muted-foreground uppercase">{subMetric}</div>
+            <div className="text-right shrink-0">
+                <div className={cn("text-[11px] md:text-sm font-black tracking-tight whitespace-nowrap", color)}>
+                    {metric}
+                </div>
+                <div className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase whitespace-nowrap">
+                    {subMetric}
+                </div>
             </div>
         </motion.div>
     );

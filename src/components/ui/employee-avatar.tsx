@@ -8,10 +8,11 @@ interface EmployeeAvatarProps {
     photo?: string | null;
     name?: string | null;
     className?: string;
+    skipUrl?: boolean;
 }
 
-export function EmployeeAvatar({ photo, name, className }: EmployeeAvatarProps) {
-    const { data: url, isLoading } = useStorageUrl(photo || null);
+export function EmployeeAvatar({ photo, name, className, skipUrl }: EmployeeAvatarProps) {
+    const { data: url, isLoading } = useStorageUrl(skipUrl ? null : (photo || null));
 
     const defaultClassName = cn(
         "bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center font-black text-neutral-400 overflow-hidden shadow-inner border border-neutral-200 dark:border-neutral-700",

@@ -22,6 +22,7 @@ export class AttendanceService {
         if (params.endDate) searchParams.append('endDate', params.endDate);
         if (params.page) searchParams.append('page', params.page.toString());
         if (params.limit) searchParams.append('limit', params.limit.toString());
+        if (params.isPending) searchParams.append('isPending', 'true');
 
         return backendApiClient.get<PaginatedResponse<AttendanceSession>>(
             `/attendance/manual/sessions?${searchParams.toString()}`

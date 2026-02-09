@@ -79,7 +79,8 @@ export function AttendanceSessionsTab({
         startDate: startDate || initialDate,
         endDate: endDate || initialDate,
         page,
-        limit: 20
+        limit: 20,
+        isPending: approvalFilter === 'PENDING' ? true : undefined
     });
 
     const sessions = sessionsData?.items || [];
@@ -292,10 +293,7 @@ export function AttendanceSessionsTab({
                                     {[1, 2, 3, 4, 5].map((i) => (
                                         <TableRow key={i} className="animate-pulse">
                                             <TableCell>
-                                                <div className="space-y-2">
-                                                    <div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" />
-                                                    <div className="h-3 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
-                                                </div>
+                                                <div className="h-4 w-48 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse" />
                                             </TableCell>
                                             <TableCell><div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                             <TableCell><div className="h-4 w-20 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
@@ -357,22 +355,13 @@ export function AttendanceSessionsTab({
                                                     onClick={() => handleRowClick(session)}
                                                 >
                                                     <TableCell>
-                                                        <div className="flex items-center gap-3">
-                                                            <EmployeeAvatar
-                                                                photo={session.employee?.photo}
-                                                                name={session.employee?.fullName || session.employee?.nameWithInitials}
-                                                                className="h-8 w-8 rounded-lg border border-border/40"
-                                                            />
-                                                            <div>
-                                                                <div className="font-bold text-[13px] uppercase tracking-tight">
-                                                                    {session.employee?.nameWithInitials}
-                                                                </div>
-                                                                {session.employee?.employeeNo && (
-                                                                    <div className="text-muted-foreground font-mono text-[9px] opacity-60">
-                                                                        #{session.employee.employeeNo}
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                        <div className="font-bold text-[13px] uppercase tracking-tight">
+                                                            {session.employee?.nameWithInitials}{" "}
+                                                            {session.employee?.employeeNo && (
+                                                                <span className="text-muted-foreground font-mono text-[10px] opacity-60">
+                                                                    ({session.employee.employeeNo})
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">

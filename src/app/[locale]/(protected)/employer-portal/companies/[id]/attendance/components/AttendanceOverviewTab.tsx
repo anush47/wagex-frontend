@@ -278,11 +278,15 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                             onClick={() => onOpenSession(session.id)}
                                         >
                                             <div className="flex items-center gap-4">
-                                                <EmployeeAvatar photo={session.employee?.photo} name={session.employee?.fullName} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                                <EmployeeAvatar photo={session.employee?.photo} name={session.employee?.fullName} className="h-12 w-12 rounded-2xl border border-border/40" skipUrl />
                                                 <div>
-                                                    <div className="text-[13px] font-black uppercase tracking-tight group-hover:text-primary transition-colors">{session.employee?.fullName}</div>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-[9px] font-black uppercase px-1.5 py-0">#{session.employee?.employeeNo}</Badge>
+                                                    <div className="text-[13px] font-black uppercase tracking-tight group-hover:text-primary transition-colors flex items-center gap-2">
+                                                        {session.employee?.fullName}
+                                                        <span className="text-muted-foreground font-mono text-[10px] opacity-60 font-normal lowercase tracking-normal bg-muted px-1 rounded">
+                                                            ({session.employee?.employeeNo})
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-0.5">
                                                         <span className="text-[10px] font-bold text-muted-foreground uppercase">
                                                             {session.shiftName || "Standard"}
                                                             <span className="text-primary/70 ml-1">
@@ -345,10 +349,15 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                         className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <EmployeeAvatar photo={leave.employee?.photo} name={leave.employee?.nameWithInitials} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                            <EmployeeAvatar photo={leave.employee?.photo} name={leave.employee?.nameWithInitials} className="h-12 w-12 rounded-2xl border border-border/40" skipUrl />
                                             <div>
-                                                <div className="text-[13px] font-black uppercase tracking-tight">{leave.employee?.nameWithInitials}</div>
-                                                <div className="text-[10px] font-bold text-blue-600 uppercase mt-1">{leave.leaveTypeName || "General"} Leave</div>
+                                                <div className="text-[13px] font-black uppercase tracking-tight flex items-center gap-2">
+                                                    {leave.employee?.nameWithInitials}
+                                                    <span className="text-muted-foreground font-mono text-[10px] opacity-60 font-normal lowercase tracking-normal bg-muted px-1 rounded">
+                                                        ({leave.employee?.employeeNo})
+                                                    </span>
+                                                </div>
+                                                <div className="text-[10px] font-bold text-blue-600 uppercase mt-0.5">{leave.leaveTypeName || "General"} Leave</div>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -371,11 +380,15 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                         className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <EmployeeAvatar photo={emp.photo} name={emp.fullName} className="h-12 w-12 rounded-2xl border border-border/40" />
+                                            <EmployeeAvatar photo={emp.photo} name={emp.fullName} className="h-12 w-12 rounded-2xl border border-border/40" skipUrl />
                                             <div>
-                                                <div className="text-[13px] font-black uppercase tracking-tight">{emp.fullName}</div>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <Badge variant="outline" className="text-[9px] font-black uppercase px-1.5 py-0">#{emp.employeeNo}</Badge>
+                                                <div className="text-[13px] font-black uppercase tracking-tight flex items-center gap-2">
+                                                    {emp.fullName}
+                                                    <span className="text-muted-foreground font-mono text-[10px] opacity-60 font-normal lowercase tracking-normal bg-muted px-1 rounded">
+                                                        ({emp.employeeNo})
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-0.5">
                                                     <span className="text-[10px] font-bold text-muted-foreground uppercase">
                                                         {(emp as any).shiftName || "Assigned Shift"}
                                                     </span>

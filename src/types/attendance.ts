@@ -151,6 +151,7 @@ export interface SessionQueryParams {
     endDate?: string;
     page?: number;
     limit?: number;
+    isPending?: boolean;
 }
 
 export interface EventQueryParams {

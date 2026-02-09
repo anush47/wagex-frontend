@@ -257,10 +257,7 @@ export function AttendanceEventsTab({
                                 {[1, 2, 3, 4, 5].map((i) => (
                                     <TableRow key={i} className="animate-pulse">
                                         <TableCell>
-                                            <div className="space-y-2">
-                                                <div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" />
-                                                <div className="h-3 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
-                                            </div>
+                                            <div className="h-4 w-48 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse" />
                                         </TableCell>
                                         <TableCell><div className="h-4 w-28 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                         <TableCell><div className="h-6 w-16 bg-neutral-100 dark:bg-neutral-800 rounded-lg" /></TableCell>
@@ -290,7 +287,6 @@ export function AttendanceEventsTab({
                                         <TableHead>Location</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Remark</TableHead>
-                                        <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -305,22 +301,13 @@ export function AttendanceEventsTab({
                                             }}
                                         >
                                             <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <EmployeeAvatar
-                                                        photo={event.employee?.photo}
-                                                        name={event.employee?.fullName || event.employee?.nameWithInitials}
-                                                        className="h-8 w-8 rounded-lg border border-border/40"
-                                                    />
-                                                    <div>
-                                                        <div className="font-bold text-[13px] uppercase tracking-tight">
-                                                            {event.employee?.nameWithInitials}
-                                                        </div>
-                                                        {event.employee?.employeeNo && (
-                                                            <div className="text-muted-foreground font-mono text-[9px] opacity-60">
-                                                                #{event.employee.employeeNo}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                <div className="font-bold text-[13px] uppercase tracking-tight">
+                                                    {event.employee?.nameWithInitials}{" "}
+                                                    {event.employee?.employeeNo && (
+                                                        <span className="text-muted-foreground font-mono text-[10px] opacity-60">
+                                                            ({event.employee.employeeNo})
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
@@ -353,11 +340,6 @@ export function AttendanceEventsTab({
                                             <TableCell>{getStatusBadge(event.status)}</TableCell>
                                             <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate" title={event.remark}>
                                                 {event.remark || "-"}
-                                            </TableCell>
-                                            <TableCell>
-                                                {event.sessionId && (
-                                                    <IconExternalLink className="h-4 w-4 text-muted-foreground opacity-50" />
-                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}
