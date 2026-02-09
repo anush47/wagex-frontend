@@ -72,8 +72,42 @@ export default function CompaniesPage() {
                     <div className="h-4 md:h-6 w-full max-w-sm bg-neutral-100 dark:bg-neutral-900 rounded-lg" />
                 </div>
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-[250px] md:h-[300px] rounded-[1.5rem] md:rounded-[2rem] bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <Card key={i} className="flex flex-col h-[300px] border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900/40 rounded-[2rem] overflow-hidden">
+                            <CardContent className="p-6 flex flex-col flex-1 space-y-6 animate-pulse">
+                                {/* Logo & Status Stub */}
+                                <div className="flex justify-between items-start">
+                                    <div className="h-14 w-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800" />
+                                </div>
+
+                                {/* Title & Number Stub */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-neutral-800" />
+                                        <div className="h-5 w-24 rounded bg-neutral-100 dark:bg-neutral-800" />
+                                    </div>
+                                    <div className="h-8 w-3/4 rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+                                </div>
+
+                                {/* Details Stub */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-4 w-4 rounded-full bg-neutral-100 dark:bg-neutral-800 shrink-0" />
+                                        <div className="h-4 w-full rounded bg-neutral-100 dark:bg-neutral-800" />
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-4 w-4 rounded-full bg-neutral-100 dark:bg-neutral-800 shrink-0" />
+                                        <div className="h-4 w-1/2 rounded bg-neutral-100 dark:bg-neutral-800" />
+                                    </div>
+                                </div>
+
+                                {/* Actions Stub */}
+                                <div className="flex gap-3 mt-auto pt-2">
+                                    <div className="flex-1 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800" />
+                                    <div className="flex-1 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800" />
+                                </div>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
             </div>
