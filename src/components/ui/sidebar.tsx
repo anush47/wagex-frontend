@@ -173,15 +173,22 @@ export const SidebarLink = ({
     link: Links;
     className?: string;
 }) => {
-    const { open, animate } = useSidebar();
+    const { open, setOpen, animate } = useSidebar();
     const pathname = usePathname();
     const isActive = link.exactMatch
         ? pathname === link.href
         : (pathname === link.href || pathname?.startsWith(`${link.href}/`));
 
+    const handleClick = () => {
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+            setOpen(false);
+        }
+    };
+
     return (
         <Link
             href={link.href as any}
+            onClick={handleClick}
             className={cn(
                 "flex items-center justify-start gap-2 group/sidebar py-2 px-2 rounded-lg transition-all",
                 isActive

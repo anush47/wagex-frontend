@@ -79,8 +79,8 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                     </p>
                 </div>
 
-                <Link href={`/employer-portal/companies/${companyId}/employees/new`}>
-                    <Button className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                <Link href={`/employer-portal/companies/${companyId}/employees/new`} className="w-full md:w-auto">
+                    <Button className="w-full md:w-auto rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                         <IconPlus className="mr-2 h-5 w-5" />
                         Add Employee
                     </Button>
