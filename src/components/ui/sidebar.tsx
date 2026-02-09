@@ -225,7 +225,7 @@ export const SidebarLink = ({
             {...props}
         >
             <div className={cn("shrink-0 flex items-center justify-center w-6 h-6")}>
-                {React.cloneElement(link.icon as React.ReactElement, {
+                {React.cloneElement(link.icon as React.ReactElement<any>, {
                     className: cn((link.icon as any).props.className, isActive ? "!text-primary-foreground" : "text-neutral-500 group-hover/sidebar:text-primary transition-colors")
                 })}
             </div>

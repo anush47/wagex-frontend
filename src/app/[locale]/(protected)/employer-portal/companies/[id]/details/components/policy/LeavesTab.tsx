@@ -28,6 +28,7 @@ const DEFAULT_LEAVE: LeaveType = {
     accrualMethod: AccrualMethod.PRO_RATA,
     canCarryOver: false,
     isEncashable: false,
+    isHolidayReplacement: false,
 };
 
 export function LeavesTab({ value, onChange }: LeavesTabProps) {
