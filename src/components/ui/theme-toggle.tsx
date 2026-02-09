@@ -10,15 +10,22 @@ import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/ui/sidebar"
 
 export function ThemeToggle() {
+    const { open, setOpen, animate } = useSidebar()
     const { setTheme, theme } = useTheme()
-    const { open, animate } = useSidebar()
+
+    const handleToggle = () => {
+        setTheme(theme === "light" ? "dark" : "light")
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+            setOpen(false)
+        }
+    }
 
     return (
         <Button
             variant="ghost"
             size="sm"
             className="w-full flex justify-start gap-2 h-10 px-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            onClick={handleToggle}
         >
             <IconSun className="h-5 w-5 dark:hidden text-neutral-500" />
             <IconMoon className="h-5 w-5 hidden dark:block text-neutral-500" />

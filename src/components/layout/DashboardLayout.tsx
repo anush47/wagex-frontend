@@ -176,7 +176,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             )}
         >
             <Sidebar open={open} setOpen={setOpen}>
-                <SidebarBody className="justify-between gap-10">
+                <SidebarBody
+                    className="justify-between gap-10"
+                    mobileBranding={
+                        <div className="flex items-center gap-3">
+                            <Logo />
+                            {isCompanyContext && company && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
+                                >
+                                    <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 truncate max-w-[120px]">
+                                        {company.name}
+                                    </span>
+                                </motion.div>
+                            )}
+                        </div>
+                    }
+                >
                     <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
                         <div className="flex flex-col gap-1">
                             {open ? <Logo /> : <LogoIcon />}

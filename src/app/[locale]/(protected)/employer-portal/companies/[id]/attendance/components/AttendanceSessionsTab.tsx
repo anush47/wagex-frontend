@@ -129,7 +129,28 @@ export function AttendanceSessionsTab({
 
     const formatTime = (time?: string) => {
         if (!time) return "-";
-        return format(new Date(time), "h:mm a");
+
+        // Handle ISO strings by checking for 'T' or if it can be parsed as a full date
+        if (time.includes('T') || time.length > 10) {
+            try {
+                return format(new Date(time), "h:mm a");
+            } catch (e) {
+                return time;
+            }
+        }
+
+        // If it's already a time string like "08:00" or "08:00:00"
+        // Just return it or trim the seconds
+        if (time.split(':').length >= 2) {
+            const parts = time.split(':');
+            const hh = parseInt(parts[0]);
+            const mm = parts[1];
+            const ampm = hh >= 12 ? 'PM' : 'AM';
+            const h12 = hh % 12 || 12;
+            return `${h12}:${mm} ${ampm}`;
+        }
+
+        return time;
     };
 
     const formatMinutes = (minutes?: number) => {
@@ -351,10 +372,10 @@ export function AttendanceSessionsTab({
                                             .map((session: AttendanceSession) => (
                                                 <TableRow
                                                     key={session.id}
-                                                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                    className="cursor-pointer hover:bg-muted/50 transition-colors group"
                                                     onClick={() => handleRowClick(session)}
                                                 >
-                                                    <TableCell>
+                                                    <TableCell className="py-3">
                                                         <div className="font-bold text-[13px] uppercase tracking-tight">
                                                             {session.employee?.nameWithInitials}{" "}
                                                             {session.employee?.employeeNo && (
@@ -364,85 +385,102 @@ export function AttendanceSessionsTab({
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="whitespace-nowrap">
+                                                    <TableCell className="py-3 whitespace-nowrap font-medium text-sm">
                                                         {format(new Date(session.date), "MMM d, yyyy")}
                                                     </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {session.shiftName || "-"}
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="py-3 whitespace-nowrap">
                                                         <div className="flex flex-col">
-                                                            <span className="font-medium text-sm">
+                                                            <span className="font-semibold text-sm">
+                                                                {session.shiftName || "No Shift"}
+                                                            </span>
+                                                            {(session.shiftStartTime || session.shiftEndTime) && (
+                                                                <span className="text-[10px] text-muted-foreground font-medium">
+                                                                    {formatTime(session.shiftStartTime)} - {formatTime(session.shiftEndTime)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="py-3">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-semibold text-sm">
                                                                 {formatTime(session.checkInTime)}
                                                             </span>
                                                             {session.inApprovalStatus !== 'APPROVED' && (
-                                                                <span className="text-[10px]">
+                                                                <div className="mt-1">
                                                                     {getApprovalBadge(session.inApprovalStatus)}
-                                                                </span>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="py-3">
                                                         <div className="flex flex-col">
-                                                            <span className="font-medium text-sm">
+                                                            <span className="font-semibold text-sm">
                                                                 {formatTime(session.checkOutTime)}
                                                             </span>
                                                             {session.outApprovalStatus !== 'APPROVED' && (
-                                                                <span className="text-[10px]">
+                                                                <div className="mt-1">
                                                                     {getApprovalBadge(session.outApprovalStatus)}
-                                                                </span>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="font-medium">
+                                                    <TableCell className="py-3 font-bold text-sm">
                                                         {formatMinutes(session.workMinutes)}
                                                     </TableCell>
-                                                    <TableCell className="font-medium text-primary">
+                                                    <TableCell className="py-3 font-bold text-sm text-primary">
                                                         {formatMinutes(session.overtimeMinutes)}
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="py-3">
                                                         <div className="flex flex-wrap gap-1">
                                                             {session.isLate && (
-                                                                <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[10px]">
-                                                                    Late
+                                                                <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
+                                                                    LATE
                                                                 </Badge>
                                                             )}
                                                             {session.isEarlyLeave && (
-                                                                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px]">
-                                                                    Early
+                                                                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
+                                                                    EARLY
                                                                 </Badge>
                                                             )}
                                                             {session.isOnLeave && (
-                                                                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 text-[10px]">
-                                                                    Leave
+                                                                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
+                                                                    LEAVE
                                                                 </Badge>
                                                             )}
                                                             {session.isHalfDay && (
-                                                                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20 text-[10px]">
-                                                                    Half
+                                                                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
+                                                                    HALF
                                                                 </Badge>
                                                             )}
                                                             {session.manuallyEdited && (
-                                                                <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 text-[10px]">
-                                                                    Edited
+                                                                <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
+                                                                    EDITED
                                                                 </Badge>
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell onClick={(e) => e.stopPropagation()}>
-                                                        <div className="flex items-center gap-1">
+                                                    <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             {hasPendingApproval(session) && (
                                                                 <Button
                                                                     size="sm"
                                                                     variant="default"
                                                                     onClick={(e) => handleQuickApprove(session, e)}
-                                                                    className="h-8 px-3 rounded-lg shadow-sm"
+                                                                    className="h-8 px-3 rounded-lg shadow-md shadow-primary/20 hover:scale-105 transition-all"
                                                                     title="Quick approve pending items"
                                                                 >
                                                                     <IconCheck className="h-3.5 w-3.5 mr-1.5" />
-                                                                    <span className="text-xs font-bold">Approve</span>
+                                                                    <span className="text-xs font-black uppercase tracking-tighter">Approve</span>
                                                                 </Button>
                                                             )}
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                                                onClick={() => handleRowClick(session)}
+                                                            >
+                                                                <IconEdit className="h-4 w-4 text-neutral-500" />
+                                                            </Button>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

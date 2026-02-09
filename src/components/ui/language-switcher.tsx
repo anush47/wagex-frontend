@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
     const router = useRouter();
     const pathname = usePathname();
     const params = useParams();
-    const { open, animate } = useSidebar();
+    const { open, setOpen, animate } = useSidebar();
 
     const switchLocale = (nextLocale: string) => {
         router.replace(
@@ -28,6 +28,9 @@ export function LanguageSwitcher() {
             { pathname, params },
             { locale: nextLocale }
         );
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+            setOpen(false);
+        }
     };
 
     const labels: Record<string, string> = {
