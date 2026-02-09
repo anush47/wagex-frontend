@@ -101,7 +101,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
 
     const handleSave = async () => {
         if (isEmployeeDirty && employeeForm) {
-            const { id: _id, createdAt, updatedAt, company, user, userId, ...payload } = employeeForm as any;
+            const { id: _id, createdAt, updatedAt, company, user, userId, calendarId: _calId, ...payload } = employeeForm as any;
 
             // Capitalize names
             if (payload.nameWithInitials) {

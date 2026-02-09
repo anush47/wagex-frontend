@@ -17,7 +17,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, subMonths, addMonths } from "date-fns";
 
 interface HolidaySelectProps {
     calendarId?: string;
@@ -36,8 +36,10 @@ export function HolidaySelect({
 }: HolidaySelectProps) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+
+    // Default to +/- 3 months range to show relevant holidays
+    const [startDate, setStartDate] = useState(format(subMonths(new Date(), 3), "yyyy-MM-dd"));
+    const [endDate, setEndDate] = useState(format(addMonths(new Date(), 3), "yyyy-MM-dd"));
 
     const { data: holidaysData, isFetching } = useHolidays({
         calendarId,

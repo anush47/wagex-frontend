@@ -326,42 +326,6 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 )}
                             </div>
                         </div>
-
-                        <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-indigo-600">
-                                    <IconCalendarStats className="h-4 w-4" />
-                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em]">Work Calendar Override</Label>
-                                </div>
-                                <div className="max-w-md">
-                                    <Select
-                                        value={formData.calendarId || "default"}
-                                        onValueChange={v => onChange('calendarId', v === "default" ? null : v)}
-                                        disabled={isCalendarsLoading}
-                                    >
-                                        <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
-                                            {isCalendarsLoading ? (
-                                                <div className="flex items-center gap-2">
-                                                    <IconLoader2 className="w-4 h-4 animate-spin" />
-                                                    <span className="text-sm">Loading...</span>
-                                                </div>
-                                            ) : (
-                                                <SelectValue placeholder="Use Company Default" />
-                                            )}
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl">
-                                            <SelectItem value="default">Use Company Default</SelectItem>
-                                            {calendars?.map((calendar: any) => (
-                                                <SelectItem key={calendar.id} value={calendar.id}>{calendar.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <p className="mt-2 text-[10px] text-neutral-400 font-medium leading-relaxed px-1">
-                                        Override the company default calendar for this specific employee.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
                     </CardContent>
                 </Card>
 

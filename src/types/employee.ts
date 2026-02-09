@@ -62,7 +62,6 @@ export interface Employee {
     };
     canSelfEdit?: boolean;
     photo?: string;
-    calendarId?: string;
     files?: CompanyFile[];
     createdAt?: string;
     updatedAt?: string;
