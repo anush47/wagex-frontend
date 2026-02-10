@@ -112,6 +112,24 @@ export interface AttendanceSession {
         fullName: string;
         photo?: string;
     };
+    workHolidayId?: string;
+    workHoliday?: {
+        id: string;
+        name: string;
+        date: string;
+        isPublic: boolean;
+        isMercantile: boolean;
+        isBank: boolean;
+    };
+    payrollHolidayId?: string;
+    payrollHoliday?: {
+        id: string;
+        name: string;
+        date: string;
+        isPublic: boolean;
+        isMercantile: boolean;
+        isBank: boolean;
+    };
 }
 
 // DTOs

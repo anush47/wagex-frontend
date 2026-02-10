@@ -89,6 +89,44 @@ export function SessionInfoCard({
                     </div>
                 )}
             </div>
+
+            {(session.workHoliday || session.payrollHoliday) && (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                    <Label className="text-[10px] font-bold text-neutral-500 uppercase tracking-tight mb-2 block">Active Holidays</Label>
+                    <div className="flex flex-col gap-2">
+                        {session.workHoliday && (
+                            <div className="flex items-center gap-2 bg-pink-500/5 border border-pink-500/10 p-2 rounded-lg">
+                                <div className="h-8 w-8 rounded-lg bg-pink-500/10 flex items-center justify-center shrink-0">
+                                    <IconBriefcase className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-bold leading-none text-pink-700 dark:text-pink-300">
+                                        {session.workHoliday.name}
+                                    </div>
+                                    <div className="text-[10px] text-pink-600/80 dark:text-pink-400/80 mt-0.5 font-medium">
+                                        Work Holiday • {session.workHoliday.isPublic ? 'Public' : ''} {session.workHoliday.isMercantile ? 'Mercantile' : ''} {session.workHoliday.isBank ? 'Bank' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {session.payrollHoliday && session.payrollHoliday.id !== session.workHoliday?.id && (
+                            <div className="flex items-center gap-2 bg-indigo-500/5 border border-indigo-500/10 p-2 rounded-lg">
+                                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
+                                    <IconBriefcase className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-bold leading-none text-indigo-700 dark:text-indigo-300">
+                                        {session.payrollHoliday.name}
+                                    </div>
+                                    <div className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80 mt-0.5 font-medium">
+                                        Payroll Holiday • {session.payrollHoliday.isPublic ? 'Public' : ''} {session.payrollHoliday.isMercantile ? 'Mercantile' : ''} {session.payrollHoliday.isBank ? 'Bank' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

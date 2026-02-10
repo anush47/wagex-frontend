@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { IconMapPin, IconLogin, IconLogout } from "@tabler/icons-react";
@@ -46,7 +46,18 @@ export function SessionTimeDetails({
                 ) : (
                     <div className="flex flex-col gap-1">
                         <div className="font-bold text-sm mt-1">
-                            {session.checkInTime ? format(new Date(session.checkInTime), "h:mm a") : "-"}
+                            {session.checkInTime ? (
+                                <div className="flex flex-col">
+                                    <span>{format(new Date(session.checkInTime), "h:mm a")}</span>
+                                    {!isSameDay(new Date(session.checkInTime), new Date(session.date)) && (
+                                        <span className="text-[10px] text-muted-foreground font-normal">
+                                            {format(new Date(session.checkInTime), "MMM d, yyyy")}
+                                        </span>
+                                    )}
+                                </div>
+                            ) : (
+                                "-"
+                            )}
                         </div>
                         {getApprovalBadge(session.inApprovalStatus, "IN")}
                     </div>
@@ -77,7 +88,18 @@ export function SessionTimeDetails({
                 ) : (
                     <div className="flex flex-col gap-1">
                         <div className="font-bold text-sm mt-1">
-                            {session.checkOutTime ? format(new Date(session.checkOutTime), "h:mm a") : "-"}
+                            {session.checkOutTime ? (
+                                <div className="flex flex-col">
+                                    <span>{format(new Date(session.checkOutTime), "h:mm a")}</span>
+                                    {!isSameDay(new Date(session.checkOutTime), new Date(session.date)) && (
+                                        <span className="text-[10px] text-muted-foreground font-normal">
+                                            {format(new Date(session.checkOutTime), "MMM d, yyyy")}
+                                        </span>
+                                    )}
+                                </div>
+                            ) : (
+                                "-"
+                            )}
                         </div>
                         {getApprovalBadge(session.outApprovalStatus, "OUT")}
                     </div>

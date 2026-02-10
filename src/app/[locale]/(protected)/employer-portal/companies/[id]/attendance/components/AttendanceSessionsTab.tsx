@@ -457,6 +457,16 @@ export function AttendanceSessionsTab({
                                                                     EDITED
                                                                 </Badge>
                                                             )}
+                                                            {session.workHoliday && (
+                                                                <Badge variant="outline" className="bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20 text-[10px] py-0 px-1.5 h-4 font-bold" title={`Work Holiday: ${session.workHoliday.name}`}>
+                                                                    HOL (W)
+                                                                </Badge>
+                                                            )}
+                                                            {session.payrollHoliday && session.payrollHoliday.id !== session.workHoliday?.id && (
+                                                                <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 text-[10px] py-0 px-1.5 h-4 font-bold" title={`Payroll Holiday: ${session.payrollHoliday.name}`}>
+                                                                    HOL (P)
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>

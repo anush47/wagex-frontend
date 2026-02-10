@@ -125,6 +125,7 @@ export function SessionDetailsDialog({
 
     const handleSave = async () => {
         if (!session) return;
+        console.log('[ATTENDANCE_UI] Saving session:', { id: session.id, checkInTime, checkOutTime });
         setProcessing(true);
         try {
             const dto: UpdateSessionDto = {
