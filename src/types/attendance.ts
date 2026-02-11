@@ -94,6 +94,8 @@ export interface AttendanceSession {
     // Additional flags
     manuallyEdited: boolean;
     autoCheckout: boolean;
+    additionalInOutCount?: number;
+    isBreakOverrideActive: boolean;
     workDayStatus: SessionWorkDayStatus;
     // Approval
     inApprovalStatus: ApprovalStatus;
@@ -159,6 +161,7 @@ export interface UpdateSessionDto {
     outApprovalStatus?: ApprovalStatus;
     workDayStatus?: SessionWorkDayStatus;
     shiftId?: string | null;
+    isBreakOverrideActive?: boolean;
 }
 
 // Query params

@@ -54,6 +54,7 @@ export function SessionDetailsDialog({
     const [shiftId, setShiftId] = useState("");
     const [workDayStatus, setWorkDayStatus] = useState<SessionWorkDayStatus>(SessionWorkDayStatus.FULL);
     const [remarks, setRemarks] = useState("");
+    const [isBreakOverrideActive, setIsBreakOverrideActive] = useState(false);
 
     const { data: policyData } = useEffectivePolicy(session?.employeeId || null);
     const availableShifts = policyData?.effective?.shifts?.list || [];
@@ -65,12 +66,13 @@ export function SessionDetailsDialog({
         if (open && session) {
             setCheckInTime(session.checkInTime ? format(new Date(session.checkInTime), "yyyy-MM-dd'T'HH:mm") : "");
             setCheckOutTime(session.checkOutTime ? format(new Date(session.checkOutTime), "yyyy-MM-dd'T'HH:mm") : "");
-            setWorkMinutes(session.workMinutes?.toString() || "");
-            setBreakMinutes(session.breakMinutes?.toString() || "");
-            setOvertimeMinutes(session.overtimeMinutes?.toString() || "");
+            setWorkMinutes(session.workMinutes !== null && session.workMinutes !== undefined ? session.workMinutes.toString() : "");
+            setBreakMinutes(session.breakMinutes !== null && session.breakMinutes !== undefined ? session.breakMinutes.toString() : "");
+            setOvertimeMinutes(session.overtimeMinutes !== null && session.overtimeMinutes !== undefined ? session.overtimeMinutes.toString() : "");
             setShiftId(session.shiftId || "");
             setWorkDayStatus(session.workDayStatus || SessionWorkDayStatus.FULL);
             setRemarks(session.remarks || "");
+            setIsBreakOverrideActive(session.isBreakOverrideActive);
             setEditing(false);
         }
     }, [open, session]);
@@ -81,47 +83,35 @@ export function SessionDetailsDialog({
             const checkIn = new Date(checkInTime);
             const checkOut = new Date(checkOutTime);
 
-            // Calculate total minutes
-            const totalMins = Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60)));
+            // 1. Calculate total duration (matching server logic)
+            const totalMins = Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60));
+            if (totalMins < 0) return; // Prevent negative durations in UI
 
-            // Calculate work minutes (total - break)
+            // 2. Resolve Break
             const brk = parseInt(breakMinutes) || 0;
             const work = Math.max(0, totalMins - brk);
 
-            // Calculate overtime if shift times are available
+            // 3. Calculate overtime if shift is selected
             let overtime = 0;
-            if (session?.shiftStartTime && session?.shiftEndTime) {
-                // Parse shift times (format: "HH:mm:ss")
-                const [startHours, startMinutes] = session.shiftStartTime.split(':').map(Number);
-                const [endHours, endMinutes] = session.shiftEndTime.split(':').map(Number);
+            const selectedShift = availableShifts.find(s => s.id === shiftId);
+            const shiftStart = selectedShift?.startTime || session?.shiftStartTime;
+            const shiftEnd = selectedShift?.endTime || session?.shiftEndTime;
 
-                const shiftStartMins = startHours * 60 + startMinutes;
-                const shiftEndMins = endHours * 60 + endMinutes;
+            if (shiftStart && shiftEnd) {
+                const [startH, startM] = shiftStart.split(':').map(Number);
+                const [endH, endM] = shiftEnd.split(':').map(Number);
 
-                // Handle overnight shifts
-                let expectedWorkMins = shiftEndMins >= shiftStartMins
-                    ? shiftEndMins - shiftStartMins
-                    : (24 * 60 - shiftStartMins) + shiftEndMins;
+                let shiftDuration = (endH * 60 + endM) - (startH * 60 + startM);
+                if (shiftDuration < 0) shiftDuration += 24 * 60; // Overnight shift
 
-                overtime = Math.max(0, work - expectedWorkMins);
+                overtime = Math.max(0, work - shiftDuration);
             }
 
             setWorkMinutes(work.toString());
             setOvertimeMinutes(overtime.toString());
         }
-    }, [checkInTime, checkOutTime, breakMinutes, editing, session?.shiftStartTime, session?.shiftEndTime]);
+    }, [checkInTime, checkOutTime, breakMinutes, editing, shiftId, session?.shiftStartTime, session?.shiftEndTime, availableShifts]);
 
-    // Recalculate workMinutes when breakMinutes changes
-    useEffect(() => {
-        if (editing && checkInTime && checkOutTime) {
-            const checkIn = new Date(checkInTime);
-            const checkOut = new Date(checkOutTime);
-            const totalMins = Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60)));
-            const brk = parseInt(breakMinutes) || 0;
-            const work = Math.max(0, totalMins - brk);
-            setWorkMinutes(work.toString());
-        }
-    }, [breakMinutes, editing, checkInTime, checkOutTime]);
 
     const handleSave = async () => {
         if (!session) return;
@@ -137,6 +127,7 @@ export function SessionDetailsDialog({
                 shiftId: shiftId === "none" ? null : (shiftId || undefined),
                 workDayStatus,
                 remarks: remarks,
+                isBreakOverrideActive,
             };
 
             await updateSession.mutateAsync({ id: session.id, dto });
@@ -240,7 +231,8 @@ export function SessionDetailsDialog({
     };
 
     const formatMinutes = (minutes?: number) => {
-        if (!minutes) return "0h 0m";
+        if (minutes === null || minutes === undefined) return "0h 0m";
+        if (minutes === 0) return "0h 0m"; // Keep 0 as 0h 0m
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         return `${hours}h ${mins}m`;
@@ -306,6 +298,17 @@ export function SessionDetailsDialog({
                             onCheckOutChange={setCheckOutTime}
                             getApprovalBadge={getApprovalBadge}
                         />
+                        
+                        {session.additionalInOutCount && session.additionalInOutCount > 0 && (
+                            <div className="border rounded-lg p-4 bg-blue-50/30 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
+                                <h3 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-300">
+                                    Additional IN/OUT Pairs ({session.additionalInOutCount})
+                                </h3>
+                                <p className="text-xs text-muted-foreground">
+                                    This session contains {session.additionalInOutCount} additional IN/OUT pair{session.additionalInOutCount > 1 ? 's' : ''} beyond the main entry and exit.
+                                </p>
+                            </div>
+                        )}
 
                         <SessionWorkSummary
                             session={session}
@@ -313,9 +316,11 @@ export function SessionDetailsDialog({
                             workMinutes={workMinutes}
                             breakMinutes={breakMinutes}
                             overtimeMinutes={overtimeMinutes}
+                            isBreakOverrideActive={isBreakOverrideActive}
                             onWorkMinutesChange={setWorkMinutes}
                             onBreakMinutesChange={setBreakMinutes}
                             onOvertimeMinutesChange={setOvertimeMinutes}
+                            onBreakOverrideActiveChange={setIsBreakOverrideActive}
                             formatMinutes={formatMinutes}
                         />
 

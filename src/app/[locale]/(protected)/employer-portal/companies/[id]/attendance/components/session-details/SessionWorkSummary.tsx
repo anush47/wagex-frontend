@@ -3,6 +3,7 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { AttendanceSession } from "@/types/attendance";
 
 interface SessionWorkSummaryProps {
@@ -11,9 +12,11 @@ interface SessionWorkSummaryProps {
     workMinutes: string;
     breakMinutes: string;
     overtimeMinutes: string;
+    isBreakOverrideActive: boolean;
     onWorkMinutesChange: (value: string) => void;
     onBreakMinutesChange: (value: string) => void;
     onOvertimeMinutesChange: (value: string) => void;
+    onBreakOverrideActiveChange: (value: boolean) => void;
     formatMinutes: (minutes?: number) => string;
 }
 
@@ -23,9 +26,11 @@ export function SessionWorkSummary({
     workMinutes,
     breakMinutes,
     overtimeMinutes,
+    isBreakOverrideActive,
     onWorkMinutesChange,
     onBreakMinutesChange,
     onOvertimeMinutesChange,
+    onBreakOverrideActiveChange,
     formatMinutes,
 }: SessionWorkSummaryProps) {
     return (
@@ -41,15 +46,33 @@ export function SessionWorkSummary({
                 <div>
                     <Label className="text-[10px] text-muted-foreground mb-1 block">Break</Label>
                     {editing ? (
-                        <Input
-                            type="number"
-                            value={breakMinutes}
-                            onChange={(e) => onBreakMinutesChange(e.target.value)}
-                            placeholder="Min"
-                            className="h-8 text-sm"
-                        />
+                        <div className="space-y-2">
+                            <Input
+                                type="number"
+                                value={breakMinutes}
+                                onChange={(e) => onBreakMinutesChange(e.target.value)}
+                                placeholder="Min"
+                                className="h-8 text-sm"
+                            />
+                            <div className="flex items-center gap-2 text-xs">
+                                <Switch
+                                    checked={isBreakOverrideActive}
+                                    onCheckedChange={onBreakOverrideActiveChange}
+                                    className="scale-75"
+                                    id="break-override-toggle"
+                                />
+                                <Label htmlFor="break-override-toggle" className="text-xs">
+                                    Override
+                                </Label>
+                            </div>
+                        </div>
                     ) : (
-                        <div className="font-black text-lg">{formatMinutes(session.breakMinutes)}</div>
+                        <div className="font-black text-lg">
+                            {formatMinutes(session.breakMinutes)}
+                            {session.isBreakOverrideActive && (
+                                <span className="ml-1 text-xs text-orange-600">(OVR)</span>
+                            )}
+                        </div>
                     )}
                 </div>
                 <div>

@@ -74,4 +74,25 @@ export class AttendanceService {
     static async deleteSession(id: string): Promise<ApiResponse<{ message: string }>> {
         return backendApiClient.delete<{ message: string }>(`/attendance/manual/sessions/${id}`);
     }
+
+    /**
+     * Get events for a specific session
+     */
+    static async getSessionEvents(sessionId: string): Promise<ApiResponse<AttendanceEvent[]>> {
+        return backendApiClient.get<AttendanceEvent[]>(`/attendance/manual/sessions/${sessionId}/events`);
+    }
+
+    /**
+     * Link an event to a session
+     */
+    static async linkEventToSession(eventId: string, sessionId: string): Promise<ApiResponse<{ success: boolean }>> {
+        return backendApiClient.post<{ success: boolean }>(`/attendance/manual/events/${eventId}/link/${sessionId}`, {});
+    }
+
+    /**
+     * Unlink an event from its session
+     */
+    static async unlinkEventFromSession(eventId: string): Promise<ApiResponse<{ success: boolean }>> {
+        return backendApiClient.delete<{ success: boolean }>(`/attendance/manual/events/${eventId}/link`);
+    }
 }

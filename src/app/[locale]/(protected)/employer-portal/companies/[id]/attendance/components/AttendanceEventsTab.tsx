@@ -26,6 +26,8 @@ import type { AttendanceEvent, EventType, EventSource, EventStatus } from "@/typ
 import { useAttendanceEvents } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
+import { SearchableSessionSelect } from "@/components/ui/searchable-session-select";
+import { useAttendanceMutations } from "@/hooks/use-attendance";
 
 interface AttendanceEventsTabProps {
     companyId: string;
@@ -114,6 +116,20 @@ export function AttendanceEventsTab({
                 {source}
             </Badge>
         );
+    };
+
+    const { linkEventToSession, unlinkEventFromSession } = useAttendanceMutations();
+
+    const handleSessionAssign = async (eventId: string, sessionId: string | null) => {
+        try {
+            if (sessionId) {
+                await linkEventToSession.mutateAsync({ eventId, sessionId });
+            } else {
+                await unlinkEventFromSession.mutateAsync(eventId);
+            }
+        } catch (error) {
+            console.error("Failed to assign session", error);
+        }
     };
 
     const getStatusBadge = (status: EventStatus) => {
@@ -246,6 +262,7 @@ export function AttendanceEventsTab({
                                     <TableHead>Employee</TableHead>
                                     <TableHead>Event Time</TableHead>
                                     <TableHead>Type</TableHead>
+                                    <TableHead>Session</TableHead>
                                     <TableHead>Source</TableHead>
                                     <TableHead>Device</TableHead>
                                     <TableHead>Location</TableHead>
@@ -261,6 +278,7 @@ export function AttendanceEventsTab({
                                         </TableCell>
                                         <TableCell><div className="h-4 w-28 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                         <TableCell><div className="h-6 w-16 bg-neutral-100 dark:bg-neutral-800 rounded-lg" /></TableCell>
+                                        <TableCell><div className="h-8 w-32 bg-neutral-100 dark:bg-neutral-800 rounded-lg" /></TableCell>
                                         <TableCell><div className="h-5 w-16 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                         <TableCell><div className="h-4 w-20 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                         <TableCell><div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
@@ -282,6 +300,7 @@ export function AttendanceEventsTab({
                                         <TableHead>Employee</TableHead>
                                         <TableHead>Event Time</TableHead>
                                         <TableHead>Type</TableHead>
+                                        <TableHead>Session</TableHead>
                                         <TableHead>Source</TableHead>
                                         <TableHead>Device</TableHead>
                                         <TableHead>Location</TableHead>
@@ -321,6 +340,15 @@ export function AttendanceEventsTab({
                                                 </div>
                                             </TableCell>
                                             <TableCell>{getEventTypeBadge(event.eventType)}</TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                                <SearchableSessionSelect
+                                                    companyId={companyId}
+                                                    employeeId={event.employeeId}
+                                                    eventDate={new Date(event.eventTime)}
+                                                    value={event.sessionId}
+                                                    onSelect={(sessionId) => handleSessionAssign(event.id, sessionId)}
+                                                />
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col gap-1">
                                                     {getSourceBadge(event.source)}
