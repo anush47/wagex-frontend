@@ -27,6 +27,7 @@ export const useStorageUrl = (storageKey?: string | null) => {
             return (response.data as any).data.url as string;
         },
         enabled: !!storageKey && !storageKey.startsWith('http') && !storageKey.startsWith('blob:'),
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };

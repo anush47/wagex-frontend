@@ -21,6 +21,8 @@ export const useLeaveRequests = (companyId: string, filters?: { status?: LeaveSt
             return Array.isArray(unwrapped) ? unwrapped : (unwrapped?.data || []);
         },
         enabled: !!companyId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -40,6 +42,8 @@ export const useLeaveBalances = (employeeId: string | null) => {
             return data?.data || data || [];
         },
         enabled: !!employeeId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -58,6 +62,8 @@ export const useEmployees = (query: EmployeeQuery, enabled = true) => {
             return Array.isArray(data) ? data : (data as any)?.data || [];
         },
         enabled: enabled && !!query.companyId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 

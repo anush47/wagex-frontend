@@ -19,6 +19,8 @@ export const useDepartments = (companyId: string) => {
             return data?.data || data || [];
         },
         enabled: !!companyId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -37,6 +39,8 @@ export const useDepartment = (id: string | null) => {
             return (response.data as any)?.data || response.data || null;
         },
         enabled: !!id,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 

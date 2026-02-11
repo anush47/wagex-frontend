@@ -19,7 +19,8 @@ export const useCompanyPolicy = (companyId: string) => {
             return data?.data || data || null;
         },
         enabled: !!companyId,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -40,7 +41,8 @@ export const useEffectivePolicy = (employeeId: string | null) => {
             return data || null;
         },
         enabled: !!employeeId,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 

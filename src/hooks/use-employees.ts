@@ -19,6 +19,8 @@ export const useEmployees = (query: EmployeeQuery, enabled = true) => {
             return data?.data || data || { data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
         },
         enabled: enabled && !!query.companyId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -37,6 +39,8 @@ export const useEmployee = (id: string | null) => {
             return (response.data as any)?.data || response.data || null;
         },
         enabled: !!id,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -53,6 +57,8 @@ export const useMe = () => {
             }
             return (response.data as any)?.data || response.data || null;
         },
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 

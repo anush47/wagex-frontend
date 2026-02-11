@@ -5,7 +5,8 @@ import type {
     SessionQueryParams,
     EventQueryParams,
     CreateEventDto,
-    UpdateSessionDto
+    UpdateSessionDto,
+    AttendanceEvent
 } from '@/types/attendance';
 
 /**
@@ -24,6 +25,8 @@ export const useAttendanceSessions = (params: SessionQueryParams) => {
             return data?.data || data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
         },
         enabled: !!params.companyId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -41,6 +44,8 @@ export const useAttendanceSession = (id?: string) => {
             return data?.data || data;
         },
         enabled: !!id,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -60,6 +65,8 @@ export const useAttendanceEvents = (params: EventQueryParams) => {
             return data?.data || data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
         },
         enabled: !!params.companyId,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 

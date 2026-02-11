@@ -27,6 +27,8 @@ export const useCompanies = (params: {
             return data?.data || data || { data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
         },
         placeholderData: (previousData) => previousData,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -45,6 +47,8 @@ export const useCompany = (id: string | null) => {
             return (response.data as any)?.data || response.data || null;
         },
         enabled: !!id,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
