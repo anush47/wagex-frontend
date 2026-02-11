@@ -55,6 +55,13 @@ export class AttendanceService {
     }
 
     /**
+     * Create a manual attendance session
+     */
+    static async createSession(dto: { employeeId: string; date: string; shiftId?: string }): Promise<ApiResponse<AttendanceSession>> {
+        return backendApiClient.post<AttendanceSession>('/attendance/manual/sessions', dto);
+    }
+
+    /**
      * Create a manual attendance event
      */
     static async createEvent(dto: CreateEventDto): Promise<ApiResponse<AttendanceEvent>> {

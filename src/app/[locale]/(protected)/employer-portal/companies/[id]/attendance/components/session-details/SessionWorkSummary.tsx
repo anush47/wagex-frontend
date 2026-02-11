@@ -52,7 +52,8 @@ export function SessionWorkSummary({
                                 value={breakMinutes}
                                 onChange={(e) => onBreakMinutesChange(e.target.value)}
                                 placeholder="Min"
-                                className="h-8 text-sm"
+                                className={`h-8 text-sm ${!isBreakOverrideActive ? 'opacity-60 bg-muted cursor-not-allowed' : ''}`}
+                                disabled={!isBreakOverrideActive}
                             />
                             <div className="flex items-center gap-2 text-xs">
                                 <Switch

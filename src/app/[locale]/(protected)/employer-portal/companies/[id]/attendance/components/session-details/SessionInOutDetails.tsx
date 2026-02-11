@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AttendanceEvent, EventType } from "@/types/attendance";
-import { IconChevronDown, IconChevronUp, IconLogin, IconLogout } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useAttendance } from "@/hooks/use-attendance";
 
 interface SessionInOutDetailsProps {
@@ -13,41 +13,26 @@ interface SessionInOutDetailsProps {
     additionalInOutCount: number;
 }
 
+const EMPTY_ARRAY: any[] = [];
+
 export function SessionInOutDetails({
     sessionId,
     additionalInOutCount,
 }: SessionInOutDetailsProps) {
     const [expanded, setExpanded] = useState(false);
-    
-    const events = useAttendance(state => state.events[sessionId] || []);
+
+    const events = useAttendance(state => state.events[sessionId] || EMPTY_ARRAY);
     const loading = useAttendance(state => state.loading[sessionId]);
     const error = useAttendance(state => state.error[sessionId]);
     const fetchSessionEvents = useAttendance(state => state.actions.fetchSessionEvents);
 
     useEffect(() => {
-        if (expanded && events.length === 0 && !loading) {
+        if (sessionId && events.length === 0 && !loading) {
             fetchSessionEvents(sessionId);
         }
-    }, [expanded, sessionId, events.length, loading, fetchSessionEvents]);
+    }, [sessionId, events.length, loading, fetchSessionEvents]);
 
     if (additionalInOutCount === 0) return null;
-
-    // Separate IN and OUT events
-    const inEvents = events.filter(e => e.eventType === EventType.IN).sort((a, b) => 
-        new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime()
-    );
-    const outEvents = events.filter(e => e.eventType === EventType.OUT).sort((a, b) => 
-        new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime()
-    );
-
-    // Create pairs of IN/OUT events
-    const eventPairs = [];
-    for (let i = 0; i < Math.max(inEvents.length, outEvents.length); i++) {
-        eventPairs.push({
-            in: inEvents[i] || null,
-            out: outEvents[i] || null
-        });
-    }
 
     return (
         <div className="mt-4">
@@ -73,90 +58,74 @@ export function SessionInOutDetails({
             </Button>
 
             {expanded && (
-                <div className="mt-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+                <div className="mt-2 border rounded-xl overflow-hidden bg-background/50">
                     {loading ? (
-                        <div className="flex items-center justify-center py-4">
-                            <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                            <span className="ml-2 text-sm">Loading events...</span>
+                        <div className="flex items-center justify-center py-6 text-muted-foreground">
+                            <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin mr-2" />
+                            <span className="text-xs font-medium">Loading events...</span>
                         </div>
                     ) : error ? (
-                        <div className="text-center py-4 text-destructive text-sm">
+                        <div className="text-center py-4 text-destructive text-xs font-medium bg-red-50/50">
                             Error: {error}
                         </div>
                     ) : events.length === 0 ? (
-                        <div className="text-center py-4 text-muted-foreground text-sm">
+                        <div className="text-center py-6 text-muted-foreground text-xs italic">
                             No events found for this session
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {eventPairs.map((pair, index) => (
-                                <div 
-                                    key={index} 
-                                    className={`p-3 rounded-lg border ${
-                                        index === 0 
-                                            ? "border-green-200 bg-green-50/50 dark:border-green-800/50 dark:bg-green-950/20" 
-                                            : index === eventPairs.length - 1 && !pair.out
-                                                ? "border-red-200 bg-red-50/50 dark:border-red-800/50 dark:bg-red-950/20"
-                                                : "border-border/50 bg-background"
-                                    }`}
-                                >
-                                    <div className="flex flex-wrap gap-4">
-                                        <div className="flex items-start gap-2 min-w-[150px]">
-                                            <IconLogin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">IN</div>
-                                                <div className="font-medium">
-                                                    {pair.in ? format(new Date(pair.in.eventTime), "h:mm a") : "-"}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-muted/50 border-b border-border/50">
+                                    <tr>
+                                        <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Type</th>
+                                        <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Time</th>
+                                        <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Source / Device</th>
+                                        <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/30">
+                                    {[...events].sort((a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime()).map((event) => (
+                                        <tr key={event.id} className="hover:bg-muted/30 transition-colors">
+                                            <td className="px-4 py-2 whitespace-nowrap">
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-[9px] font-bold h-5 px-1.5 ${event.eventType === EventType.IN
+                                                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800"
+                                                        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800"
+                                                        }`}
+                                                >
+                                                    {event.eventType}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-2 whitespace-nowrap">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold leading-none">
+                                                        {format(new Date(event.eventTime), "h:mm:ss a")}
+                                                    </span>
+                                                    <span className="text-[9px] text-muted-foreground mt-0.5">
+                                                        {format(new Date(event.eventTime), "MMM d, yyyy")}
+                                                    </span>
                                                 </div>
-                                                {pair.in && (
-                                                    <div className="text-xs text-muted-foreground truncate max-w-[120px]">
-                                                        {format(new Date(pair.in.eventTime), "MMM d, yyyy")}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex items-start gap-2 min-w-[150px]">
-                                            <IconLogout className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">OUT</div>
-                                                <div className="font-medium">
-                                                    {pair.out ? format(new Date(pair.out.eventTime), "h:mm a") : "-"}
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-medium leading-none truncate max-w-[120px]">
+                                                        {event.source}
+                                                    </span>
+                                                    {event.device && (
+                                                        <span className="text-[9px] text-muted-foreground mt-0.5 truncate max-w-[120px]">
+                                                            {event.device}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                {pair.out && (
-                                                    <div className="text-xs text-muted-foreground truncate max-w-[120px]">
-                                                        {format(new Date(pair.out.eventTime), "MMM d, yyyy")}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        
-                                        {pair.in && (
-                                            <div className="text-xs text-muted-foreground ml-auto">
-                                                <div>Device: {pair.in.device || "N/A"}</div>
-                                                <div>Source: {pair.in.source}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                    {(pair.in?.location || pair.out?.location) && (
-                                        <div className="mt-2 pt-2 border-t border-border/30 text-xs text-muted-foreground flex flex-wrap gap-x-4">
-                                            {pair.in?.location && (
-                                                <div className="flex items-center gap-1">
-                                                    <span className="font-medium">IN Location:</span>
-                                                    <span>{pair.in.location}</span>
-                                                </div>
-                                            )}
-                                            {pair.out?.location && (
-                                                <div className="flex items-center gap-1">
-                                                    <span className="font-medium">OUT Location:</span>
-                                                    <span>{pair.out.location}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                            </td>
+                                            <td className="px-4 py-2 text-[10px] text-muted-foreground italic">
+                                                {event.location || "-"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>

@@ -112,13 +112,13 @@ export function SessionTimeDetails({
                     </div>
                 )}
             </div>
-            
+
             {/* Additional IN/OUT pairs section */}
             {session.additionalInOutCount && session.additionalInOutCount > 0 && (
                 <div className="md:col-span-2 mt-4">
-                    <SessionInOutDetails 
-                        sessionId={session.id} 
-                        additionalInOutCount={session.additionalInOutCount} 
+                    <SessionInOutDetails
+                        sessionId={session.id}
+                        additionalInOutCount={session.additionalInOutCount}
                     />
                 </div>
             )}

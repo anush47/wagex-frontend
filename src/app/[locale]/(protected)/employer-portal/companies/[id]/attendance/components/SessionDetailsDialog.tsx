@@ -10,13 +10,13 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAttendanceMutations } from "@/hooks/use-attendance";
+import { useAttendance, useAttendanceMutations } from "@/hooks/use-attendance";
 import { useEffectivePolicy } from "@/hooks/use-policies";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { IconClock, IconX, IconTrash, IconCheck } from "@tabler/icons-react";
-import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus } from "@/types/attendance";
+import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus, EventType } from "@/types/attendance";
 import { Badge } from "@/components/ui/badge";
 
 // Sub-components
@@ -33,6 +33,8 @@ interface SessionDetailsDialogProps {
     onDelete?: (id: string) => Promise<void>;
     isLoading?: boolean;
 }
+
+const EMPTY_ARRAY: any[] = [];
 
 export function SessionDetailsDialog({
     open,
@@ -60,6 +62,7 @@ export function SessionDetailsDialog({
     const availableShifts = policyData?.effective?.shifts?.list || [];
 
     const { updateSession } = useAttendanceMutations();
+    const events = useAttendance(state => session?.id ? state.events[session.id] || EMPTY_ARRAY : EMPTY_ARRAY);
 
     // Reset form when dialog opens with a new session
     useEffect(() => {
@@ -88,7 +91,39 @@ export function SessionDetailsDialog({
             if (totalMins < 0) return; // Prevent negative durations in UI
 
             // 2. Resolve Break
-            const brk = parseInt(breakMinutes) || 0;
+            let brk = parseInt(breakMinutes) || 0;
+
+            if (!isBreakOverrideActive) {
+                // Auto-calculate break ONLY if override is off
+                const selectedShift = availableShifts.find(s => s.id === shiftId);
+                const shiftBreak = selectedShift?.breakTime || session?.shiftBreakTime || (session as any)?.shiftBreakMinutes || 0;
+
+                // Calculate gap break from events
+                let gapBreak = 0;
+                if (events && events.length > 1) {
+                    const sortedEvents = [...events].sort((a, b) =>
+                        new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime()
+                    );
+
+                    for (let i = 0; i < sortedEvents.length - 1; i++) {
+                        const current = sortedEvents[i];
+                        const next = sortedEvents[i + 1];
+                        if (current.eventType === EventType.OUT && next.eventType === EventType.IN) {
+                            const gap = Math.floor((new Date(next.eventTime).getTime() - new Date(current.eventTime).getTime()) / (1000 * 60));
+                            gapBreak += Math.max(0, gap);
+                        }
+                    }
+                }
+
+                // Per user request: max of in out calculated or shifts break
+                brk = Math.max(gapBreak, (totalMins > 360) ? shiftBreak : 0);
+
+                // Only update state if it actually changed to avoid effect cycles
+                if (brk.toString() !== breakMinutes) {
+                    setBreakMinutes(brk.toString());
+                }
+            }
+
             const work = Math.max(0, totalMins - brk);
 
             // 3. Calculate overtime if shift is selected
@@ -110,7 +145,7 @@ export function SessionDetailsDialog({
             setWorkMinutes(work.toString());
             setOvertimeMinutes(overtime.toString());
         }
-    }, [checkInTime, checkOutTime, breakMinutes, editing, shiftId, session?.shiftStartTime, session?.shiftEndTime, availableShifts]);
+    }, [checkInTime, checkOutTime, breakMinutes, editing, shiftId, session?.shiftStartTime, session?.shiftEndTime, session?.shiftBreakTime, availableShifts, isBreakOverrideActive, events]);
 
 
     const handleSave = async () => {
@@ -121,13 +156,11 @@ export function SessionDetailsDialog({
             const dto: UpdateSessionDto = {
                 checkInTime: checkInTime ? new Date(checkInTime).toISOString() : null,
                 checkOutTime: checkOutTime ? new Date(checkOutTime).toISOString() : null,
-                workMinutes: workMinutes ? parseInt(workMinutes) : undefined,
-                breakMinutes: breakMinutes ? parseInt(breakMinutes) : undefined,
-                overtimeMinutes: overtimeMinutes ? parseInt(overtimeMinutes) : undefined,
+                breakMinutes: (breakMinutes !== "" && !isNaN(parseInt(breakMinutes))) ? parseInt(breakMinutes) : undefined,
                 shiftId: shiftId === "none" ? null : (shiftId || undefined),
                 workDayStatus,
                 remarks: remarks,
-                isBreakOverrideActive,
+                isBreakOverrideActive: !!isBreakOverrideActive,
             };
 
             await updateSession.mutateAsync({ id: session.id, dto });
@@ -298,17 +331,6 @@ export function SessionDetailsDialog({
                             onCheckOutChange={setCheckOutTime}
                             getApprovalBadge={getApprovalBadge}
                         />
-                        
-                        {session.additionalInOutCount && session.additionalInOutCount > 0 && (
-                            <div className="border rounded-lg p-4 bg-blue-50/30 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
-                                <h3 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-300">
-                                    Additional IN/OUT Pairs ({session.additionalInOutCount})
-                                </h3>
-                                <p className="text-xs text-muted-foreground">
-                                    This session contains {session.additionalInOutCount} additional IN/OUT pair{session.additionalInOutCount > 1 ? 's' : ''} beyond the main entry and exit.
-                                </p>
-                            </div>
-                        )}
 
                         <SessionWorkSummary
                             session={session}

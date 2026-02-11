@@ -87,6 +87,24 @@ export const useAttendanceMutations = () => {
         },
     });
 
+    const createSession = useMutation({
+        mutationFn: async (dto: { employeeId: string; date: string; shiftId?: string }) => {
+            const response = await AttendanceService.createSession(dto);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Creating attendance session...') };
+        },
+        onSuccess: (_data, _variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            toast.success('Session created', { id: context?.toastId });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to create session', { id: context?.toastId });
+        },
+    });
+
     const updateSession = useMutation({
         mutationFn: async ({ id, dto }: { id: string; dto: UpdateSessionDto }) => {
             const response = await AttendanceService.updateSession(id, dto);
@@ -161,6 +179,7 @@ export const useAttendanceMutations = () => {
 
     return {
         createEvent,
+        createSession,
         updateSession,
         deleteSession,
         linkEventToSession,
@@ -206,7 +225,8 @@ export const useAttendance = create<AttendanceStore>((set, get) => ({
                     throw new Error(response.error.message || 'Failed to fetch session events');
                 }
 
-                const events = response.data as AttendanceEvent[];
+                const result = response.data as any;
+                const events = (result?.data || result || []) as AttendanceEvent[];
 
                 set(state => ({
                     events: { ...state.events, [sessionId]: events },
