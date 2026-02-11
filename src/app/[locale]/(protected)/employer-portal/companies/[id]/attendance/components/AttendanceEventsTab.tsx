@@ -22,9 +22,9 @@ import {
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink, IconCalendarStats, IconFilter } from "@tabler/icons-react";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
-import type { AttendanceEvent, EventType, EventSource, EventStatus } from "@/types/attendance";
-import { useAttendanceEvents } from "@/hooks/use-attendance";
-import { format } from "date-fns";
+import type { AttendanceEvent, AttendanceSession, EventType, EventSource, EventStatus } from "@/types/attendance";
+import { useAttendanceEvents, useAttendanceSessions } from "@/hooks/use-attendance";
+import { format, subDays, addDays } from "date-fns";
 import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
 import { SearchableSessionSelect } from "@/components/ui/searchable-session-select";
 import { useAttendanceMutations } from "@/hooks/use-attendance";
@@ -84,6 +84,32 @@ export function AttendanceEventsTab({
 
     const events = eventsData?.items || [];
     const meta = eventsData?.meta;
+
+    // Prefetch all sessions for this period to avoid one-by-one calls in the table
+    // Fetch a broader range (1-day buffer) to handle sessions that might span date boundaries
+    const fetchStart = (startDate || initialDate) ? format(subDays(new Date(startDate || initialDate || ""), 1), "yyyy-MM-dd") : undefined;
+    const fetchEnd = (endDate || initialDate) ? format(addDays(new Date(endDate || initialDate || ""), 1), "yyyy-MM-dd") : undefined;
+
+    const { data: allSessionsData, isLoading: allSessionsLoading } = useAttendanceSessions({
+        companyId,
+        startDate: fetchStart,
+        endDate: fetchEnd,
+        limit: 1000 // Get all relevant sessions for the period
+    }, {
+        enabled: !!companyId && !!fetchStart,
+    });
+
+    const prefetchedSessions = allSessionsData?.items;
+
+    const sessionsByEmployee = React.useMemo(() => {
+        const map: Record<string, AttendanceSession[]> = {};
+        if (!prefetchedSessions) return map;
+        prefetchedSessions.forEach(s => {
+            if (!map[s.employeeId]) map[s.employeeId] = [];
+            map[s.employeeId].push(s);
+        });
+        return map;
+    }, [prefetchedSessions]);
 
     const getEventTypeBadge = (type: EventType) => {
         const styles = {
@@ -347,6 +373,8 @@ export function AttendanceEventsTab({
                                                     eventDate={new Date(event.eventTime)}
                                                     value={event.sessionId}
                                                     onSelect={(sessionId) => handleSessionAssign(event.id, sessionId)}
+                                                    prefetchedSessions={sessionsByEmployee[event.employeeId]}
+                                                    loading={allSessionsLoading}
                                                 />
                                             </TableCell>
                                             <TableCell>

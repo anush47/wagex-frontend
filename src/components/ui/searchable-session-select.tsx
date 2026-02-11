@@ -33,6 +33,8 @@ interface SearchableSessionSelectProps {
     placeholder?: string;
     className?: string;
     disabled?: boolean;
+    prefetchedSessions?: AttendanceSession[];
+    loading?: boolean;
 }
 
 export function SearchableSessionSelect({
@@ -44,6 +46,8 @@ export function SearchableSessionSelect({
     placeholder = "Assign to session...",
     className,
     disabled = false,
+    prefetchedSessions,
+    loading = false,
 }: SearchableSessionSelectProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -53,15 +57,23 @@ export function SearchableSessionSelect({
     const startDate = format(subDays(eventDate, 1), "yyyy-MM-dd");
     const endDate = format(addDays(eventDate, 1), "yyyy-MM-dd");
 
-    const { data: sessionsData, isLoading } = useAttendanceSessions({
+    const { data: sessionsData, isLoading: queryLoading } = useAttendanceSessions({
         companyId,
         employeeId,
         startDate,
         endDate,
         limit: 50
-    });
+    }, { enabled: prefetchedSessions === undefined && !loading });
 
-    const sessions = sessionsData?.items || [];
+    // Use prefetched sessions if available, otherwise use query data
+    const sessions = prefetchedSessions
+        ? prefetchedSessions.filter(s =>
+            s.date >= startDate &&
+            s.date <= endDate
+        )
+        : (sessionsData?.items || []);
+
+    const isLoading = loading || (prefetchedSessions === undefined && queryLoading);
     const selectedSession = sessions.find((s: AttendanceSession) => s.id === value);
 
     const getSessionLabel = (session: AttendanceSession) => {

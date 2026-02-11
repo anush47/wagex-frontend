@@ -12,7 +12,7 @@ import type {
 /**
  * Hook to fetch attendance sessions (paginated)
  */
-export const useAttendanceSessions = (params: SessionQueryParams) => {
+export const useAttendanceSessions = (params: SessionQueryParams, options: any = {}) => {
     return useQuery({
         queryKey: ['attendance', 'sessions', params],
         queryFn: async () => {
@@ -27,6 +27,7 @@ export const useAttendanceSessions = (params: SessionQueryParams) => {
         enabled: !!params.companyId,
         staleTime: 30 * 60 * 1000, // 30 minutes
         gcTime: 45 * 60 * 1000,    // 45 minutes
+        ...options,
     });
 };
 
