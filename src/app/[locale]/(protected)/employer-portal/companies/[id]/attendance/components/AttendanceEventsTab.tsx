@@ -102,12 +102,12 @@ export function AttendanceEventsTab({
         enabled: !!companyId && !!fetchStart,
     });
 
-    const prefetchedSessions = allSessionsData?.items;
+    const prefetchedSessions = (allSessionsData as any)?.items as AttendanceSession[] | undefined;
 
     const sessionsByEmployee = React.useMemo(() => {
         const map: Record<string, AttendanceSession[]> = {};
         if (!prefetchedSessions) return map;
-        prefetchedSessions.forEach(s => {
+        prefetchedSessions.forEach((s: AttendanceSession) => {
             if (!map[s.employeeId]) map[s.employeeId] = [];
             map[s.employeeId].push(s);
         });

@@ -58,7 +58,7 @@ export function SalariesTab({
         if (selectedIds.length === salaries.length) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(salaries.map(s => s.id));
+            setSelectedIds(salaries.map((s: any) => s.id));
         }
     };
 
@@ -180,7 +180,7 @@ export function SalariesTab({
                         </TableHeader>
                         <TableBody>
                             {salariesQuery.isLoading ? (
-                                [1, 2, 3].map(i => (
+                                [1, 2, 3].map((i: number) => (
                                     <TableRow key={i} className="animate-pulse border-neutral-50">
                                         <TableCell colSpan={9} className="h-16 bg-neutral-50/50" />
                                     </TableRow>

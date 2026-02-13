@@ -183,6 +183,7 @@ export interface EventQueryParams {
     status?: EventStatus;
     page?: number;
     limit?: number;
+    onlyUnlinked?: boolean;
 }
 
 // API Responses

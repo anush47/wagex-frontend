@@ -83,8 +83,8 @@ export function AttendanceSessionsTab({
         isPending: approvalFilter === 'PENDING' ? true : undefined
     });
 
-    const sessions = sessionsData?.items || [];
-    const meta = sessionsData?.meta;
+    const sessions = (sessionsData as any)?.items || [];
+    const meta = (sessionsData as any)?.meta;
 
     const { deleteSession, updateSession } = useAttendanceMutations();
 
@@ -452,9 +452,13 @@ export function AttendanceSessionsTab({
                                                                     HALF
                                                                 </Badge>
                                                             )}
-                                                            {session.manuallyEdited && (
+                                                            {session.manuallyEdited ? (
                                                                 <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
                                                                     EDITED
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="bg-blue-500/5 text-blue-500/70 dark:text-blue-400/70 border-blue-500/10 text-[10px] py-0 px-1.5 h-4 font-bold">
+                                                                    SYSTEM
                                                                 </Badge>
                                                             )}
                                                             {/* Joint Holiday Badge */}

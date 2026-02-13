@@ -37,6 +37,7 @@ interface SalaryDetailsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     salary: Salary | null;
+    onSave?: (updatedSalary: any) => void;
 }
 
 export function SalaryDetailsDialog({
@@ -134,7 +135,7 @@ export function SalaryDetailsDialog({
                     <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <EmployeeAvatar
-                                photo={salary.employee?.photo}
+                                photo={(salary.employee as any)?.photo}
                                 name={salary.employee?.fullName}
                                 className="h-12 w-12 rounded-2xl text-lg shadow-lg"
                             />

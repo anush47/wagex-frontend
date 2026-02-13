@@ -16,8 +16,9 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { IconClock, IconX, IconTrash, IconCheck } from "@tabler/icons-react";
-import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus, EventType } from "@/types/attendance";
+import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus, EventType, AttendanceEvent } from "@/types/attendance";
 import { Badge } from "@/components/ui/badge";
+import { EventDetailsDialog } from "./EventDetailsDialog";
 
 // Sub-components
 import { SessionInfoCard } from "./session-details/SessionInfoCard";
@@ -58,11 +59,22 @@ export function SessionDetailsDialog({
     const [remarks, setRemarks] = useState("");
     const [isBreakOverrideActive, setIsBreakOverrideActive] = useState(false);
 
+    // Event details state
+    const [selectedEventForDialog, setSelectedEventForDialog] = useState<AttendanceEvent | null>(null);
+    const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
+
     const { data: policyData } = useEffectivePolicy(session?.employeeId || null);
     const availableShifts = policyData?.effective?.shifts?.list || [];
 
     const { updateSession } = useAttendanceMutations();
-    const events = useAttendance(state => session?.id ? state.events[session.id] || EMPTY_ARRAY : EMPTY_ARRAY);
+    const { events: sessionEventsMap, actions: attendanceActions } = useAttendance();
+    const events = session?.id ? sessionEventsMap[session.id] || EMPTY_ARRAY : EMPTY_ARRAY;
+
+    useEffect(() => {
+        if (open && session?.id) {
+            attendanceActions.fetchSessionEvents(session.id);
+        }
+    }, [open, session?.id, attendanceActions]);
 
     // Reset form when dialog opens with a new session
     useEffect(() => {
@@ -95,8 +107,8 @@ export function SessionDetailsDialog({
 
             if (!isBreakOverrideActive) {
                 // Auto-calculate break ONLY if override is off
-                const selectedShift = availableShifts.find(s => s.id === shiftId);
-                const shiftBreak = selectedShift?.breakTime || session?.shiftBreakTime || (session as any)?.shiftBreakMinutes || 0;
+                const selectedShift = availableShifts.find((s: any) => s.id === shiftId);
+                const shiftBreak = selectedShift?.breakTime || session?.shiftBreakMinutes || 0;
 
                 // Calculate gap break from events
                 let gapBreak = 0;
@@ -128,7 +140,7 @@ export function SessionDetailsDialog({
 
             // 3. Calculate overtime if shift is selected
             let overtime = 0;
-            const selectedShift = availableShifts.find(s => s.id === shiftId);
+            const selectedShift = availableShifts.find((s: any) => s.id === shiftId);
             const shiftStart = selectedShift?.startTime || session?.shiftStartTime;
             const shiftEnd = selectedShift?.endTime || session?.shiftEndTime;
 
@@ -145,7 +157,7 @@ export function SessionDetailsDialog({
             setWorkMinutes(work.toString());
             setOvertimeMinutes(overtime.toString());
         }
-    }, [checkInTime, checkOutTime, breakMinutes, editing, shiftId, session?.shiftStartTime, session?.shiftEndTime, session?.shiftBreakTime, availableShifts, isBreakOverrideActive, events]);
+    }, [checkInTime, checkOutTime, breakMinutes, editing, shiftId, session?.shiftStartTime, session?.shiftEndTime, session?.shiftBreakMinutes, availableShifts, isBreakOverrideActive, events]);
 
 
     const handleSave = async () => {
@@ -324,12 +336,17 @@ export function SessionDetailsDialog({
 
                         <SessionTimeDetails
                             session={session}
+                            events={events}
                             editing={editing}
                             checkInTime={checkInTime}
                             checkOutTime={checkOutTime}
                             onCheckInChange={setCheckInTime}
                             onCheckOutChange={setCheckOutTime}
                             getApprovalBadge={getApprovalBadge}
+                            onViewEvent={(event) => {
+                                setSelectedEventForDialog(event);
+                                setEventDetailsOpen(true);
+                            }}
                         />
 
                         <SessionWorkSummary
@@ -419,6 +436,12 @@ export function SessionDetailsDialog({
                     </div>
                 </DialogFooter>
             </DialogContent>
+
+            <EventDetailsDialog
+                open={eventDetailsOpen}
+                onOpenChange={setEventDetailsOpen}
+                event={selectedEventForDialog}
+            />
 
             <ConfirmationDialog
                 open={deleteConfirmOpen}

@@ -48,6 +48,7 @@ export class AttendanceService {
         if (params.status) searchParams.append('status', params.status);
         if (params.page) searchParams.append('page', params.page.toString());
         if (params.limit) searchParams.append('limit', params.limit.toString());
+        if (params.onlyUnlinked) searchParams.append('onlyUnlinked', 'true');
 
         return backendApiClient.get<PaginatedResponse<AttendanceEvent>>(
             `/attendance/manual/events?${searchParams.toString()}`

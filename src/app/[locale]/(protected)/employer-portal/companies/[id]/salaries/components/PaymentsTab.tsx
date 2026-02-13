@@ -50,7 +50,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                                     <TableCell colSpan={6} className="h-32 text-center text-neutral-400 font-medium italic">No payment history found.</TableCell>
                                 </TableRow>
                             ) : (
-                                payments.map((payment) => (
+                                payments.map((payment: any) => (
                                     <TableRow key={payment.id} className="border-neutral-50 hover:bg-neutral-50/50 transition-all">
                                         <TableCell className="px-8 font-bold text-xs uppercase text-neutral-600">
                                             {format(new Date(payment.date), "MMM d, yyyy")}

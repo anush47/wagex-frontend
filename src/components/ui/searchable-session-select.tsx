@@ -71,7 +71,7 @@ export function SearchableSessionSelect({
             s.date >= startDate &&
             s.date <= endDate
         )
-        : (sessionsData?.items || []);
+        : ((sessionsData as any)?.items || []);
 
     const isLoading = loading || (prefetchedSessions === undefined && queryLoading);
     const selectedSession = sessions.find((s: AttendanceSession) => s.id === value);

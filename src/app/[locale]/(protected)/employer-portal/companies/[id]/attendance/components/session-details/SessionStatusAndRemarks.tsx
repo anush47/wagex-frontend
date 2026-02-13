@@ -97,9 +97,13 @@ export function SessionStatusAndRemarks({
                             Short Leave
                         </Badge>
                     )}
-                    {session.manuallyEdited && (
+                    {session.manuallyEdited ? (
                         <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20">
                             Manually Edited
+                        </Badge>
+                    ) : (
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+                            System (Original)
                         </Badge>
                     )}
                     {session.autoCheckout && (

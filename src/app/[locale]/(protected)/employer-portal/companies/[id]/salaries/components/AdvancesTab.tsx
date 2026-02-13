@@ -43,7 +43,7 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                                         <TableCell colSpan={5} className="h-32 text-center text-neutral-400 font-medium italic">No active advances found.</TableCell>
                                     </TableRow>
                                 ) : (
-                                    advances.map((advance) => {
+                                    advances.map((advance: any) => {
                                         const recovered = advance.totalAmount - advance.remainingAmount;
                                         const progress = (recovered / advance.totalAmount) * 100;
                                         return (
@@ -97,13 +97,13 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                         Estimated recovery for the upcoming pay cycle based on all active deduction schedules.
                     </p>
                     <div className="text-4xl font-black tracking-tighter mb-2">
-                        LKR {advances.reduce((sum, adv) => {
-                            const nextDeduction = adv.deductionSchedule.find(s => !s.isDeducted);
+                        LKR {advances.reduce((sum: number, adv: any) => {
+                            const nextDeduction = adv.deductionSchedule.find((s: any) => !s.isDeducted);
                             return sum + (nextDeduction?.amount || 0);
                         }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </div>
                     <Badge className="bg-orange-500/20 text-orange-500 border-none font-bold uppercase text-[9px]">
-                        Calculated from {advances.filter(adv => adv.remainingAmount > 0).length} active advances
+                        Calculated from {advances.filter((adv: any) => adv.remainingAmount > 0).length} active advances
                     </Badge>
                 </Card>
 

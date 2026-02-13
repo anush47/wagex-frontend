@@ -82,7 +82,7 @@ export function GenerateSalaryDialog({
         if (selectedEmployees.length === employees.length) {
             setSelectedEmployees([]);
         } else {
-            setSelectedEmployees(employees.map(e => e.id));
+            setSelectedEmployees(employees.map((e: any) => e.id));
         }
     };
 
@@ -183,7 +183,7 @@ export function GenerateSalaryDialog({
                                         <Badge variant="outline" className="font-bold">{selectedEmployees.length} Selected</Badge>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {employees.map(employee => (
+                                        {employees.map((employee: any) => (
                                             <div
                                                 key={employee.id}
                                                 onClick={() => toggleEmployee(employee.id)}
@@ -218,8 +218,8 @@ export function GenerateSalaryDialog({
                                             </TableHeader>
                                             <TableBody>
                                                 {previewData.map((row, idx) => {
-                                                    const adds = row.components.filter(c => c.category === 'ADDITION').reduce((s, c) => s + c.amount, 0);
-                                                    const deds = row.components.filter(c => c.category === 'DEDUCTION').reduce((s, c) => s + c.amount, 0);
+                                                    const adds = (row.components as any[]).filter(c => c.category === 'ADDITION').reduce((s, c) => s + c.amount, 0);
+                                                    const deds = (row.components as any[]).filter(c => c.category === 'DEDUCTION').reduce((s, c) => s + c.amount, 0);
                                                     return (
                                                         <TableRow
                                                             key={idx}
@@ -275,7 +275,7 @@ export function GenerateSalaryDialog({
                                     payDate: new Date().toISOString(), // Mock
                                     employee: {
                                         fullName: selectedPreview.employeeName,
-                                        employeeNo: employees.find(e => e.id === selectedPreview.employeeId)?.employeeNo || 0
+                                        employeeNo: (employees as any[]).find(e => e.id === selectedPreview.employeeId)?.employeeNo || 0
                                     }
                                 } as any}
                             />

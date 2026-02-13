@@ -41,7 +41,7 @@ export default function AttendancePage() {
         isPending: true,
         limit: 1
     });
-    const hasPending = (pendingSessions?.meta?.total || 0) > 0;
+    const hasPending = ((pendingSessions as any)?.meta?.total || 0) > 0;
 
     // Sync tab state with URL parameter
     useEffect(() => {
