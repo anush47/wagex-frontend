@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink, IconCalendarStats, IconFilter } from "@tabler/icons-react";
+import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink, IconCalendarStats, IconFilter, IconEye } from "@tabler/icons-react";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceEvent, AttendanceSession, EventType, EventSource, EventStatus } from "@/types/attendance";
 import { useAttendanceEvents, useAttendanceSessions } from "@/hooks/use-attendance";
@@ -28,6 +28,7 @@ import { format, subDays, addDays } from "date-fns";
 import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
 import { SearchableSessionSelect } from "@/components/ui/searchable-session-select";
 import { useAttendanceMutations } from "@/hooks/use-attendance";
+import { EventDetailsDialog } from "./EventDetailsDialog";
 
 interface AttendanceEventsTabProps {
     companyId: string;
@@ -59,6 +60,8 @@ export function AttendanceEventsTab({
     const [statusFilter, setStatusFilter] = useState<EventStatus | "ALL">("ALL");
     const [showFilters, setShowFilters] = useState(false);
     const [page, setPage] = useState(1);
+    const [selectedEvent, setSelectedEvent] = useState<AttendanceEvent | null>(null);
+    const [detailsOpen, setDetailsOpen] = useState(false);
 
     // Sync with initial filters
     useEffect(() => {
@@ -294,6 +297,7 @@ export function AttendanceEventsTab({
                                     <TableHead>Location</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Remark</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -310,6 +314,9 @@ export function AttendanceEventsTab({
                                         <TableCell><div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                         <TableCell><div className="h-5 w-16 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
                                         <TableCell><div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="h-8 w-8 bg-neutral-100 dark:bg-neutral-800 rounded ml-auto" />
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -332,6 +339,7 @@ export function AttendanceEventsTab({
                                         <TableHead>Location</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Remark</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -397,6 +405,20 @@ export function AttendanceEventsTab({
                                             <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate" title={event.remark}>
                                                 {event.remark || "-"}
                                             </TableCell>
+                                            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                                    onClick={() => {
+                                                        setSelectedEvent(event);
+                                                        setDetailsOpen(true);
+                                                    }}
+                                                    title="View Details"
+                                                >
+                                                    <IconEye className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -431,6 +453,12 @@ export function AttendanceEventsTab({
                     </>
                 )}
             </CardContent>
+
+            <EventDetailsDialog
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                event={selectedEvent}
+            />
         </Card>
     );
 }
