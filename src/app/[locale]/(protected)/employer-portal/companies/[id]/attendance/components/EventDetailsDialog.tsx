@@ -20,9 +20,11 @@ import {
     IconDatabase,
     IconArrowRight,
     IconArrowLeft,
-    IconCode
+    IconCode,
+    IconRefresh
 } from "@tabler/icons-react";
 import { AttendanceEvent, EventType } from "@/types/attendance";
+import { useAttendanceMutations } from "@/hooks/use-attendance";
 import { Badge } from "@/components/ui/badge";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import { useEffectivePolicy } from "@/hooks/use-policies";
@@ -47,17 +49,40 @@ export function EventDetailsDialog({
     const { data: policyData } = useEffectivePolicy(event?.employeeId || null);
     const zones = policyData?.effective?.attendance?.geofencing?.zones || [];
 
+    const { updateEventType } = useAttendanceMutations();
+
     if (!event) return null;
+
+    const handleTypeToggle = async () => {
+        const newType = event.eventType === "IN" ? "OUT" : "IN";
+        try {
+            await updateEventType.mutateAsync({ id: event.id, eventType: newType });
+            onOpenChange(false);
+        } catch (error) {
+            console.error("Failed to toggle type", error);
+        }
+    };
 
     const getEventTypeBadge = (type: EventType) => {
         const styles = {
-            IN: "bg-green-500/10 text-green-600 border-green-500/20",
-            OUT: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+            IN: "bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20",
+            OUT: "bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20",
         };
 
+        const isUpdating = updateEventType.isPending && updateEventType.variables?.id === event.id;
+
         return (
-            <Badge variant="outline" className={`font-bold px-3 py-1 ${styles[type]}`}>
-                {type === "IN" ? <IconArrowRight className="h-4 w-4 mr-1.5" /> : <IconArrowLeft className="h-4 w-4 mr-1.5" />}
+            <Badge
+                variant="outline"
+                className={`font-bold px-3 py-1 cursor-pointer transition-all ${styles[type]} ${isUpdating ? "opacity-70 pointer-events-none" : ""}`}
+                onClick={handleTypeToggle}
+                title="Click to toggle type"
+            >
+                {isUpdating ? (
+                    <IconRefresh className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                    type === "IN" ? <IconArrowRight className="h-4 w-4 mr-1.5" /> : <IconArrowLeft className="h-4 w-4 mr-1.5" />
+                )}
                 {type}
             </Badge>
         );

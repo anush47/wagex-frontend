@@ -192,6 +192,23 @@ export const useAttendanceMutations = () => {
         deleteSession,
         linkEventToSession,
         unlinkEventFromSession,
+        updateEventType: useMutation({
+            mutationFn: async ({ id, eventType }: { id: string; eventType: string }) => {
+                const response = await AttendanceService.updateEventType(id, eventType);
+                if (response.error) throw new Error(response.error.message);
+                return response.data;
+            },
+            onMutate: () => {
+                return { toastId: toast.loading('Updating event type...') };
+            },
+            onSuccess: (_data, _variables, context) => {
+                queryClient.invalidateQueries({ queryKey: ['attendance'] });
+                toast.success('Event type updated', { id: context?.toastId });
+            },
+            onError: (err: any, _variables, context) => {
+                toast.error(err.message || 'Failed to update event type', { id: context?.toastId });
+            },
+        }),
     };
 };
 

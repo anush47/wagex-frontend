@@ -102,4 +102,11 @@ export class AttendanceService {
     static async unlinkEventFromSession(eventId: string): Promise<ApiResponse<{ success: boolean }>> {
         return backendApiClient.delete<{ success: boolean }>(`/attendance/manual/events/${eventId}/link`);
     }
+
+    /**
+     * Update an event type
+     */
+    static async updateEventType(id: string, eventType: string): Promise<ApiResponse<{ success: boolean }>> {
+        return backendApiClient.patch<{ success: boolean }>(`/attendance/manual/events/${id}/type`, { eventType });
+    }
 }

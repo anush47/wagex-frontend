@@ -119,6 +119,7 @@ export function SessionTimeDetails({
                     <SessionInOutDetails
                         sessionId={session.id}
                         additionalInOutCount={session.additionalInOutCount}
+                        editing={editing}
                     />
                 </div>
             )}

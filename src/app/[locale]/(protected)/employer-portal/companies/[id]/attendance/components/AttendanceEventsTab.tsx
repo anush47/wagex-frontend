@@ -114,10 +114,12 @@ export function AttendanceEventsTab({
         return map;
     }, [prefetchedSessions]);
 
-    const getEventTypeBadge = (type: EventType) => {
+    const { linkEventToSession, unlinkEventFromSession, updateEventType } = useAttendanceMutations();
+
+    const getEventTypeBadge = (type: EventType, eventId?: string) => {
         const styles = {
-            IN: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
-            OUT: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+            IN: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 hover:bg-green-500/20",
+            OUT: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20",
         };
 
         const icons = {
@@ -125,9 +127,28 @@ export function AttendanceEventsTab({
             OUT: <IconArrowLeft className="h-3 w-3 mr-1" />,
         };
 
+        const isUpdating = updateEventType.isPending && updateEventType.variables?.id === eventId;
+
         return (
-            <Badge variant="outline" className={`font-bold ${styles[type]}`}>
-                {icons[type]}
+            <Badge
+                variant="outline"
+                className={`font-bold transition-all ${eventId ? "cursor-pointer" : ""} ${styles[type]} ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
+                onClick={(e) => {
+                    if (eventId) {
+                        e.stopPropagation();
+                        updateEventType.mutate({
+                            id: eventId,
+                            eventType: type === "IN" ? "OUT" : "IN"
+                        });
+                    }
+                }}
+                title={eventId ? "Click to toggle type" : undefined}
+            >
+                {isUpdating ? (
+                    <IconRefresh className="h-3 w-3 animate-spin mr-1" />
+                ) : (
+                    icons[type]
+                )}
                 {type}
             </Badge>
         );
@@ -147,7 +168,6 @@ export function AttendanceEventsTab({
         );
     };
 
-    const { linkEventToSession, unlinkEventFromSession } = useAttendanceMutations();
 
     const handleSessionAssign = async (eventId: string, sessionId: string | null) => {
         try {
@@ -373,7 +393,7 @@ export function AttendanceEventsTab({
                                                     </span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{getEventTypeBadge(event.eventType)}</TableCell>
+                                            <TableCell>{getEventTypeBadge(event.eventType, event.id)}</TableCell>
                                             <TableCell onClick={(e) => e.stopPropagation()}>
                                                 <SearchableSessionSelect
                                                     companyId={companyId}

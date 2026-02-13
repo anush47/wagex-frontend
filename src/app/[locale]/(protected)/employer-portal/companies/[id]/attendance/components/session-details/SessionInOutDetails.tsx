@@ -5,12 +5,13 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AttendanceEvent, EventType } from "@/types/attendance";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import { useAttendance } from "@/hooks/use-attendance";
+import { IconChevronDown, IconChevronUp, IconRefresh } from "@tabler/icons-react";
+import { useAttendance, useAttendanceMutations } from "@/hooks/use-attendance";
 
 interface SessionInOutDetailsProps {
     sessionId: string;
     additionalInOutCount: number;
+    editing?: boolean;
 }
 
 const EMPTY_ARRAY: any[] = [];
@@ -18,6 +19,7 @@ const EMPTY_ARRAY: any[] = [];
 export function SessionInOutDetails({
     sessionId,
     additionalInOutCount,
+    editing = false,
 }: SessionInOutDetailsProps) {
     const [expanded, setExpanded] = useState(false);
 
@@ -31,6 +33,20 @@ export function SessionInOutDetails({
             fetchSessionEvents(sessionId);
         }
     }, [sessionId, events.length, loading, fetchSessionEvents]);
+
+    const { updateEventType } = useAttendanceMutations();
+
+    const handleTypeToggle = async (eventId: string, currentType: EventType) => {
+        if (!editing) return;
+        const newType = currentType === EventType.IN ? EventType.OUT : EventType.IN;
+        try {
+            await updateEventType.mutateAsync({ id: eventId, eventType: newType });
+            // Refresh events for this session
+            fetchSessionEvents(sessionId);
+        } catch (error) {
+            console.error("Failed to update event type", error);
+        }
+    };
 
     if (additionalInOutCount === 0) return null;
 
@@ -89,12 +105,17 @@ export function SessionInOutDetails({
                                             <td className="px-4 py-2 whitespace-nowrap">
                                                 <Badge
                                                     variant="outline"
-                                                    className={`text-[9px] font-bold h-5 px-1.5 ${event.eventType === EventType.IN
+                                                    className={`text-[9px] font-bold h-5 px-1.5 transition-all ${editing ? "cursor-pointer hover:border-primary hover:shadow-sm" : ""} ${event.eventType === EventType.IN
                                                         ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800"
                                                         : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800"
                                                         }`}
+                                                    onClick={() => handleTypeToggle(event.id, event.eventType)}
                                                 >
-                                                    {event.eventType}
+                                                    {updateEventType.isPending && updateEventType.variables?.id === event.id ? (
+                                                        <IconRefresh className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        event.eventType
+                                                    )}
                                                 </Badge>
                                             </td>
                                             <td className="px-4 py-2 whitespace-nowrap">
