@@ -16,63 +16,66 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
 
     return (
         <div className="space-y-6">
-            <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
-                <CardHeader className="p-8">
-                    <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                        <IconCash className="h-6 w-6 text-orange-500" />
-                        Active Advances
-                    </CardTitle>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Active Advances</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
+                <CardContent>
                     <div className="overflow-x-auto">
                         <Table>
-                            <TableHeader className="bg-neutral-50 font-black text-[10px] uppercase tracking-wider">
-                                <TableRow className="border-neutral-100">
-                                    <TableHead className="px-8">Date</TableHead>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
                                     <TableHead>Employee</TableHead>
                                     <TableHead>Total Amount</TableHead>
                                     <TableHead>Recovery Progress</TableHead>
-                                    <TableHead className="text-right px-8">Remaining</TableHead>
+                                    <TableHead className="text-right">Remaining</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {advancesQuery.isLoading ? (
-                                    [1, 2].map(i => <TableRow key={i} className="animate-pulse h-20" />)
+                                    [1, 2].map(i => <TableRow key={i} className="animate-pulse h-16" />)
                                 ) : advances.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-32 text-center text-neutral-400 font-medium italic">No active advances found.</TableCell>
+                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No active advances found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     advances.map((advance: any) => {
                                         const recovered = advance.totalAmount - advance.remainingAmount;
                                         const progress = (recovered / advance.totalAmount) * 100;
                                         return (
-                                            <TableRow key={advance.id} className="border-neutral-50 group hover:bg-neutral-50/50 transition-all">
-                                                <TableCell className="px-8 font-bold text-xs uppercase text-neutral-600">
+                                            <TableRow key={advance.id} className="hover:bg-muted/50">
+                                                <TableCell className="font-medium">
                                                     {format(new Date(advance.date), "MMM d, yyyy")}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col">
-                                                        <span className="font-black text-xs uppercase tracking-tight text-neutral-900">{advance.employee?.fullName}</span>
-                                                        <span className="text-[10px] font-mono text-neutral-400">EMP-{advance.employee?.employeeNo}</span>
+                                                        <span className="font-medium text-sm">{advance.employee?.fullName}</span>
+                                                        <span className="text-xs text-muted-foreground font-mono">EMP-{advance.employee?.employeeNo}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="font-bold text-xs">
+                                                <TableCell className="font-medium">
                                                     {advance.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                 </TableCell>
                                                 <TableCell className="w-[200px]">
                                                     <div className="flex flex-col gap-2">
-                                                        <Progress value={progress} className="h-1.5 bg-neutral-100" />
-                                                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-tighter text-neutral-400">
+                                                        <Progress value={progress} className="h-1.5" />
+                                                        <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase font-bold">
                                                             <span>{progress.toFixed(0)}% Recovered</span>
                                                             <span>{recovered.toLocaleString()} LKR</span>
                                                         </div>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right px-8">
-                                                    <span className="px-3 py-1 bg-orange-500 text-white rounded-lg font-black text-xs">
-                                                        {advance.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                    </span>
+                                                <TableCell className="text-right">
+                                                    {advance.remainingAmount > 0 ? (
+                                                        <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 border-orange-200">
+                                                            {advance.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                            Settled
+                                                        </Badge>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -86,37 +89,41 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
 
             {/* Quick Actions / Insights */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="rounded-3xl border-none shadow-sm p-8 bg-neutral-900 text-white">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="h-12 w-12 rounded-2xl bg-orange-500/20 flex items-center justify-center border border-orange-500/20">
-                            <IconCalendarRepeat className="h-6 w-6 text-orange-500" />
+                <Card className="bg-primary text-primary-foreground border-none shadow-md">
+                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                        <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                            <IconCalendarRepeat className="h-5 w-5" />
                         </div>
-                        <h3 className="text-lg font-black uppercase tracking-tighter">Next Cycle Recovery</h3>
-                    </div>
-                    <p className="text-neutral-400 text-sm font-medium mb-6">
-                        Estimated recovery for the upcoming pay cycle based on all active deduction schedules.
-                    </p>
-                    <div className="text-4xl font-black tracking-tighter mb-2">
-                        LKR {advances.reduce((sum: number, adv: any) => {
-                            const nextDeduction = adv.deductionSchedule.find((s: any) => !s.isDeducted);
-                            return sum + (nextDeduction?.amount || 0);
-                        }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </div>
-                    <Badge className="bg-orange-500/20 text-orange-500 border-none font-bold uppercase text-[9px]">
-                        Calculated from {advances.filter((adv: any) => adv.remainingAmount > 0).length} active advances
-                    </Badge>
+                        <CardTitle className="text-lg">Next Cycle Recovery</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-primary-foreground/80 text-sm mb-4">
+                            Estimated recovery for the upcoming pay cycle based on all active deduction schedules.
+                        </p>
+                        <div className="text-3xl font-black mb-2">
+                            LKR {advances.reduce((sum: number, adv: any) => {
+                                const nextDeduction = adv.deductionSchedule.find((s: any) => !s.isDeducted);
+                                return sum + (nextDeduction?.amount || 0);
+                            }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-xs font-bold uppercase opacity-80">
+                            From {advances.filter((adv: any) => adv.remainingAmount > 0).length} active advances
+                        </div>
+                    </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border border-neutral-200 dark:border-neutral-800 p-8 flex flex-col justify-center">
-                    <div className="flex items-start gap-4">
-                        <IconAlertCircle className="h-6 w-6 text-neutral-400 shrink-0 mt-1" />
+                <Card>
+                    <CardHeader className="flex flex-row items-start gap-4 pb-2">
+                        <IconAlertCircle className="h-5 w-5 text-muted-foreground mt-1" />
                         <div>
-                            <h3 className="font-black uppercase tracking-tight text-neutral-900 mb-2">Recovery Policy</h3>
-                            <p className="text-neutral-500 text-sm font-medium leading-relaxed">
-                                Advances are recovered automatically during salary generation based on the custom schedule defined at creation. Any remaining balance is displayed on the Salary record.
-                            </p>
+                            <CardTitle className="text-lg">Recovery Policy</CardTitle>
                         </div>
-                    </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                            Advances are recovered automatically during salary generation based on the custom schedule defined at creation. Any remaining balance is displayed on the Salary record.
+                        </p>
+                    </CardContent>
                 </Card>
             </div>
         </div>

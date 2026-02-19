@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { IconArrowRight, IconChecks, IconDeviceFloppy, IconChevronLeft, IconUsers, IconCalendarEvent, IconTable } from "@tabler/icons-react";
+import { IconArrowRight, IconChecks, IconDeviceFloppy, IconChevronLeft, IconUsers, IconCalendarEvent, IconTable, IconCalculator, IconCheck } from "@tabler/icons-react";
 import { useSalaries } from "@/hooks/use-salaries";
 import { useEmployees } from "@/hooks/use-employees";
 import { format } from "date-fns";
@@ -86,6 +86,14 @@ export function GenerateSalaryDialog({
         }
     };
 
+    const steps = [
+        { id: "PERIOD", icon: IconCalendarEvent, label: "Period" },
+        { id: "EMPLOYEES", icon: IconUsers, label: "Employees" },
+        { id: "PREVIEW", icon: IconTable, label: "Preview" },
+    ];
+
+    const currentStepIndex = steps.findIndex(s => s.id === step);
+
     return (
         <Dialog open={open} onOpenChange={(v) => {
             onOpenChange(v);
@@ -94,235 +102,225 @@ export function GenerateSalaryDialog({
                 setPreviewData([]);
             }
         }}>
-            <DialogContent className="sm:max-w-[90vw] lg:max-w-6xl w-full rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
-                <div className="flex flex-col md:flex-row min-h-[60vh] max-h-[90vh]">
-                    {/* Sidebar Steps */}
-                    <div className="md:w-80 w-full bg-neutral-900 p-10 flex flex-col gap-10 shrink-0">
-                        <div className="flex items-center gap-3 text-white mb-4">
-                            <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/20">
-                                <IconChecks className="h-6 w-6 text-primary" />
+            <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-5xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+                <DialogHeader className="p-6 pb-4 border-b shrink-0">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
+                                <IconCalculator className="h-5 w-5" />
                             </div>
-                            <h2 className="font-black uppercase tracking-tighter text-xl leading-none">Payroll<br />Wizard</h2>
-                        </div>
-
-                        <div className="space-y-4">
-                            {[
-                                { id: "PERIOD", icon: IconCalendarEvent, label: "Period" },
-                                { id: "EMPLOYEES", icon: IconUsers, label: "Employees" },
-                                { id: "PREVIEW", icon: IconTable, label: "Preview" },
-                            ].map((s, idx) => {
-                                const active = step === s.id;
-                                const done = idx < ["PERIOD", "EMPLOYEES", "PREVIEW"].indexOf(step);
-                                return (
-                                    <div key={s.id} className="flex items-center gap-4 group">
-                                        <div className={`h-10 w-10 rounded-2xl flex items-center justify-center transition-all ${active ? 'bg-primary shadow-2xl shadow-primary/60 scale-110' : done ? 'bg-green-500/20 text-green-500' : 'bg-neutral-800/50 text-neutral-600'}`}>
-                                            <s.icon className="h-5 w-5" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ${active ? 'text-primary' : 'text-neutral-600'}`}>Step {idx + 1}</span>
-                                            <span className={`text-xs font-black uppercase tracking-widest ${active ? 'text-white' : 'text-neutral-500'}`}>{s.label}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Main Content Area */}
-                    <div className="flex-1 bg-white flex flex-col h-full overflow-hidden">
-                        <DialogHeader className="p-10 pb-4 shrink-0">
-                            <div className="flex flex-col gap-1">
-                                <DialogTitle className="text-4xl font-black uppercase tracking-tighter text-neutral-900 leading-none">
-                                    {step === "PERIOD" && "Payroll Period"}
-                                    {step === "EMPLOYEES" && "Staff Selection"}
-                                    {step === "PREVIEW" && "Review Calculations"}
+                            <div>
+                                <DialogTitle className="text-xl font-bold tracking-tight">
+                                    Generate Salaries
                                 </DialogTitle>
-                                <DialogDescription className="text-[11px] font-black uppercase tracking-[0.15em] text-neutral-400">
-                                    {step === "PERIOD" && "Configure the time range for this payroll batch"}
-                                    {step === "EMPLOYEES" && `Choose which employees to include in this cycle`}
-                                    {step === "PREVIEW" && "Review the calculated net payouts for the selected staff"}
+                                <DialogDescription className="text-xs font-medium text-muted-foreground">
+                                    Follow the steps to generate salary slips for your employees.
                                 </DialogDescription>
                             </div>
-                        </DialogHeader>
-
-                        <div className="flex-1 overflow-y-auto p-8 scrollbar-hide">
-                            {step === "PERIOD" && (
-                                <div className="max-w-md mx-auto py-8 space-y-8">
-                                    <div className="p-8 bg-neutral-50 rounded-[2.5rem] border border-neutral-100 shadow-inner space-y-4">
-                                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 ml-1">Quick Select</label>
-                                        <SalaryPeriodQuickSelect
-                                            companyId={companyId}
-                                            onRangeSelect={(start, end) => setPeriod({ start, end })}
-                                            currentStart={period?.start}
-                                            currentEnd={period?.end}
-                                        />
-                                    </div>
-                                    {period && (
-                                        <div className="bg-primary p-8 rounded-[2.5rem] shadow-2xl shadow-primary/20 flex items-center justify-between text-white">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/60 mb-1">Involved Period</span>
-                                                <span className="font-black text-2xl tracking-tighter leading-none">
-                                                    {format(new Date(period.start), "MMM d")} - {format(new Date(period.end), "MMM d, yyyy")}
-                                                </span>
-                                            </div>
-                                            <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
-                                                <IconCalendarEvent className="text-white h-7 w-7" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {step === "EMPLOYEES" && (
-                                <Card className="border-none shadow-none">
-                                    <div className="flex items-center justify-between mb-4 px-2">
-                                        <div className="flex items-center gap-3">
-                                            <Checkbox checked={selectedEmployees.length === employees.length} onCheckedChange={selectAllEmployees} />
-                                            <span className="text-xs font-black uppercase tracking-tight">Select All ({employees.length})</span>
-                                        </div>
-                                        <Badge variant="outline" className="font-bold">{selectedEmployees.length} Selected</Badge>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {employees.map((employee: any) => (
-                                            <div
-                                                key={employee.id}
-                                                onClick={() => toggleEmployee(employee.id)}
-                                                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${selectedEmployees.includes(employee.id) ? 'bg-primary/5 border-primary/20' : 'bg-neutral-50 border-neutral-100 hover:border-neutral-200'}`}
-                                            >
-                                                <Checkbox checked={selectedEmployees.includes(employee.id)} />
-                                                <div className="flex flex-col">
-                                                    <span className="font-black text-xs uppercase text-neutral-900 leading-tight">{employee.fullName}</span>
-                                                    <span className="text-[10px] font-mono text-neutral-400">EMP-{employee.employeeNo}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </Card>
-                            )}
-
-                            {step === "PREVIEW" && (
-                                <div className="space-y-6">
-                                    <div className="overflow-x-auto rounded-3xl border border-neutral-100 shadow-sm">
-                                        <Table>
-                                            <TableHeader className="bg-neutral-50 font-black text-[10px] uppercase tracking-wider">
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableHead className="px-6">Employee</TableHead>
-                                                    <TableHead>Basic</TableHead>
-                                                    <TableHead>Additions</TableHead>
-                                                    <TableHead>OT</TableHead>
-                                                    <TableHead>No Pay</TableHead>
-                                                    <TableHead>Deductions</TableHead>
-                                                    <TableHead>Recovery</TableHead>
-                                                    <TableHead className="text-right whitespace-nowrap">Net Salary</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {previewData.map((row, idx) => {
-                                                    const adds = (row.components as any[]).filter(c => c.category === 'ADDITION').reduce((s, c) => s + c.amount, 0);
-                                                    const deds = (row.components as any[]).filter(c => c.category === 'DEDUCTION').reduce((s, c) => s + c.amount, 0);
-                                                    return (
-                                                        <TableRow
-                                                            key={idx}
-                                                            className="border-neutral-50 group hover:bg-neutral-50/50 cursor-pointer"
-                                                            onClick={() => setSelectedPreview(row)}
-                                                        >
-                                                            <TableCell className="px-6 py-4">
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-black text-xs uppercase text-neutral-800 leading-tight">{row.employeeName}</span>
-                                                                    <span className="text-[9px] font-mono font-bold text-neutral-400 mt-0.5">{row.employeeId.slice(0, 13).toUpperCase()}</span>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell className="font-bold text-xs">{row.basicSalary.toLocaleString()}</TableCell>
-                                                            <TableCell className="font-bold text-xs text-green-600">+{adds.toLocaleString()}</TableCell>
-                                                            <TableCell className="font-bold text-xs text-blue-600">+{row.otAmount.toLocaleString()}</TableCell>
-                                                            <TableCell className="font-bold text-xs text-red-600">-{row.noPayAmount.toLocaleString()}</TableCell>
-                                                            <TableCell className="font-bold text-xs text-red-600">-{deds.toLocaleString()}</TableCell>
-                                                            <TableCell className="font-bold text-xs text-orange-600">-{row.advanceDeduction.toLocaleString()}</TableCell>
-                                                            <TableCell className="text-right">
-                                                                <span className="px-3 py-1 bg-neutral-900 text-white rounded-lg font-black text-xs">
-                                                                    {row.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                                </span>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    );
-                                                })}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                    <div className="p-6 bg-neutral-900 rounded-[2rem] flex items-center justify-between shadow-xl shadow-neutral-900/20">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black uppercase text-neutral-500 mb-1">Batch Total (Net)</span>
-                                            <span className="text-3xl font-black text-white tracking-tighter">
-                                                LKR {previewData.reduce((s, r) => s + r.netSalary, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
-                                        </div>
-                                        <IconTable className="h-10 w-10 text-neutral-800" />
-                                    </div>
-                                </div>
-                            )}
                         </div>
-
-                        {/* Preview Details Dialog */}
-                        {selectedPreview && (
-                            <SalaryDetailsDialog
-                                open={!!selectedPreview}
-                                onOpenChange={(open) => !open && setSelectedPreview(null)}
-                                onSave={handleUpdatePreviewRow}
-                                salary={{
-                                    ...selectedPreview,
-                                    id: 'PREVIEW-' + selectedPreview.employeeId,
-                                    status: SalaryStatus.DRAFT,
-                                    payDate: new Date().toISOString(), // Mock
-                                    employee: {
-                                        fullName: selectedPreview.employeeName,
-                                        employeeNo: (employees as any[]).find(e => e.id === selectedPreview.employeeId)?.employeeNo || 0
-                                    }
-                                } as any}
-                            />
-                        )}
-
-                        <DialogFooter className="p-10 border-t border-neutral-100 gap-4 shrink-0 bg-neutral-50/50">
-                            {step !== "PERIOD" && (
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setStep(step === "EMPLOYEES" ? "PERIOD" : "EMPLOYEES")}
-                                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider"
-                                >
-                                    <IconChevronLeft className="mr-2 h-4 w-4" /> Back
-                                </Button>
-                            )}
-                            <div className="flex-1" />
-                            {step === "PERIOD" && (
-                                <Button
-                                    disabled={!period}
-                                    onClick={() => setStep("EMPLOYEES")}
-                                    className="rounded-2xl h-12 px-10 font-black text-xs uppercase tracking-wider shadow-lg shadow-primary/20"
-                                >
-                                    Select Employees <IconArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            )}
-                            {step === "EMPLOYEES" && (
-                                <Button
-                                    disabled={selectedEmployees.length === 0 || generatePreviewsMutation.isPending}
-                                    onClick={handleGeneratePreview}
-                                    className="rounded-2xl h-12 px-10 font-black text-xs uppercase tracking-wider shadow-lg shadow-primary/20"
-                                >
-                                    {generatePreviewsMutation.isPending ? "Calculating..." : "Generate Preview"} <IconArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            )}
-                            {step === "PREVIEW" && (
-                                <Button
-                                    disabled={saveDraftsMutation.isPending}
-                                    onClick={handleSaveDrafts}
-                                    className="rounded-2xl h-14 bg-primary px-12 font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/40 hover:scale-105 active:scale-[0.98] transition-all"
-                                >
-                                    <IconDeviceFloppy className="mr-3 h-5 w-5" />
-                                    {saveDraftsMutation.isPending ? "Saving..." : "Save Drafts"}
-                                </Button>
-                            )}
-                        </DialogFooter>
                     </div>
+
+                    {/* Stepper */}
+                    <div className="flex items-center justify-between px-4 sm:px-12 relative">
+                        <div className="absolute left-12 right-12 top-1/2 -translate-y-1/2 h-0.5 bg-muted -z-10" />
+                        {steps.map((s, idx) => {
+                            const active = step === s.id;
+                            const done = idx < currentStepIndex;
+                            return (
+                                <div key={s.id} className="flex flex-col items-center gap-2 bg-background px-2">
+                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-all ${active ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' :
+                                            done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                        }`}>
+                                        <s.icon className="h-4 w-4" />
+                                    </div>
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+                                        {s.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </DialogHeader>
+
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-muted/20">
+                    {step === "PERIOD" && (
+                        <div className="max-w-md mx-auto py-8">
+                            <Card className="p-6 space-y-6">
+                                <div className="space-y-2 text-center">
+                                    <h3 className="text-lg font-bold">Select Payroll Period</h3>
+                                    <p className="text-sm text-muted-foreground">Choose the date range for this salary batch.</p>
+                                </div>
+                                <SalaryPeriodQuickSelect
+                                    companyId={companyId}
+                                    onRangeSelect={(start, end) => setPeriod({ start, end })}
+                                    currentStart={period?.start}
+                                    currentEnd={period?.end}
+                                />
+                                {period && (
+                                    <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center justify-between">
+                                        <div>
+                                            <div className="text-xs text-muted-foreground font-bold uppercase">Selected Range</div>
+                                            <div className="font-bold text-lg text-primary">
+                                                {format(new Date(period.start), "MMM d")} - {format(new Date(period.end), "MMM d, yyyy")}
+                                            </div>
+                                        </div>
+                                        <IconCheck className="h-5 w-5 text-primary" />
+                                    </div>
+                                )}
+                            </Card>
+                        </div>
+                    )}
+
+                    {step === "EMPLOYEES" && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold">Select Employees</h3>
+                                <div className="flex items-center gap-2">
+                                    <Checkbox checked={selectedEmployees.length === employees.length} onCheckedChange={selectAllEmployees} id="select-all" />
+                                    <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">Select All ({employees.length})</label>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {employees.map((employee: any) => (
+                                    <div
+                                        key={employee.id}
+                                        onClick={() => toggleEmployee(employee.id)}
+                                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${selectedEmployees.includes(employee.id) ? 'bg-primary/5 border-primary/50 shadow-sm' : 'bg-background border-border hover:border-primary/30'}`}
+                                    >
+                                        <Checkbox checked={selectedEmployees.includes(employee.id)} />
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="font-bold text-sm truncate">{employee.fullName}</span>
+                                            <span className="text-xs text-muted-foreground font-mono">EMP-{employee.employeeNo}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {step === "PREVIEW" && (
+                        <div className="space-y-6">
+                            <Card className="overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Employee</TableHead>
+                                                <TableHead>Basic</TableHead>
+                                                <TableHead className="text-green-600">Additions</TableHead>
+                                                <TableHead className="text-blue-600">OT</TableHead>
+                                                <TableHead className="text-red-500">No Pay</TableHead>
+                                                <TableHead className="text-red-500">Deductions</TableHead>
+                                                <TableHead className="text-orange-500">Recovery</TableHead>
+                                                <TableHead className="text-right">Net Salary</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {previewData.map((row, idx) => {
+                                                const adds = (row.components as any[]).filter(c => c.category === 'ADDITION').reduce((s, c) => s + c.amount, 0);
+                                                const deds = (row.components as any[]).filter(c => c.category === 'DEDUCTION').reduce((s, c) => s + c.amount, 0);
+                                                return (
+                                                    <TableRow
+                                                        key={idx}
+                                                        className="cursor-pointer hover:bg-muted/50"
+                                                        onClick={() => setSelectedPreview(row)}
+                                                    >
+                                                        <TableCell>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-sm">{row.employeeName}</span>
+                                                                <span className="text-xs text-muted-foreground font-mono">{row.employeeId.slice(0, 8)}...</span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>{row.basicSalary.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-green-600">+{adds.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-blue-600">+{row.otAmount.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-red-500">-{row.noPayAmount.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-red-500">-{deds.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-orange-500">-{row.advanceDeduction.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-right font-bold">
+                                                            {row.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </Card>
+
+                            <div className="flex justify-end">
+                                <div className="bg-primary text-primary-foreground p-4 rounded-xl shadow-lg flex items-center gap-6">
+                                    <span className="text-xs font-bold uppercase opacity-80">Total Payable Amount</span>
+                                    <span className="text-2xl font-black">
+                                        LKR {previewData.reduce((s, r) => s + r.netSalary, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
+
+                {/* Preview Details Dialog */}
+                {selectedPreview && (
+                    <SalaryDetailsDialog
+                        open={!!selectedPreview}
+                        onOpenChange={(open) => !open && setSelectedPreview(null)}
+                        onSave={handleUpdatePreviewRow}
+                        salary={{
+                            ...selectedPreview,
+                            id: 'PREVIEW-' + selectedPreview.employeeId,
+                            status: SalaryStatus.DRAFT,
+                            payDate: new Date().toISOString(),
+                            employee: {
+                                fullName: selectedPreview.employeeName,
+                                employeeNo: (employees as any[]).find(e => e.id === selectedPreview.employeeId)?.employeeNo || 0
+                            }
+                        } as any}
+                    />
+                )}
+
+                <DialogFooter className="p-6 border-t shrink-0 bg-background">
+                    {step !== "PERIOD" && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setStep(step === "EMPLOYEES" ? "PERIOD" : "EMPLOYEES")}
+                            className="mr-auto"
+                        >
+                            <IconChevronLeft className="mr-2 h-4 w-4" /> Back
+                        </Button>
+                    )}
+
+                    {step === "PERIOD" && (
+                        <Button
+                            disabled={!period}
+                            onClick={() => setStep("EMPLOYEES")}
+                            className="w-full md:w-auto"
+                        >
+                            Next: Select Employees <IconArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+
+                    {step === "EMPLOYEES" && (
+                        <Button
+                            disabled={selectedEmployees.length === 0 || generatePreviewsMutation.isPending}
+                            onClick={handleGeneratePreview}
+                            className="w-full md:w-auto"
+                        >
+                            {generatePreviewsMutation.isPending ? "Calculating..." : "Generate Preview"} <IconArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+
+                    {step === "PREVIEW" && (
+                        <Button
+                            disabled={saveDraftsMutation.isPending}
+                            onClick={handleSaveDrafts}
+                            className="w-full md:w-auto shadow-lg shadow-primary/20"
+                        >
+                            <IconDeviceFloppy className="mr-2 h-4 w-4" />
+                            {saveDraftsMutation.isPending ? "Saving..." : "Save Payroll Drafts"}
+                        </Button>
+                    )}
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
