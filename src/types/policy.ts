@@ -9,7 +9,7 @@ export enum ShiftSelectionPolicy {
 export enum PayrollComponentType {
     FLAT_AMOUNT = 'FLAT_AMOUNT',
     PERCENTAGE_BASIC = 'PERCENTAGE_BASIC',
-    PERCENTAGE_GROSS = 'PERCENTAGE_GROSS',
+    PERCENTAGE_TOTAL_EARNINGS = 'PERCENTAGE_TOTAL_EARNINGS',
 }
 
 export enum PayrollComponentCategory {

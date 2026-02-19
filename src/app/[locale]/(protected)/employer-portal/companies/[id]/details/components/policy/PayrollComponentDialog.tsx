@@ -110,7 +110,7 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                         <SelectContent className="rounded-xl">
                                             <SelectItem value={PayrollComponentType.FLAT_AMOUNT}>Fixed Amount (Flat)</SelectItem>
                                             <SelectItem value={PayrollComponentType.PERCENTAGE_BASIC}>% of Basic Salary</SelectItem>
-                                            <SelectItem value={PayrollComponentType.PERCENTAGE_GROSS}>% of Gross Earnings</SelectItem>
+                                            <SelectItem value={PayrollComponentType.PERCENTAGE_TOTAL_EARNINGS}>% of Total Earnings</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
