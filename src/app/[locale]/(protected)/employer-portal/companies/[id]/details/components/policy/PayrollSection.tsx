@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { SalaryComponentsConfig, PayrollComponent, PayrollComponentCategory, PayrollComponentType } from "@/types/policy";
+import { SalaryComponentsConfig, PayrollComponent, PayrollComponentCategory, PayrollComponentType, PayrollComponentSystemType } from "@/types/policy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconPlus, IconPencil, IconTrash, IconTrendingUp, IconTrendingDown, IconPercentage, IconCoin } from "@tabler/icons-react";
@@ -81,7 +81,9 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                                 ? `Fixed Amount`
                                 : comp.type === PayrollComponentType.PERCENTAGE_BASIC
                                     ? `% of Basic Salary`
-                                    : `% of Gross Salary`}
+                                    : (comp.systemType && comp.systemType !== PayrollComponentSystemType.NONE)
+                                        ? `System Calculated`
+                                        : `% of Total Earnings`}
                         </p>
                     </div>
                 </div>

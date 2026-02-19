@@ -17,6 +17,15 @@ export enum PayrollComponentCategory {
     DEDUCTION = 'DEDUCTION'
 }
 
+export enum PayrollComponentSystemType {
+    NONE = 'NONE',
+    EPF_EMPLOYEE = 'EPF_EMPLOYEE',
+    EPF_EMPLOYER = 'EPF_EMPLOYER',
+    ETF_EMPLOYER = 'ETF_EMPLOYER',
+    HOLIDAY_PAY = 'HOLIDAY_PAY',
+    NO_PAY_DEDUCTION = 'NO_PAY_DEDUCTION'
+}
+
 export enum EmploymentType {
     PROBATION = 'PROBATION',
     CONTRACT = 'CONTRACT',
@@ -95,6 +104,7 @@ export interface PayrollComponent {
     affectsTotalEarnings?: boolean;
     minCap?: number;
     maxCap?: number;
+    systemType?: PayrollComponentSystemType;
 }
 
 export interface SalaryComponentsConfig {

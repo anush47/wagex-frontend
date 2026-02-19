@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PayrollComponent, PayrollComponentCategory, PayrollComponentType } from "@/types/policy";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
+import { PayrollComponent, PayrollComponentCategory, PayrollComponentType, PayrollComponentSystemType } from "@/types/policy";
 import { IconCoin, IconCalculator, IconScale, IconShieldCheck, IconSettings } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
@@ -44,8 +44,42 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
         }
     }, [open, initialData, category]);
 
-    const handleChange = (field: keyof PayrollComponent, value: any) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const handleChange = (field: keyof PayrollComponent | 'template', value: any) => {
+        if (field === 'template') {
+            // Handle Template Selection
+            if (value === 'TEMPLATE_EPF_8') {
+                setFormData(prev => ({
+                    ...prev,
+                    name: "EPF (Employee Share)",
+                    type: PayrollComponentType.PERCENTAGE_TOTAL_EARNINGS,
+                    value: 8,
+                    isStatutory: true,
+                    systemType: PayrollComponentSystemType.EPF_EMPLOYEE
+                }));
+            } else if (value === 'TEMPLATE_HOLIDAY_PAY') {
+                setFormData(prev => ({
+                    ...prev,
+                    name: "Holiday Pay",
+                    type: PayrollComponentType.FLAT_AMOUNT, // Actually system calculated, but we use flat as placeholder
+                    value: 0,
+                    isStatutory: true,
+                    affectsTotalEarnings: true,
+                    systemType: PayrollComponentSystemType.HOLIDAY_PAY
+                }));
+            } else if (value === 'TEMPLATE_NO_PAY') {
+                setFormData(prev => ({
+                    ...prev,
+                    name: "No-Pay Deduction",
+                    type: PayrollComponentType.FLAT_AMOUNT, // System calculated
+                    value: 0,
+                    isStatutory: false,
+                    affectsTotalEarnings: true,
+                    systemType: PayrollComponentSystemType.NO_PAY_DEDUCTION
+                }));
+            }
+        } else {
+            setFormData(prev => ({ ...prev, [field]: value }));
+        }
     };
 
     const handleSave = () => {
@@ -57,6 +91,18 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
     const isAddition = category === PayrollComponentCategory.ADDITION;
     const accentColor = isAddition ? "text-emerald-600" : "text-rose-600";
     const accentBg = isAddition ? "bg-emerald-500/10" : "bg-rose-500/10";
+
+    // Determine the value to show in the Select component
+    let selectValue = formData.type as string;
+    if (formData.systemType === PayrollComponentSystemType.EPF_EMPLOYEE) {
+        selectValue = 'TEMPLATE_EPF_8';
+    } else if (formData.systemType === PayrollComponentSystemType.HOLIDAY_PAY) {
+        selectValue = 'TEMPLATE_HOLIDAY_PAY';
+    } else if (formData.systemType === PayrollComponentSystemType.NO_PAY_DEDUCTION) {
+        selectValue = 'TEMPLATE_NO_PAY';
+    }
+
+    const isSystemCalculated = formData.systemType && formData.systemType !== PayrollComponentSystemType.NONE;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,8 +147,14 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-bold text-neutral-600 ml-1">Computational Basis</Label>
                                     <Select
-                                        value={formData.type}
-                                        onValueChange={(v) => handleChange("type", v as PayrollComponentType)}
+                                        value={selectValue}
+                                        onValueChange={(v) => {
+                                            if (v.startsWith('TEMPLATE_')) {
+                                                handleChange('template', v);
+                                            } else {
+                                                handleChange("type", v as PayrollComponentType);
+                                            }
+                                        }}
                                     >
                                         <SelectTrigger className="h-11 bg-background border-none rounded-xl font-bold px-4 shadow-sm">
                                             <SelectValue />
@@ -111,25 +163,47 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                             <SelectItem value={PayrollComponentType.FLAT_AMOUNT}>Fixed Amount (Flat)</SelectItem>
                                             <SelectItem value={PayrollComponentType.PERCENTAGE_BASIC}>% of Basic Salary</SelectItem>
                                             <SelectItem value={PayrollComponentType.PERCENTAGE_TOTAL_EARNINGS}>% of Total Earnings</SelectItem>
+
+                                            <SelectGroup>
+                                                <SelectLabel className="text-[10px] font-black uppercase text-muted-foreground pl-3 py-1">System Templates</SelectLabel>
+                                                {category === PayrollComponentCategory.DEDUCTION && (
+                                                    <>
+                                                        <SelectItem value="TEMPLATE_EPF_8">EPF 8% (Employee Share)</SelectItem>
+                                                        <SelectItem value="TEMPLATE_NO_PAY">No-Pay Deduction (System Calculated)</SelectItem>
+                                                    </>
+                                                )}
+                                                {category === PayrollComponentCategory.ADDITION && (
+                                                    <SelectItem value="TEMPLATE_HOLIDAY_PAY">Holiday Pay (System Calculated)</SelectItem>
+                                                )}
+                                            </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-bold text-neutral-600 ml-1">
-                                        {formData.type === PayrollComponentType.FLAT_AMOUNT ? "Base Amount (LKR)" : "Percentage Value (%)"}
+                                        {isSystemCalculated ? "Default Value / Rate" : (formData.type === PayrollComponentType.FLAT_AMOUNT ? "Base Amount (LKR)" : "Percentage Value (%)")}
                                     </Label>
                                     <div className="relative">
                                         <Input
                                             type="number"
                                             value={formData.value}
+                                            disabled={selectValue === 'TEMPLATE_HOLIDAY_PAY' || selectValue === 'TEMPLATE_NO_PAY'}
                                             onChange={(e) => handleChange("value", parseFloat(e.target.value) || 0)}
-                                            className="h-11 bg-background border-none rounded-xl font-black px-4 shadow-sm"
+                                            className={cn(
+                                                "h-11 bg-background border-none rounded-xl font-black px-4 shadow-sm",
+                                                (selectValue === 'TEMPLATE_HOLIDAY_PAY' || selectValue === 'TEMPLATE_NO_PAY') && "opacity-50"
+                                            )}
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">
                                             {formData.type === PayrollComponentType.FLAT_AMOUNT ? "LKR" : "%"}
                                         </span>
                                     </div>
+                                    {(selectValue === 'TEMPLATE_HOLIDAY_PAY' || selectValue === 'TEMPLATE_NO_PAY') && (
+                                        <p className="text-[10px] text-muted-foreground font-medium ml-1">
+                                            Calculated automatically based on attendance records.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
