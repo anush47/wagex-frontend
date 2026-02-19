@@ -27,7 +27,8 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
             setEditingLeave({
                 ...initialData,
                 isHolidayReplacement: initialData.isHolidayReplacement ?? false,
-                earnedOnHolidayCategories: initialData.earnedOnHolidayCategories ?? []
+                earnedOnHolidayCategories: initialData.earnedOnHolidayCategories ?? [],
+                isPaid: initialData.isPaid ?? true,
             });
         }
     }, [open, initialData]);
@@ -261,6 +262,19 @@ export function LeaveEditDialog({ open, onOpenChange, initialData, onSave }: Lea
                             </div>
 
                             <div className="space-y-4">
+                                <div className="flex items-center justify-between p-3.5 bg-background rounded-xl shadow-sm border border-transparent">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <Label className="text-sm font-bold block">Paid Leave</Label>
+                                            {!editingLeave.isPaid && <Badge variant="destructive" className="h-4 px-1 text-[9px] uppercase font-black">Unpaid</Badge>}
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">Determines if salary is deducted for this leave.</p>
+                                    </div>
+                                    <Switch
+                                        checked={editingLeave.isPaid !== false} // Default true
+                                        onCheckedChange={v => updateField('isPaid', v)}
+                                    />
+                                </div>
                                 <div className="flex items-center justify-between p-3.5 bg-background rounded-xl shadow-sm border border-transparent">
                                     <div className="space-y-0.5">
                                         <Label className="text-sm font-bold block">Manual Approval Required</Label>

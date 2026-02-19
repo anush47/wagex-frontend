@@ -186,6 +186,11 @@ export function CreateLeaveRequestForm({
                                                 {selectedLeaveType.code}
                                             </Badge>
                                         )}
+                                        {!selectedLeaveType.isPaid && (
+                                            <Badge variant="destructive" className="text-[9px] font-black uppercase tracking-wider py-0 px-1.5 h-4 ml-1">
+                                                Unpaid
+                                            </Badge>
+                                        )}
                                     </div>
                                 )}
                             </SelectValue>
@@ -210,6 +215,11 @@ export function CreateLeaveRequestForm({
                                                     <Badge variant="outline" className="text-[9px] font-mono font-black">
                                                         {lt.code}
                                                     </Badge>
+                                                    {!lt.isPaid && (
+                                                        <Badge variant="destructive" className="text-[9px] font-black uppercase tracking-wider py-0 px-1.5 h-4">
+                                                            Unpaid
+                                                        </Badge>
+                                                    )}
                                                 </div>
                                                 {balance && (
                                                     <span className="text-xs font-medium text-muted-foreground">

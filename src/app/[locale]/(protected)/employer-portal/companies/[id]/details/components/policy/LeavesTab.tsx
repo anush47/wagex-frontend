@@ -23,6 +23,7 @@ const DEFAULT_LEAVE: LeaveType = {
     applicableEmploymentTypes: [EmploymentType.PERMANENT],
     requiresApproval: true,
     isShortLeave: false,
+    isPaid: true,
     baseAmount: 14,
     accrualFrequency: AccrualFrequency.YEARLY,
     accrualMethod: AccrualMethod.PRO_RATA,
@@ -118,6 +119,7 @@ export function LeavesTab({ value, onChange }: LeavesTabProps) {
                                         <div>
                                             <h4 className="font-bold text-sm tracking-tight">{leave.name}</h4>
                                             {leave.isShortLeave && <span className="text-[8px] font-black uppercase text-amber-600 bg-amber-500/10 px-1 py-0.5 rounded">Short Leave</span>}
+                                            {leave.isPaid === false && <span className="text-[8px] font-black uppercase text-rose-600 bg-rose-500/10 px-1 py-0.5 rounded ml-1">Unpaid</span>}
                                         </div>
                                     </div>
 

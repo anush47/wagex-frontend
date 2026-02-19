@@ -244,6 +244,9 @@ export interface LeaveType {
     isShortLeave: boolean;
     maxDurationMinutes?: number;
 
+    // Payment Status
+    isPaid: boolean;
+
     // Accrual
     baseAmount: number;
     accrualFrequency: AccrualFrequency;
