@@ -16,13 +16,14 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { IconCalendarStats, IconCheck, IconChevronDown } from "@tabler/icons-react";
-import { useCompanyPolicy } from "@/hooks/use-policies";
-import { format, subMonths, startOfMonth, endOfMonth, setDate, addDays, getYear, isSameMonth } from "date-fns";
-import { PayCycleFrequency } from "@/types/policy";
+import { useCompanyPolicy, useEffectivePolicy } from "@/hooks/use-policies";
+import { format, subMonths, startOfMonth, endOfMonth, setDate, addDays, getYear, isSameMonth, subWeeks, startOfWeek, endOfWeek, isWithinInterval, getDate } from "date-fns";
+import { PayCycleFrequency, Policy } from "@/types/policy";
 import { cn } from "@/lib/utils";
 
 interface SalaryPeriodQuickSelectProps {
     companyId: string;
+    employeeId?: string | null;
     onRangeSelect: (start: string, end: string) => void;
     currentStart?: string;
     currentEnd?: string;
@@ -30,90 +31,172 @@ interface SalaryPeriodQuickSelectProps {
 
 export function SalaryPeriodQuickSelect({
     companyId,
+    employeeId,
     onRangeSelect,
     currentStart,
     currentEnd
 }: SalaryPeriodQuickSelectProps) {
     const [open, setOpen] = useState(false);
-    const { data: policy, isLoading } = useCompanyPolicy(companyId);
+    const { data: defaultPolicy, isLoading: isLoadingDefault } = useCompanyPolicy(companyId);
+    const { data: effectiveData, isLoading: isLoadingEffective } = useEffectivePolicy(employeeId || null);
 
+    const isLoading = isLoadingDefault || (!!employeeId && isLoadingEffective);
+    const policy = employeeId ? (effectiveData?.effective as unknown as Policy) : defaultPolicy;
     const payrollConfig = policy?.settings?.payrollConfiguration;
 
     const periods = useMemo(() => {
-        if (!payrollConfig || payrollConfig.frequency !== PayCycleFrequency.MONTHLY) {
-            return [];
-        }
+        if (!payrollConfig) return [];
 
-        const { runDay } = payrollConfig;
-        const day = parseInt(runDay) || 0;
         const today = new Date();
         const result = [];
+        const frequency = payrollConfig.frequency;
 
-        // Helper to determine the period for a given date based on runDay
-        const getPeriodForDate = (referenceDate: Date) => {
-            let start: Date;
-            let end: Date;
+        if (frequency === PayCycleFrequency.MONTHLY) {
+            const { runDay } = payrollConfig;
+            const day = parseInt(runDay) || 0;
 
-            if (day === 0 || day >= 28) {
-                // Full month mechanism (e.g. 1st to 30th/31st)
-                start = startOfMonth(referenceDate);
-                end = endOfMonth(referenceDate);
-            } else {
-                // Split month mechanism (e.g. 26th to 25th)
-                // If runDay is 25, the period for "Jan" ends ends on Jan 25.
-                // It starts Dec 26.
+            // Helper to determine the period for a given date based on runDay
+            const getPeriodForDate = (referenceDate: Date) => {
+                let start: Date;
+                let end: Date;
 
-                // We define the period by its END date's month.
-                // So if we are looking at "referenceDate", we calculate the period that ends in referenceDate's month.
+                if (day === 0 || day >= 28) {
+                    // Full month mechanism (e.g. 1st to 30th/31st)
+                    start = startOfMonth(referenceDate);
+                    end = endOfMonth(referenceDate);
+                } else {
+                    // Split month mechanism (e.g. 26th to 25th)
+                    // If runDay is 25, the period for "Jan" ends ends on Jan 25.
+                    // It starts Dec 26.
 
-                end = setDate(referenceDate, day);
-                // Start is previous month's day + 1
-                const prevMonth = subMonths(referenceDate, 1);
-                start = addDays(setDate(prevMonth, day), 1);
-            }
+                    // We define the period by its END date's month.
+                    // So if we are looking at "referenceDate", we calculate the period that ends in referenceDate's month.
 
-            return {
-                start: format(start, "yyyy-MM-dd"),
-                end: format(end, "yyyy-MM-dd"),
-                label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
-                monthLabel: format(end, "MMMM"),
-                year: getYear(end),
-                endObj: end
+                    end = setDate(referenceDate, day);
+                    // Start is previous month's day + 1
+                    const prevMonth = subMonths(referenceDate, 1);
+                    start = addDays(setDate(prevMonth, day), 1);
+                }
+
+                return {
+                    start: format(start, "yyyy-MM-dd"),
+                    end: format(end, "yyyy-MM-dd"),
+                    label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
+                    monthLabel: format(end, "MMMM"),
+                    year: getYear(end),
+                    endObj: end
+                };
             };
-        };
 
-        // Generate periods:
-        // -2: 2 months in future
-        // -1: 1 month in future
-        // 0: Current month
-        // 1...60: Past months
-        for (let i = -2; i < 60; i++) {
-            const periodDate = subMonths(today, i);
-            const periodData = getPeriodForDate(periodDate);
+            // Generate periods:
+            // -2: 2 months in future
+            // -1: 1 month in future
+            // 0: Current month
+            // 1...60: Past months
+            for (let i = -2; i < 60; i++) {
+                const periodDate = subMonths(today, i);
+                const periodData = getPeriodForDate(periodDate);
 
-            let status = "past";
-            // Check if this period is the "current" one based solely on today's date
-            // For split periods (e.g. 25th), if today is 26th, we are in next month's period.
-            // But iteration based on 'Reference Date' (Month) is stable. 
-            // i=0 is "This Month's Period". 
-            // If today is Jan 26, and runDay is 25. "This Month" (Jan) period ended Jan 25. So it's technically past/closed.
-            // The "Active" period is Feb (Jan 26 - Feb 25).
+                let status = "past";
+                // Check if this period is the "current" one based solely on today's date
+                // For split periods (e.g. 25th), if today is 26th, we are in next month's period.
+                // But iteration based on 'Reference Date' (Month) is stable. 
+                // i=0 is "This Month's Period". 
+                // If today is Jan 26, and runDay is 25. "This Month" (Jan) period ended Jan 25. So it's technically past/closed.
+                // The "Active" period is Feb (Jan 26 - Feb 25).
 
-            // Let's rely on date comparison for "Current" status
-            if (i < 0) status = "upcoming";
-            else if (i === 0) status = "current";
+                // Let's rely on date comparison for "Current" status
+                if (isWithinInterval(today, { start: new Date(periodData.start), end: new Date(periodData.end) })) {
+                    status = "current";
+                } else if (new Date(periodData.start) > today) {
+                    status = "upcoming";
+                }
 
-            // Refined status logic:
-            // If today is within start and end?
-            // Actually, for generation, "Current" usually means the one matching today's month, or the active pay cycle.
-            // Simple mapping for now: i=0 is "Current Month"
 
-            result.push({
-                ...periodData,
-                key: `${periodData.start}_${periodData.end}`,
-                status,
-                fullLabel: `${periodData.monthLabel} ${periodData.year} ${periodData.label}`
-            });
+                result.push({
+                    ...periodData,
+                    key: `${periodData.start}_${periodData.end}`,
+                    status,
+                    fullLabel: `${periodData.monthLabel} ${periodData.year} ${periodData.label}`
+                });
+            }
+        } else if (frequency === PayCycleFrequency.WEEKLY || frequency === PayCycleFrequency.BI_WEEKLY) {
+            const step = frequency === PayCycleFrequency.WEEKLY ? 1 : 2;
+            const periodCount = frequency === PayCycleFrequency.WEEKLY ? 52 : 26;
+
+            for (let i = -2; i < periodCount; i++) {
+                const refDate = subWeeks(today, i * step);
+                const start = startOfWeek(refDate);
+                const end = endOfWeek(refDate);
+
+                let status = "past";
+                if (isWithinInterval(today, { start, end })) {
+                    status = "current";
+                } else if (start > today) {
+                    status = "upcoming";
+                }
+
+                result.push({
+                    start: format(start, "yyyy-MM-dd"),
+                    end: format(end, "yyyy-MM-dd"),
+                    label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
+                    monthLabel: format(end, "MMM"),
+                    year: getYear(end),
+                    endObj: end,
+                    key: `${format(start, "yyyy-MM-dd")}_${format(end, "yyyy-MM-dd")}`,
+                    status,
+                    fullLabel: `${format(end, "MMM")} Week ${Math.ceil(getDate(end) / 7)} ${getYear(end)}`
+                });
+            }
+        } else if (frequency === PayCycleFrequency.SEMI_MONTHLY) {
+            const periodsToGenerate = 24; // Generate periods for 1 year (24 halves) + 2 upcoming
+            const generatedPeriods: any[] = [];
+
+            for (let m = -2; m < periodsToGenerate / 2; m++) { // Iterate through months
+                const refMonth = subMonths(today, m);
+
+                // First half (1st to 15th)
+                const s1 = startOfMonth(refMonth);
+                const e1 = setDate(refMonth, 15);
+
+                // Second half (16th to End)
+                const s2 = setDate(refMonth, 16);
+                const e2 = endOfMonth(refMonth);
+
+                // Add periods in chronological order (first half then second half)
+                // For past periods, we want to show them in reverse chronological order (most recent first)
+                // For upcoming, we want to show them in chronological order
+                const currentMonthPeriods = [
+                    { start: s1, end: e1, labelSuffix: "H1" },
+                    { start: s2, end: e2, labelSuffix: "H2" }
+                ];
+
+                currentMonthPeriods.forEach(p => {
+                    let status = "past";
+                    if (isWithinInterval(today, { start: p.start, end: p.end })) {
+                        status = "current";
+                    } else if (p.start > today) {
+                        status = "upcoming";
+                    }
+
+                    generatedPeriods.push({
+                        start: format(p.start, "yyyy-MM-dd"),
+                        end: format(p.end, "yyyy-MM-dd"),
+                        label: `${format(p.start, "MMM d")} - ${format(p.end, "MMM d, yyyy")}`,
+                        monthLabel: format(p.end, "MMMM"),
+                        year: getYear(p.end),
+                        endObj: p.end,
+                        key: `${format(p.start, "yyyy-MM-dd")}_${format(p.end, "yyyy-MM-dd")}`,
+                        status,
+                        fullLabel: `${format(p.end, "MMMM")} ${p.labelSuffix} ${getYear(p.end)}`
+                    });
+                });
+            }
+            // Sort periods to ensure correct chronological order for display, especially for upcoming/current
+            // and reverse chronological for past.
+            // A simpler approach for generation is to generate all, then sort.
+            // For now, let's just push and rely on the status filtering later.
+            result.push(...generatedPeriods.sort((a, b) => b.endObj.getTime() - a.endObj.getTime()));
         }
 
         return result;

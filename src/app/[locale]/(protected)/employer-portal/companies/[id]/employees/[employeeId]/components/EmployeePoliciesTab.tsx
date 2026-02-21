@@ -119,6 +119,34 @@ export function EmployeePoliciesTab({
         return tabs;
     }, [policies, selectedPolicyId, selectedPolicy]);
 
+    if (policiesLoading) {
+        return (
+            <div className="space-y-10 animate-pulse">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-[1.5rem] bg-neutral-200 dark:bg-neutral-800" />
+                        <div className="space-y-2">
+                            <div className="h-4 w-40 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                            <div className="h-3 w-32 bg-neutral-100 dark:bg-neutral-900 rounded" />
+                        </div>
+                    </div>
+                    <div className="h-12 w-[240px] bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                </div>
+
+                <div className="h-24 w-full bg-neutral-50 dark:bg-neutral-900/50 rounded-[2rem] border border-neutral-100 dark:border-neutral-800" />
+
+                <div className="space-y-10">
+                    <div className="flex gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-4">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <div key={i} className="h-10 w-24 bg-neutral-100 dark:bg-neutral-900 rounded-lg" />
+                        ))}
+                    </div>
+                    <div className="h-[500px] w-full bg-neutral-50/50 dark:bg-neutral-950/20 rounded-[2rem]" />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

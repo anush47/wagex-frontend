@@ -220,6 +220,7 @@ export function AttendanceSessionsTab({
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 pt-2 border-t border-border">
                             <SalaryPeriodQuickSelect
                                 companyId={companyId}
+                                employeeId={employeeFilter}
                                 onRangeSelect={(start, end) => onFilterChange?.({ startDate: start, endDate: end })}
                                 currentStart={startDate || initialDate}
                                 currentEnd={endDate || initialDate}

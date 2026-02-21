@@ -162,6 +162,7 @@ export function PoliciesManagement({ companyId }: PoliciesManagementProps) {
         if (!selectedPolicy || !editingSettings) return false;
         return JSON.stringify(selectedPolicy.settings) !== JSON.stringify(editingSettings) ||
             selectedPolicy.name !== editingMeta.name ||
+            (selectedPolicy.description || "") !== editingMeta.description ||
             selectedPolicy.isDefault !== editingMeta.isDefault;
     }, [selectedPolicy, editingSettings, editingMeta]);
 
@@ -169,7 +170,38 @@ export function PoliciesManagement({ companyId }: PoliciesManagementProps) {
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (isLoading) return <div>Loading policies...</div>;
+    if (isLoading) {
+        return (
+            <div className="space-y-8 animate-pulse">
+                {/* Header Selector Skeleton */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-center gap-6 flex-1">
+                        <div className="h-14 w-14 rounded-2xl bg-neutral-200 dark:bg-neutral-800" />
+                        <div className="flex-1 max-w-md space-y-2">
+                            <div className="h-3 w-20 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                            <div className="h-12 w-full bg-neutral-200 dark:bg-neutral-800 rounded-2xl" />
+                        </div>
+                    </div>
+                    <div className="h-12 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-2xl" />
+                </div>
+
+                {/* Tabs Skeleton */}
+                <div className="space-y-6">
+                    <div className="flex gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-4">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <div key={i} className="h-10 w-24 bg-neutral-100 dark:bg-neutral-900 rounded-lg" />
+                        ))}
+                    </div>
+
+                    {/* Content Skeleton */}
+                    <div className="space-y-8">
+                        <div className="h-64 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[2.5rem]" />
+                        <div className="h-48 w-full bg-neutral-100 dark:bg-neutral-900 rounded-[2.5rem]" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
