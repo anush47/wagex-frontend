@@ -21,13 +21,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconCheck, IconX, IconRefresh, IconTrash, IconFileText, IconPaperclip } from "@tabler/icons-react";
+import { IconCheck, IconX, IconRefresh, IconTrash, IconFileText, IconPaperclip, IconFilter } from "@tabler/icons-react";
 import type { LeaveRequest, LeaveStatus } from "@/types/leave";
 import type { Employee } from "@/types/employee";
 import { useLeaveRequests, useLeaveMutations } from "@/hooks/use-leaves";
 import { useCompanyPolicy } from "@/hooks/use-policies";
 import { useAuth } from "@/hooks/useAuth";
 import { LeaveRequestDetailsDialog } from "./LeaveRequestDetailsDialog";
+import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format, isSameDay } from "date-fns";
 import { toast } from "sonner";
@@ -41,6 +42,9 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
     const { user } = useAuth();
     const [statusFilter, setStatusFilter] = useState<LeaveStatus | "ALL">("ALL");
     const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
+    const [startDate, setStartDate] = useState<string | undefined>(undefined);
+    const [endDate, setEndDate] = useState<string | undefined>(undefined);
+    const [showFilters, setShowFilters] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -52,7 +56,9 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
         refetch: fetchRequests
     } = useLeaveRequests(companyId, {
         status: statusFilter === "ALL" ? undefined : statusFilter,
-        employeeId: employeeFilter
+        employeeId: employeeFilter,
+        startDate,
+        endDate
     });
 
     const { approveRequest, rejectRequest, deleteRequest } = useLeaveMutations();
@@ -151,8 +157,55 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                 <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <CardTitle>Leave Requests</CardTitle>
-                        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
-                            <div className="w-[200px]">
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className="rounded-xl h-9"
+                            >
+                                <IconFilter className="h-4 w-4 mr-2" />
+                                Filters
+                            </Button>
+                            <Button variant="outline" size="icon" onClick={() => fetchRequests()} disabled={loading} className="rounded-xl shadow-sm h-9 w-9">
+                                <IconRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            </Button>
+                        </div>
+                    </div>
+                    {showFilters && (
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 pt-2 border-t border-border mt-2">
+                            <SalaryPeriodQuickSelect
+                                companyId={companyId}
+                                onRangeSelect={(start, end) => {
+                                    setStartDate(start);
+                                    setEndDate(end);
+                                }}
+                                currentStart={startDate}
+                                currentEnd={endDate}
+                            />
+                            <div className="flex items-center gap-2 p-1 bg-neutral-100/50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200/50 dark:border-neutral-700/50 shadow-inner">
+                                <div className="flex items-center gap-1.5 px-2">
+                                    <span className="text-[10px] font-black uppercase text-neutral-400">From</span>
+                                    <input
+                                        type="date"
+                                        value={startDate || ""}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[110px]"
+                                    />
+                                </div>
+                                <div className="h-4 w-[1px] bg-neutral-200 dark:bg-neutral-700" />
+                                <div className="flex items-center gap-1.5 px-2">
+                                    <span className="text-[10px] font-black uppercase text-neutral-400">To</span>
+                                    <input
+                                        type="date"
+                                        value={endDate || ""}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[110px]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="w-full md:w-[200px]">
                                 <SearchableEmployeeSelect
                                     companyId={companyId}
                                     value={employeeFilter || undefined} // Pass undefined for "All"
@@ -160,19 +213,9 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                     placeholder="Filter by employee"
                                 />
                             </div>
-                            {employeeFilter && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setEmployeeFilter(undefined)}
-                                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                                    title="Clear employee filter"
-                                >
-                                    <IconX className="h-4 w-4" />
-                                </Button>
-                            )}
+
                             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeaveStatus | "ALL")}>
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-[180px] rounded-xl h-9">
                                     <SelectValue placeholder="Filter by status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -183,11 +226,25 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                     <SelectItem value="CANCELLED">Cancelled</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" size="icon" onClick={() => fetchRequests()} disabled={loading}>
-                                <IconRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                            </Button>
+
+                            {(employeeFilter || statusFilter !== "ALL" || startDate || endDate) && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                        setEmployeeFilter(undefined);
+                                        setStatusFilter("ALL");
+                                        setStartDate(undefined);
+                                        setEndDate(undefined);
+                                    }}
+                                    className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0"
+                                    title="Clear all filters"
+                                >
+                                    <IconX className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
-                    </div>
+                    )}
                 </CardHeader>
                 <CardContent>
                     {loading && requests.length === 0 ? (

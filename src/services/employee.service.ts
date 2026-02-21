@@ -28,6 +28,9 @@ export const EmployeeService = {
         const params = new URLSearchParams();
         Object.entries(query).forEach(([key, value]) => {
             if (value !== undefined) {
+                if (key === 'status' && value === 'ALL') {
+                    return;
+                }
                 params.append(key, value.toString());
             }
         });

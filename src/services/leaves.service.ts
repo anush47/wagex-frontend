@@ -23,11 +23,13 @@ export class LeavesService {
      */
     static async getCompanyRequests(
         companyId: string,
-        filters?: { status?: LeaveStatus; employeeId?: string }
+        filters?: { status?: LeaveStatus; employeeId?: string; startDate?: string; endDate?: string }
     ): Promise<ApiResponse<LeaveRequest[]>> {
         const params = new URLSearchParams();
         if (filters?.status) params.append('status', filters.status);
         if (filters?.employeeId) params.append('employeeId', filters.employeeId);
+        if (filters?.startDate) params.append('startDate', filters.startDate);
+        if (filters?.endDate) params.append('endDate', filters.endDate);
 
         return backendApiClient.get<LeaveRequest[]>(
             `/leaves/company/${companyId}?${params.toString()}`

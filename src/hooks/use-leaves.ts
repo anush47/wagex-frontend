@@ -7,7 +7,7 @@ import type { LeaveStatus, CreateLeaveRequestDto } from '@/types/leave';
 /**
  * Hook to fetch leave requests for a company
  */
-export const useLeaveRequests = (companyId: string, filters?: { status?: LeaveStatus; employeeId?: string }) => {
+export const useLeaveRequests = (companyId: string, filters?: { status?: LeaveStatus; employeeId?: string; startDate?: string; endDate?: string }) => {
     return useQuery({
         queryKey: ['leaves', 'requests', companyId, filters],
         queryFn: async () => {
