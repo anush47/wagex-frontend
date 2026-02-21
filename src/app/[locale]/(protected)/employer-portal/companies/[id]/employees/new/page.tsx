@@ -2,9 +2,9 @@
 
 import { use, useState } from "react";
 import { useRouter } from "@/i18n/routing";
-import { EmployeeService } from "@/services/employee.service";
 import { EmploymentType, Gender } from "@/types/policy";
 import { EmployeeStatus } from "@/types/employee";
+import { useEmployeeMutations } from "@/hooks/use-employees";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
     const { id: companyId } = use(params);
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
+    const { createEmployee } = useEmployeeMutations();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ export default function NewEmployeePage({ params }: { params: Promise<{ id: stri
                 employeeData.fullName = employeeData.fullName.toUpperCase();
             }
 
-            await EmployeeService.createEmployee(employeeData);
+            await createEmployee.mutateAsync(employeeData as any);
             router.push(`/employer-portal/companies/${companyId}/employees`);
         } catch (error) {
             console.error("Failed to create employee", error);

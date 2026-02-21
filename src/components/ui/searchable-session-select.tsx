@@ -82,6 +82,13 @@ export function SearchableSessionSelect({
         return `${day} - ${shift}`;
     };
 
+    // While sessions are loading, show a shimmer skeleton instead of placeholder
+    if (isLoading) {
+        return (
+            <div className={cn("h-8 w-[180px] rounded-lg bg-muted/60 animate-pulse", className)} />
+        );
+    }
+
     return (
         <>
             <Popover open={open} onOpenChange={setOpen}>
@@ -95,7 +102,7 @@ export function SearchableSessionSelect({
                             !value && "text-muted-foreground italic font-normal",
                             className
                         )}
-                        disabled={disabled || isLoading}
+                        disabled={disabled}
                     >
                         <span className="truncate mr-1">
                             {selectedSession ? getSessionLabel(selectedSession) : placeholder}
