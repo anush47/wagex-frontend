@@ -30,7 +30,7 @@ import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import { useEffectivePolicy } from "@/hooks/use-policies";
 import dynamic from "next/dynamic";
 
-const AttendanceMap = dynamic(() => import("../../details/components/policy/AttendanceMap"), {
+const AttendanceMap = dynamic(() => import("../../policies/components/policy/AttendanceMap"), {
     ssr: false,
     loading: () => <div className="h-full w-full bg-muted animate-pulse rounded-xl" />
 });

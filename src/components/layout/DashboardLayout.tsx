@@ -24,7 +24,8 @@ import {
     IconCalendarTime,
     IconCalendarCheck,
     IconLogout,
-    IconWallet
+    IconWallet,
+    IconClipboardList
 } from "@tabler/icons-react";
 import {
     DropdownMenu,
@@ -129,6 +130,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             href: `/employer-portal/companies/${companyId}/details`,
             icon: (
                 <IconBuildingSkyscraper className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            ),
+        },
+        {
+            label: "Policies",
+            href: `/employer-portal/companies/${companyId}/policies`,
+            icon: (
+                <IconClipboardList className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
         {

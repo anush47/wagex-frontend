@@ -50,11 +50,10 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
 
     const departments = (deptsResp as any)?.data || (Array.isArray(deptsResp) ? deptsResp : []);
     const { updateEmployee } = useEmployeeMutations();
-    const { saveEmployeePolicy, deleteEmployeePolicy } = usePolicyMutations();
+    const { savePolicy, deletePolicy } = usePolicyMutations();
 
     // Local State for Forms
     const [employeeForm, setEmployeeForm] = useState<Employee | null>(null);
-    const [overridePolicy, setOverridePolicy] = useState<PolicySettings>({});
 
     const initialTab = searchParams.get("tab") || "general";
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -74,19 +73,13 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
         }
     }, [employeeData]);
 
-    useEffect(() => {
-        if (policyData) {
-            const override = policyData.employeeOverride?.settings || {};
-            setOverridePolicy(JSON.parse(JSON.stringify(override)));
-        }
-    }, [policyData]);
+    // No longer using individual override sync
 
     const loading = empLoading || policyLoading || deptsLoading || empsLoading;
 
     // Derived values from policyData
-    const effectivePolicy = policyData?.effective || {};
+    const effectivePolicy = policyData?.effective || ({} as PolicySettings);
     const policySource = policyData?.source || {};
-    const originalOverride = policyData?.employeeOverride?.settings || {};
     const originalEmployee = employeeData;
 
     const canonicalStringify = (obj: any): string => {
@@ -96,71 +89,39 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     };
 
     const isEmployeeDirty = canonicalStringify(originalEmployee) !== canonicalStringify(employeeForm);
-    const isPolicyDirty = canonicalStringify(originalOverride) !== canonicalStringify(overridePolicy);
-    const isDirty = isEmployeeDirty || isPolicyDirty;
+    const isDirty = isEmployeeDirty;
 
-    const handleSave = async () => {
-        if (isEmployeeDirty && employeeForm) {
-            const { id: _id, createdAt, updatedAt, company, user, userId, calendarId: _calId, ...payload } = employeeForm as any;
-
-            // Capitalize names
-            if (payload.nameWithInitials) {
-                payload.nameWithInitials = payload.nameWithInitials.toUpperCase();
-            }
-            if (payload.fullName) {
-                payload.fullName = payload.fullName.toUpperCase();
-            }
-
-            // Flatten details into payload if they exist, but strip internal fields
-            const { details, ...rest } = payload;
-
-            // Destructure to remove database-internal fields
-            const {
-                id: _dId,
-                employeeId: _eId,
-                createdAt: _cAt,
-                updatedAt: _uAt,
-                ...cleanDetails
-            } = details || {};
-
-            const flattenedPayload = {
-                ...rest,
-                ...cleanDetails
-            };
-
-            await updateEmployee.mutateAsync({ id: employeeId, data: flattenedPayload });
-        }
-
-        if (isPolicyDirty) {
-            await saveEmployeePolicy.mutateAsync({ companyId, employeeId, settings: overridePolicy });
-        }
-    };
 
     const handleResetPolicy = async () => {
-        await deleteEmployeePolicy.mutateAsync({ employeeId, companyId });
+        setEmployeeForm(prev => prev ? ({ ...prev, policyId: null }) : null);
     };
 
-    const handleResetTab = async (tabKey: string) => {
-        const labels: Record<string, string> = {
-            shifts: "Shifts",
-            workingDays: "Working Days",
-            salaryComponents: "Salary",
-            payrollConfiguration: "Payroll",
-            attendance: "Attendance",
-            leaves: "Leaves"
-        };
-        const label = labels[tabKey] || "Module";
-
+    const handleSave = async () => {
+        if (!employeeForm) return;
         try {
-            const newOverride = { ...overridePolicy };
-            delete (newOverride as any)[tabKey];
-            await saveEmployeePolicy.mutateAsync({ companyId, employeeId, settings: newOverride });
+            const { id: _id, createdAt, updatedAt, company, user, userId, details: _details, ...payload } = employeeForm as any;
+
+            // Handle details flattening if needed by API
+            const flattenedPayload = {
+                ...payload,
+                ...(employeeForm.details || {})
+            };
+
+            // Strip database internal fields from flattened payload
+            delete (flattenedPayload as any).id;
+            delete (flattenedPayload as any).employeeId;
+            delete (flattenedPayload as any).createdAt;
+            delete (flattenedPayload as any).updatedAt;
+
+            await updateEmployee.mutateAsync({ id: employeeId, data: flattenedPayload });
+            toast.success("Changes saved successfully");
         } catch (error) {
-            console.error(`Failed to reset ${label}`, error);
+            console.error("Failed to save changes", error);
+            toast.error("Failed to save changes");
         }
     };
 
-    const saving = updateEmployee.isPending || saveEmployeePolicy.isPending;
+    const saving = updateEmployee.isPending;
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
@@ -240,7 +201,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     >
                         <IconSettings className="w-4 h-4" />
                         Policy Rules
-                        {(policySource?.isOverridden || isPolicyDirty) && (
+                        {policySource?.isAssigned && (
                             <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
                         )}
                     </TabsTrigger>
@@ -284,11 +245,13 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
 
                 <TabsContent value="policies" className="mt-0">
                     <EmployeePoliciesTab
+                        companyId={companyId}
+                        selectedPolicyId={employeeForm?.policyId || null}
+                        onPolicySelect={(policyId) => setEmployeeForm(prev => prev ? ({ ...prev, policyId }) : null)}
                         effective={effectivePolicy}
-                        override={overridePolicy}
-                        onOverrideChange={setOverridePolicy}
-                        onResetTab={handleResetTab}
                         source={policySource}
+                        companyDefault={policyData?.companyDefault}
+                        assignedTemplate={policyData?.assignedTemplate}
                     />
                 </TabsContent>
 

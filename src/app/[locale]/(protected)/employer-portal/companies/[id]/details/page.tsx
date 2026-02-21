@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { IconDeviceFloppy, IconBuildingSkyscraper, IconMapPin, IconCalendar, IconId, IconLoader2 } from "@tabler/icons-react";
 import { GeneralTab } from "./components/GeneralTab";
 import { FilesTab } from "./components/FilesTab";
-import { PoliciesTab } from "./components/PoliciesTab";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
@@ -18,7 +17,6 @@ import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCompany, useCompanyMutations } from "@/hooks/use-companies";
-import { useEffectivePolicy, usePolicyMutations, useCompanyPolicy } from "@/hooks/use-policies";
 import { PolicySettings } from "@/types/policy";
 import { useStorageUrl } from "@/hooks/use-storage";
 
@@ -32,14 +30,10 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
     // React Query Hooks
     const { data: companyData, isLoading: compLoading } = useCompany(id);
-    const { data: policyData, isLoading: policyLoading } = useCompanyPolicy(id);
-
     const { updateCompany, deleteCompany } = useCompanyMutations();
-    const { saveCompanyPolicy } = usePolicyMutations();
 
     // Local Form State
     const [formData, setFormData] = useState<Company | null>(null);
-    const [policySettings, setPolicySettings] = useState<PolicySettings>({});
 
     // Sync with React Query
     useEffect(() => {
@@ -48,21 +42,9 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         }
     }, [companyData]);
 
-    useEffect(() => {
-        if (policyData) {
-            const settings = policyData.settings || {};
-            // MIGRATION: Handle legacy 'payroll' key
-            if ((settings as any).payroll) {
-                if (!settings.salaryComponents) settings.salaryComponents = (settings as any).payroll;
-                delete (settings as any).payroll;
-            }
-            setPolicySettings(JSON.parse(JSON.stringify(settings)));
-        }
-    }, [policyData]);
 
-    const loading = compLoading || policyLoading;
+    const loading = compLoading;
     const originalData = companyData;
-    const originalPolicy = policyData?.settings || {};
 
     // Initialize tab from URL or default to general
     const initialTab = searchParams.get("tab") || "general";
@@ -85,8 +67,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     };
 
     const isCompanyDirty = JSON.stringify(originalData) !== JSON.stringify(formData);
-    const isPolicyDirty = JSON.stringify(originalPolicy) !== JSON.stringify(policySettings);
-    const isDirty = isCompanyDirty || isPolicyDirty;
+    const isDirty = isCompanyDirty;
 
     const handleSave = async () => {
         if (!formData || !id) return;
@@ -94,12 +75,6 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         if (isCompanyDirty) {
             const { id: _id, createdAt, updatedAt, ...payload } = formData;
             await updateCompany.mutateAsync({ id, data: payload as any });
-        }
-
-        if (isPolicyDirty) {
-            const payload = JSON.parse(JSON.stringify(policySettings));
-            if (payload.payroll) delete payload.payroll;
-            await saveCompanyPolicy.mutateAsync({ companyId: id, settings: payload });
         }
     };
 
@@ -109,7 +84,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         router.push("/employer-portal/companies");
     };
 
-    const saving = updateCompany.isPending || saveCompanyPolicy.isPending;
+    const saving = updateCompany.isPending;
     const deleting = deleteCompany.isPending;
 
     const updateTabUrl = (tab: string) => {
@@ -134,7 +109,6 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
             updateTabUrl(pendingTab);
             updateTabUrl(pendingTab);
             setFormData(JSON.parse(JSON.stringify(originalData)));
-            setPolicySettings(JSON.parse(JSON.stringify(originalPolicy)));
             setPendingTab(null);
             setShowUnsavedDialog(false);
         }
@@ -208,12 +182,6 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                         General
                     </TabsTrigger>
                     <TabsTrigger
-                        value="policies"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        Policies
-                    </TabsTrigger>
-                    <TabsTrigger
                         value="files"
                         className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
                     >
@@ -229,12 +197,6 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                     />
                 </TabsContent>
 
-                <TabsContent value="policies" className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
-                    <PoliciesTab
-                        settings={policySettings}
-                        onChange={setPolicySettings}
-                    />
-                </TabsContent>
 
                 <TabsContent value="files" className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
                     <FilesTab formData={formData} handleChange={handleChange} />

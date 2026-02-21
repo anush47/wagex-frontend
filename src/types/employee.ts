@@ -28,6 +28,7 @@ export interface Employee {
     managerId?: string;
     departmentId?: string;
     userId?: string;
+    policyId?: string | null;
 
     // Split Details
     details?: {

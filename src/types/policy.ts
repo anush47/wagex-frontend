@@ -292,8 +292,10 @@ export interface LeavesConfig {
 
 export interface Policy {
     id: string;
-    companyId?: string;
-    employeeId?: string;
+    companyId: string;
+    name: string;
+    description?: string;
+    isDefault: boolean;
     settings: PolicySettings;
     createdAt: string;
     updatedAt: string;

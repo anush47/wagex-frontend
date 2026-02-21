@@ -326,8 +326,8 @@ export function SessionDetailsDialog({
                                 setShiftId(v);
                                 if (v !== "none") {
                                     const shift = availableShifts.find((s: any) => s.id === v);
-                                    if (shift && shift.breakMinutes) {
-                                        setBreakMinutes(shift.breakMinutes.toString());
+                                    if (shift && shift.breakTime) {
+                                        setBreakMinutes(shift.breakTime.toString());
                                     }
                                 }
                             }}

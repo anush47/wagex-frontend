@@ -1,8 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-import { PolicySettings } from "@/types/policy";
+import { Policy, PolicySettings } from "@/types/policy";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     IconClock,
@@ -12,66 +13,46 @@ import {
     IconCalendarTime,
     IconCalendarStar,
     IconCircleCheckFilled,
-    IconCircleXFilled,
     IconAlertCircle,
-    IconTrash
+    IconTemplate
 } from "@tabler/icons-react";
-import { ShiftsSection } from "../../../details/components/policy/ShiftsSection";
-import { PayrollSection } from "../../../details/components/policy/PayrollSection";
-import { PayrollSettingsTab } from "../../../details/components/policy/PayrollSettingsTab";
-import { WorkingDaysTab } from "../../../details/components/policy/WorkingDaysTab";
-import { AttendanceTab } from "../../../details/components/policy/AttendanceTab";
-import { LeavesTab } from "../../../details/components/policy/LeavesTab";
-import { Badge } from "@/components/ui/badge";
+import { ShiftsSection } from "../../../policies/components/policy/ShiftsSection";
+import { PayrollSection } from "../../../policies/components/policy/PayrollSection";
+import { PayrollSettingsTab } from "../../../policies/components/policy/PayrollSettingsTab";
+import { WorkingDaysTab } from "../../../policies/components/policy/WorkingDaysTab";
+import { AttendanceTab } from "../../../policies/components/policy/AttendanceTab";
+import { LeavesTab } from "../../../policies/components/policy/LeavesTab";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { useState } from "react";
+import { useCompanyPolicies } from "@/hooks/use-policies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface EmployeePoliciesTabProps {
+    companyId: string;
+    selectedPolicyId: string | null;
+    onPolicySelect: (policyId: string | null) => void;
     effective: PolicySettings;
-    override: PolicySettings;
-    onOverrideChange: (settings: PolicySettings) => void;
-    onResetTab: (key: string) => void;
-    source: any; // { shifts: 'COMPANY' | 'EMPLOYEE', ... }
+    source: any;
+    companyDefault?: PolicySettings;
+    assignedTemplate?: PolicySettings;
 }
 
-export function EmployeePoliciesTab({ effective, override, onOverrideChange, onResetTab, source }: EmployeePoliciesTabProps) {
+export function EmployeePoliciesTab({
+    companyId,
+    selectedPolicyId,
+    onPolicySelect,
+    effective,
+    source,
+    companyDefault,
+    assignedTemplate
+}: EmployeePoliciesTabProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const [resetTabKey, setResetTabKey] = useState<string | null>(null);
-    const [showResetDialog, setShowResetDialog] = useState(false);
+    const { data: policies = [], isLoading: policiesLoading } = useCompanyPolicies(companyId);
 
     const currentTab = searchParams.get("policyTab") || "shifts";
-
-    // Helper to merge effective policy with local overrides for display
-    const mergeConfig = (key: string) => {
-        const eff = effective[key as keyof PolicySettings] || {};
-        const ovr = override[key as keyof PolicySettings];
-
-        if (ovr === undefined) return eff;
-
-        // Handle specific deep merges for complex policy objects
-        if (key === 'workingDays' && typeof eff === 'object' && typeof ovr === 'object') {
-            return {
-                ...eff,
-                ...ovr,
-                defaultPattern: {
-                    ...(eff as any).defaultPattern,
-                    ...(ovr as any).defaultPattern,
-                }
-            };
-        }
-
-        // Default shallow merge for other objects
-        if (typeof eff === 'object' && typeof ovr === 'object' && !Array.isArray(ovr)) {
-            return { ...eff, ...ovr };
-        }
-
-        return ovr;
-    };
 
     const handleTabChange = (val: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -79,110 +60,126 @@ export function EmployeePoliciesTab({ effective, override, onOverrideChange, onR
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
-    const isOverridden = (key: string) => {
-        const isLocallyChanged = override && override[key as keyof PolicySettings] !== undefined;
-        const isServerOverridden = source?.overriddenFields?.includes(key);
-        return isLocallyChanged || isServerOverridden;
-    };
+    const selectedPolicy = useMemo(() =>
+        policies.find(p => p.id === selectedPolicyId)
+        , [policies, selectedPolicyId]);
 
-    const getOverrideWarning = (key: string) => {
-        const field = key === 'salaryComponents' ? 'salaryComponents' :
-            key === 'payrollConfiguration' ? 'payrollConfiguration' : key;
+    const activeSourceName = useMemo(() => {
+        const s = source as any;
+        if (s?.hasAssignedPolicy) return s.assignedPolicyName || "Assigned Template";
+        return "Company Default";
+    }, [source]);
 
-        if (isOverridden(field)) {
-            return (
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 mb-6 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
-                    <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
-                        <IconAlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <div className="text-xs font-bold leading-tight">
-                            <span className="uppercase block text-[10px] opacity-70 mb-0.5">Custom Configuration</span>
-                            This module is overridden for this employee.
-                        </div>
-                    </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                            setResetTabKey(field);
-                            setShowResetDialog(true);
-                        }}
-                        className="rounded-xl font-bold h-8 px-3 text-[10px] uppercase tracking-widest bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white transition-all"
-                    >
-                        <IconTrash className="w-3.5 h-3.5 mr-1.5" />
-                        Reset Module
-                    </Button>
-                </div>
-            );
+    const previewEffective = useMemo(() => {
+        const df = policies.find(p => p.isDefault);
+        const dfSettings = (df?.settings as unknown as PolicySettings) || ({} as PolicySettings);
+
+        if (!selectedPolicyId || selectedPolicyId === 'default' || !selectedPolicy) {
+            return dfSettings;
         }
-        return (
-            <div className="flex items-center gap-2 p-4 mb-6 bg-muted/50 border border-muted rounded-2xl text-muted-foreground opacity-60">
-                <IconCircleCheckFilled className="w-5 h-5 flex-shrink-0" />
-                <div className="text-xs font-bold leading-tight">
-                    <span className="uppercase block text-[10px] opacity-70 mb-0.5">Inherited from Company</span>
-                    Using global organization settings.
-                </div>
-            </div>
-        );
-    };
 
-    // Helper to merge changes into override state
-    const updateOverride = (key: string, value: any) => {
-        onOverrideChange({
-            ...override,
-            [key]: value
-        });
-    };
+        const assignedSettings = (selectedPolicy.settings as unknown as PolicySettings) || ({} as PolicySettings);
 
-    const handleConfirmReset = () => {
-        if (resetTabKey) {
-            onResetTab(resetTabKey);
-            setResetTabKey(null);
-            setShowResetDialog(false);
+        // Simple merge (shallow is enough for top level keys, but shifts.list needs replace)
+        const combined = {
+            ...dfSettings,
+            ...assignedSettings,
+            // Deep merge some specific sections if needed, but for now we follow the backend logic:
+            // Assigned replaces default sections.
+        };
+
+        // Special handling for shifts.list to match backend
+        if (assignedSettings.shifts?.list) {
+            combined.shifts = {
+                ...(combined.shifts || {}),
+                list: assignedSettings.shifts.list
+            };
         }
-    };
+
+        return combined as PolicySettings;
+    }, [policies, selectedPolicyId, selectedPolicy]);
+
+    const overriddenTabs = useMemo(() => {
+        if (!selectedPolicyId || selectedPolicyId === 'default' || !selectedPolicy) return new Set<string>();
+
+        const df = policies.find(p => p.isDefault);
+        const dfSettings = (df?.settings as unknown as PolicySettings) || ({} as PolicySettings);
+        const cur = (selectedPolicy.settings as unknown as PolicySettings) || ({} as PolicySettings);
+
+        const tabs = new Set<string>();
+        const isDifferent = (a: any, b: any) => JSON.stringify(a) !== JSON.stringify(b);
+
+        if (isDifferent(cur.shifts, dfSettings.shifts)) tabs.add('shifts');
+        if (isDifferent(cur.workingDays, dfSettings.workingDays)) tabs.add('working-days');
+        if (isDifferent(cur.salaryComponents, dfSettings.salaryComponents)) tabs.add('salary-components');
+        if (isDifferent(cur.payrollConfiguration, dfSettings.payrollConfiguration)) tabs.add('payroll-settings');
+        if (isDifferent(cur.attendance, dfSettings.attendance)) tabs.add('attendance');
+        if (isDifferent(cur.leaves, dfSettings.leaves)) tabs.add('leaves');
+
+        return tabs;
+    }, [policies, selectedPolicyId, selectedPolicy]);
 
     return (
         <div className="space-y-10">
-            <ConfirmationDialog
-                open={showResetDialog}
-                onOpenChange={setShowResetDialog}
-                variant="warning"
-                title="Reset Policy Module?"
-                description="Are you sure you want to reset this module to company defaults? All custom changes for this employee in this section will be permanently lost."
-                icon={<IconTrash className="h-8 w-8" />}
-                actionLabel="Reset to Defaults"
-                cancelLabel="Cancel"
-                onAction={handleConfirmReset}
-            />
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-[1.5rem] bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                        <IconSettings className="h-6 w-6" />
+                        <IconTemplate className="h-6 w-6" />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-black tracking-tighter uppercase">Policy Orchestration</h3>
-                        <p className="text-sm text-neutral-500 font-medium">Configure custom rules or inherit from company defaults.</p>
+                        <h3 className="text-2xl font-black tracking-tighter uppercase">Policy Assignment</h3>
+                        <p className="text-sm text-neutral-500 font-medium">Assign a policy template to this employee.</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 px-5 py-2.5 bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 h-10">
-                    <div className="h-2 w-2 rounded-full bg-orange-500" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Current Scope: </span>
-                    <Badge variant="secondary" className="bg-white dark:bg-neutral-800 text-[10px] font-black uppercase tracking-tighter">
-                        {source?.isOverridden ? "Hybrid Override" : "Master Inheritance"}
-                    </Badge>
+                <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Current Policy</span>
+                        <Badge variant="outline" className="text-[10px] font-black uppercase py-0 px-2 rounded-md">
+                            {activeSourceName}
+                        </Badge>
+                    </div>
+
+                    <Select
+                        value={selectedPolicyId || "default"}
+                        onValueChange={(val) => onPolicySelect(val === "default" ? null : val)}
+                    >
+                        <SelectTrigger className="w-[240px] rounded-xl h-12 font-bold shadow-sm">
+                            <SelectValue placeholder="Select Policy Template" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                            <SelectItem value="default" className="font-medium">Company Default</SelectItem>
+                            {policies.filter(p => !p.isDefault).map(p => (
+                                <SelectItem key={p.id} value={p.id}>
+                                    {p.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="bg-blue-500/5 border border-blue-500/10 p-6 rounded-[2rem] flex flex-col md:flex-row items-center gap-6">
+                <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 shadow-inner">
+                    <IconAlertCircle className="h-7 w-7" />
+                </div>
+                <div className="flex-1">
+                    <h5 className="font-black text-blue-900 dark:text-blue-100 uppercase text-xs tracking-widest mb-1">Information</h5>
+                    <p className="text-sm text-blue-800/70 dark:text-blue-200/70 leading-relaxed">
+                        To adjust policy settings for this employee, please select a different template or manage templates in the <span className="font-bold underline cursor-pointer" onClick={() => router.push(`/employer-portal/companies/${companyId}/policies`)}>Company Policies</span> page.
+                    </p>
                 </div>
             </div>
 
             <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full flex flex-col gap-10">
                 <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
                     {[
-                        { id: 'shifts', icon: IconClock, label: 'Shifts', field: 'shifts' },
-                        { id: 'working-days', icon: IconCalendarStats, label: 'Work Days', field: 'workingDays' },
-                        { id: 'salary-components', icon: IconCoin, label: 'Salary', field: 'salaryComponents' },
-                        { id: 'payroll-settings', icon: IconCalendarTime, label: 'Payroll', field: 'payrollConfiguration' },
-                        { id: 'attendance', icon: IconCalendarStats, label: 'Attendance', field: 'attendance' },
-                        { id: 'leaves', icon: IconCalendarStar, label: 'Leaves', field: 'leaves' },
+                        { id: 'shifts', icon: IconClock, label: 'Shifts' },
+                        { id: 'working-days', icon: IconCalendarStats, label: 'Work Days' },
+                        { id: 'salary-components', icon: IconCoin, label: 'Salary' },
+                        { id: 'payroll-settings', icon: IconCalendarTime, label: 'Payroll' },
+                        { id: 'attendance', icon: IconCalendarStats, label: 'Attendance' },
+                        { id: 'leaves', icon: IconCalendarStar, label: 'Leaves' },
                     ].map((tab) => (
                         <TabsTrigger
                             key={tab.id}
@@ -190,64 +187,62 @@ export function EmployeePoliciesTab({ effective, override, onOverrideChange, onR
                             className={cn(
                                 "rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800",
                                 "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary",
-                                "bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
+                                "bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 relative"
                             )}
                         >
+                            {overriddenTabs.has(tab.id) && (
+                                <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-orange-500 shadow-sm animate-pulse" />
+                            )}
                             <tab.icon className="w-4 h-4" />
                             {tab.label}
-                            {isOverridden(tab.field) && <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />}
                         </TabsTrigger>
                     ))}
                 </TabsList>
 
                 <div className="min-h-[500px]">
-                    <TabsContent value="shifts" className="m-0 focus-visible:ring-0">
-                        {getOverrideWarning('shifts')}
-                        <ShiftsSection
-                            value={mergeConfig('shifts') as any || { list: [] }}
-                            onChange={(val) => updateOverride('shifts', val)}
-                        />
-                    </TabsContent>
+                    <div className="pointer-events-none opacity-80 cursor-not-allowed">
+                        <TabsContent value="shifts" className="m-0 focus-visible:ring-0">
+                            <ShiftsSection
+                                value={previewEffective.shifts || { list: [] }}
+                                onChange={() => { }}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="working-days" className="m-0 focus-visible:ring-0">
-                        {getOverrideWarning('workingDays')}
-                        <WorkingDaysTab
-                            value={mergeConfig('workingDays') as any}
-                            onChange={(val) => updateOverride('workingDays', val)}
-                        />
-                    </TabsContent>
+                        <TabsContent value="working-days" className="m-0 focus-visible:ring-0">
+                            <WorkingDaysTab
+                                value={previewEffective.workingDays}
+                                onChange={() => { }}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="salary-components" className="m-0 focus-visible:ring-0">
-                        {getOverrideWarning('salaryComponents')}
-                        <PayrollSection
-                            value={mergeConfig('salaryComponents') as any || { components: [] }}
-                            onChange={(val) => updateOverride('salaryComponents', val)}
-                        />
-                    </TabsContent>
+                        <TabsContent value="salary-components" className="m-0 focus-visible:ring-0">
+                            <PayrollSection
+                                value={previewEffective.salaryComponents || { components: [] }}
+                                onChange={() => { }}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="payroll-settings" className="m-0 focus-visible:ring-0">
-                        {getOverrideWarning('payrollConfiguration')}
-                        <PayrollSettingsTab
-                            value={mergeConfig('payrollConfiguration') as any}
-                            onChange={(val) => updateOverride('payrollConfiguration', val)}
-                        />
-                    </TabsContent>
+                        <TabsContent value="payroll-settings" className="m-0 focus-visible:ring-0">
+                            <PayrollSettingsTab
+                                value={previewEffective.payrollConfiguration}
+                                onChange={() => { }}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="attendance" className="m-0 focus-visible:ring-0">
-                        {getOverrideWarning('attendance')}
-                        <AttendanceTab
-                            value={mergeConfig('attendance') as any}
-                            onChange={(val) => updateOverride('attendance', val)}
-                        />
-                    </TabsContent>
+                        <TabsContent value="attendance" className="m-0 focus-visible:ring-0">
+                            <AttendanceTab
+                                value={previewEffective.attendance}
+                                onChange={() => { }}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="leaves" className="m-0 focus-visible:ring-0">
-                        {getOverrideWarning('leaves')}
-                        <LeavesTab
-                            value={mergeConfig('leaves') as any}
-                            onChange={(val) => updateOverride('leaves', val)}
-                        />
-                    </TabsContent>
+                        <TabsContent value="leaves" className="m-0 focus-visible:ring-0">
+                            <LeavesTab
+                                value={previewEffective.leaves}
+                                onChange={() => { }}
+                            />
+                        </TabsContent>
+                    </div>
                 </div>
             </Tabs>
         </div>

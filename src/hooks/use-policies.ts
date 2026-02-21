@@ -1,17 +1,36 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PoliciesService } from '@/services/policy.service';
-import { toast } from 'sonner';
-import { PolicySettings } from '@/types/policy';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PoliciesService } from "@/services/policy.service";
+import { Policy, PolicySettings } from "@/types/policy";
+import { toast } from "sonner";
 
 /**
- * Hook to fetch company policy
+ * Hook to fetch all policies for a company
+ */
+export const useCompanyPolicies = (companyId: string) => {
+    return useQuery<Policy[]>({
+        queryKey: ['policies', 'list', companyId],
+        queryFn: async () => {
+            if (!companyId) return [];
+            const response = await PoliciesService.getCompanyPolicies(companyId);
+            if (response.error) {
+                throw new Error(response.error.message);
+            }
+            const data = response.data as any;
+            return data?.data || data || [];
+        },
+        enabled: !!companyId,
+    });
+};
+
+/**
+ * Hook to fetch company default policy
  */
 export const useCompanyPolicy = (companyId: string) => {
-    return useQuery({
-        queryKey: ['policies', 'company', companyId],
+    return useQuery<Policy | null>({
+        queryKey: ['policies', 'company', companyId, 'default'],
         queryFn: async () => {
             if (!companyId) return null;
-            const response = await PoliciesService.getCompanyPolicy(companyId);
+            const response = await PoliciesService.getCompanyDefaultPolicy(companyId);
             if (response.error) {
                 throw new Error(response.error.message);
             }
@@ -19,8 +38,6 @@ export const useCompanyPolicy = (companyId: string) => {
             return data?.data || data || null;
         },
         enabled: !!companyId,
-        staleTime: 30 * 60 * 1000, // 30 minutes
-        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
@@ -28,7 +45,12 @@ export const useCompanyPolicy = (companyId: string) => {
  * Hook to fetch effective policy for an employee
  */
 export const useEffectivePolicy = (employeeId: string | null) => {
-    return useQuery({
+    return useQuery<{
+        effective: PolicySettings;
+        source: any;
+        companyDefault: PolicySettings;
+        assignedTemplate: PolicySettings;
+    } | null>({
         queryKey: ['policies', 'effective', employeeId],
         queryFn: async () => {
             if (!employeeId) return null;
@@ -37,78 +59,83 @@ export const useEffectivePolicy = (employeeId: string | null) => {
                 throw new Error(response.error.message);
             }
             const data = (response.data as any)?.data || response.data;
-            // Return full orchestration object (effective, source, employeeOverride)
             return data || null;
         },
         enabled: !!employeeId,
-        staleTime: 30 * 60 * 1000, // 30 minutes
-        gcTime: 45 * 60 * 1000,    // 45 minutes
     });
 };
 
 /**
- * Hook for policy mutations
+ * Hook for policy mutations (Create/Update/Delete)
  */
 export const usePolicyMutations = () => {
     const queryClient = useQueryClient();
 
-    const saveCompanyPolicy = useMutation({
-        mutationFn: async ({ companyId, settings }: { companyId: string; settings: PolicySettings }) => {
-            const response = await PoliciesService.saveCompanyPolicy(companyId, settings);
+    const savePolicy = useMutation({
+        mutationFn: async (payload: {
+            companyId: string;
+            name: string;
+            description?: string;
+            isDefault?: boolean;
+            settings: PolicySettings
+        }) => {
+            const response = await PoliciesService.savePolicy(payload);
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
         onMutate: () => {
-            return { toastId: toast.loading('Saving company policy...') };
+            return { toastId: toast.loading('Saving policy...') };
         },
-        onSuccess: (_, { companyId }, context) => {
-            queryClient.invalidateQueries({ queryKey: ['policies', 'company', companyId] });
-            toast.success('Company policy saved successfully', { id: context?.toastId });
+        onSuccess: (_, { companyId }, context: any) => {
+            queryClient.invalidateQueries({ queryKey: ['policies'] });
+            toast.success('Policy saved successfully', { id: context?.toastId });
         },
-        onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to save company policy', { id: context?.toastId });
+        onError: (err: any, _variables, context: any) => {
+            toast.error(err.message || 'Failed to save policy', { id: context?.toastId });
         },
     });
 
-    const saveEmployeePolicy = useMutation({
-        mutationFn: async ({ companyId, employeeId, settings }: { companyId: string; employeeId: string; settings: PolicySettings }) => {
-            const response = await PoliciesService.saveEmployeePolicy(companyId, employeeId, settings);
+    const updatePolicy = useMutation({
+        mutationFn: async ({ id, data, companyId }: { id: string; data: Partial<any>; companyId?: string }) => {
+            const payload = { ...data };
+            if (companyId) payload.companyId = companyId;
+            const response = await PoliciesService.updatePolicy(id, payload);
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
         onMutate: () => {
-            return { toastId: toast.loading('Saving employee policy override...') };
+            return { toastId: toast.loading('Updating policy...') };
         },
-        onSuccess: (_, { employeeId }, context) => {
-            queryClient.invalidateQueries({ queryKey: ['policies', 'effective', employeeId] });
-            toast.success('Employee policy override saved successfully', { id: context?.toastId });
+        onSuccess: (_, variables, context: any) => {
+            queryClient.invalidateQueries({ queryKey: ['policies'] });
+            toast.success('Policy updated successfully', { id: context?.toastId });
         },
-        onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to save employee policy override', { id: context?.toastId });
+        onError: (err: any, _variables, context: any) => {
+            toast.error(err.message || 'Failed to update policy', { id: context?.toastId });
         },
     });
 
-    const deleteEmployeePolicy = useMutation({
-        mutationFn: async ({ employeeId, companyId }: { employeeId: string; companyId: string }) => {
-            const response = await PoliciesService.deleteEmployeePolicy(employeeId, companyId);
+    const deletePolicy = useMutation({
+        mutationFn: async ({ id, companyId }: { id: string; companyId: string }) => {
+            const response = await PoliciesService.deletePolicy(id, companyId);
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },
         onMutate: () => {
-            return { toastId: toast.loading('Removing policy override...') };
+            return { toastId: toast.loading('Deleting policy...') };
         },
-        onSuccess: (_, { employeeId }, context) => {
-            queryClient.invalidateQueries({ queryKey: ['policies', 'effective', employeeId] });
-            toast.success('Employee policy override removed', { id: context?.toastId });
+        onSuccess: (_, { companyId }, context: any) => {
+            queryClient.invalidateQueries({ queryKey: ['policies'] });
+            toast.success('Policy deleted', { id: context?.toastId });
         },
-        onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to delete employee policy override', { id: context?.toastId });
+        onError: (err: any, _variables, context: any) => {
+            toast.error(err.message || 'Failed to delete policy', { id: context?.toastId });
         },
     });
 
     return {
-        saveCompanyPolicy,
-        saveEmployeePolicy,
-        deleteEmployeePolicy
+        savePolicy,
+        updatePolicy,
+        deletePolicy
     };
 };
