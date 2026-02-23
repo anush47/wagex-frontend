@@ -6,6 +6,7 @@ export const companySchema = z.object({
     address: z.string().min(5, "Address must be at least 5 characters"),
     startedDate: z.string().or(z.date()), // Accept string from API, Date form form objects
     logo: z.string().url().optional().or(z.literal("")),
+    timezone: z.string().optional(),
     files: z.array(z.object({
         key: z.string(),
         name: z.string(),

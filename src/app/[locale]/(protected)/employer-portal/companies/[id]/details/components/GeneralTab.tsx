@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Company } from "@/types/company";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IconBuildingSkyscraper, IconMail, IconMapPin, IconCalendar, IconId, IconLoader2, IconCalendarStats } from "@tabler/icons-react";
+import { IconBuildingSkyscraper, IconMail, IconMapPin, IconCalendar, IconId, IconLoader2, IconCalendarStats, IconWorld } from "@tabler/icons-react";
 import { CompanyService } from "@/services/company.service";
 import { ImageUpload } from "@/components/ui/image-upload"; // Assuming this component exists or we'll create/mock it
 import { Calendar } from "@/components/ui/calendar";
@@ -120,6 +120,45 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                     />
                                 </LabelInputContainer>
                             </div>
+
+                            <Separator className="bg-neutral-100 dark:bg-neutral-800/50" />
+
+                            {/* Section: Localization & Timezone */}
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-3xl bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                                        <IconWorld className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-black tracking-tight">Localization</h3>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <LabelInputContainer>
+                                        <Label htmlFor="timezone" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Company Timezone</Label>
+                                        <Select
+                                            value={formData.timezone || "UTC"}
+                                            onValueChange={(val) => handleChange("timezone", val)}
+                                        >
+                                            <SelectTrigger id="timezone" className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-2xl px-4 md:px-6 text-base font-medium shadow-inner">
+                                                <SelectValue placeholder="Select Timezone" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-2xl border-neutral-100 dark:border-neutral-800">
+                                                <SelectItem value="UTC">UTC (Universal Time)</SelectItem>
+                                                <SelectItem value="Asia/Colombo">Asia/Colombo (Sri Lanka, IST +5:30)</SelectItem>
+                                                <SelectItem value="Asia/Kolkata">Asia/Kolkata (India, IST +5:30)</SelectItem>
+                                                <SelectItem value="Asia/Dubai">Asia/Dubai (UAE, UTC+4)</SelectItem>
+                                                <SelectItem value="Europe/London">Europe/London (UK, GMT/BST)</SelectItem>
+                                                <SelectItem value="America/New_York">America/New_York (US Eastern)</SelectItem>
+                                                <SelectItem value="Australia/Sydney">Australia/Sydney (UTC+10/11)</SelectItem>
+                                                <SelectItem value="Asia/Singapore">Asia/Singapore (UTC+8)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-tighter px-1">
+                                            Affects how attendance shifts and daily reports are calculated.
+                                        </p>
+                                    </LabelInputContainer>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -194,6 +233,6 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </div >
     );
 }

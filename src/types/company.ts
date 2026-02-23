@@ -14,6 +14,7 @@ export interface Company {
     address: string;
     startedDate: string;
     logo?: string;
+    timezone?: string;
     active?: boolean;
     files?: CompanyFile[];
     createdAt: string;

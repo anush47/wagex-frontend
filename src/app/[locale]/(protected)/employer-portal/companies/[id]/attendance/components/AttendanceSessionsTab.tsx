@@ -26,6 +26,7 @@ import type { AttendanceSession, ApprovalStatus } from "@/types/attendance";
 import { useAttendanceSessions, useAttendanceMutations } from "@/hooks/use-attendance";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
 interface AttendanceSessionsTabProps {
@@ -43,6 +44,7 @@ interface AttendanceSessionsTabProps {
         tab?: string
     }) => void;
     onOpenSession: (id: string) => void;
+    timezone?: string;
 }
 
 export function AttendanceSessionsTab({
@@ -52,7 +54,8 @@ export function AttendanceSessionsTab({
     startDate,
     endDate,
     onFilterChange,
-    onOpenSession
+    onOpenSession,
+    timezone = "UTC"
 }: AttendanceSessionsTabProps) {
     const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(initialEmployeeId);
     const [approvalFilter, setApprovalFilter] = useState<string>("ALL");
@@ -133,7 +136,7 @@ export function AttendanceSessionsTab({
         // Handle ISO strings by checking for 'T' or if it can be parsed as a full date
         if (time.includes('T') || time.length > 10) {
             try {
-                return format(new Date(time), "h:mm a");
+                return formatInTimeZone(new Date(time), timezone, "h:mm a");
             } catch (e) {
                 return time;
             }
@@ -220,10 +223,11 @@ export function AttendanceSessionsTab({
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 pt-2 border-t border-border">
                             <SalaryPeriodQuickSelect
                                 companyId={companyId}
+                                timezone={timezone}
                                 employeeId={employeeFilter}
                                 onRangeSelect={(start, end) => onFilterChange?.({ startDate: start, endDate: end })}
-                                currentStart={startDate || initialDate}
-                                currentEnd={endDate || initialDate}
+                                currentStart={startDate}
+                                currentEnd={endDate}
                             />
 
                             <div className="flex items-center gap-2 p-1 bg-neutral-100/50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200/50 dark:border-neutral-700/50 shadow-inner">
@@ -387,7 +391,7 @@ export function AttendanceSessionsTab({
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="py-3 whitespace-nowrap font-medium text-sm">
-                                                        {format(new Date(session.date), "MMM d, yyyy")}
+                                                        {formatInTimeZone(new Date(session.date), timezone, "MMM d, yyyy")}
                                                     </TableCell>
                                                     <TableCell className="py-3 whitespace-nowrap">
                                                         <div className="flex flex-col">

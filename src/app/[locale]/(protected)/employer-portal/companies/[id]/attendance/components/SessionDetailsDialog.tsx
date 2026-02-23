@@ -14,6 +14,7 @@ import { useAttendance, useAttendanceMutations } from "@/hooks/use-attendance";
 import { useEffectivePolicy } from "@/hooks/use-policies";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import { IconClock, IconX, IconTrash, IconCheck } from "@tabler/icons-react";
 import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus, EventType, AttendanceEvent } from "@/types/attendance";
@@ -33,6 +34,7 @@ interface SessionDetailsDialogProps {
     session: AttendanceSession | null;
     onDelete?: (id: string) => Promise<void>;
     isLoading?: boolean;
+    timezone?: string;
 }
 
 const EMPTY_ARRAY: any[] = [];
@@ -43,6 +45,7 @@ export function SessionDetailsDialog({
     session,
     onDelete,
     isLoading,
+    timezone = "UTC",
 }: SessionDetailsDialogProps) {
     const [processing, setProcessing] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -79,8 +82,8 @@ export function SessionDetailsDialog({
     // Reset form when dialog opens with a new session
     useEffect(() => {
         if (open && session) {
-            setCheckInTime(session.checkInTime ? format(new Date(session.checkInTime), "yyyy-MM-dd'T'HH:mm") : "");
-            setCheckOutTime(session.checkOutTime ? format(new Date(session.checkOutTime), "yyyy-MM-dd'T'HH:mm") : "");
+            setCheckInTime(session.checkInTime ? formatInTimeZone(new Date(session.checkInTime), timezone, "yyyy-MM-dd'T'HH:mm") : "");
+            setCheckOutTime(session.checkOutTime ? formatInTimeZone(new Date(session.checkOutTime), timezone, "yyyy-MM-dd'T'HH:mm") : "");
             setWorkMinutes(session.workMinutes !== null && session.workMinutes !== undefined ? session.workMinutes.toString() : "");
             setBreakMinutes(session.breakMinutes !== null && session.breakMinutes !== undefined ? session.breakMinutes.toString() : "");
             setOvertimeMinutes(session.overtimeMinutes !== null && session.overtimeMinutes !== undefined ? session.overtimeMinutes.toString() : "");
@@ -304,7 +307,7 @@ export function SessionDetailsDialog({
                                 Attendance Session Details
                             </DialogTitle>
                             <DialogDescription className="text-[11px] font-medium text-muted-foreground/80">
-                                {session && !isLoading ? format(new Date(session.date), "MMMM d, yyyy") : "Retrieving session data..."}
+                                {session && !isLoading ? formatInTimeZone(new Date(session.date), timezone, "MMMM d, yyyy") : "Retrieving session data..."}
                             </DialogDescription>
                         </div>
 

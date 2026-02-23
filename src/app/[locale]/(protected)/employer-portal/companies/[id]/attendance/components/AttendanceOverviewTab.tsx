@@ -15,6 +15,7 @@ import {
     IconPlayerPlay
 } from "@tabler/icons-react";
 import { format, isSameDay, startOfDay, endOfDay, differenceInMinutes } from "date-fns";
+import { formatInTimeZone, toZonedTime, fromZonedTime } from "date-fns-tz";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,10 +29,10 @@ import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceSession } from "@/types/attendance";
 import { LeaveStatus, type LeaveRequest } from "@/types/leave";
 import type { Employee } from "@/types/employee";
-
 interface AttendanceOverviewTabProps {
     companyId: string;
     onOpenSession: (id: string) => void;
+    timezone?: string;
 }
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -43,19 +44,19 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
     );
 }
 
-function safeFormatTime(dateStr?: string | null, formatStr: string = "h:mm a") {
+function safeFormatTime(dateStr: string | null | undefined, timezone: string, formatStr: string = "h:mm a") {
     if (!dateStr) return "";
     try {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return "";
-        return format(date, formatStr);
+        return formatInTimeZone(date, timezone, formatStr);
     } catch (e) {
         return "";
     }
 }
 
-export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOverviewTabProps) {
-    const today = new Date();
+export function AttendanceOverviewTab({ companyId, onOpenSession, timezone = "UTC" }: AttendanceOverviewTabProps) {
+    const today = toZonedTime(new Date(), timezone);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState<"PRESENT" | "LEAVE" | "ABSENT" | "COMPLETED">("PRESENT");
@@ -66,11 +67,16 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
         return () => clearInterval(timer);
     }, []);
 
-    // Fetch Today's Sessions
+    // Fetch Today's Sessions - Boundaries in UTC but representing "Today" in timezone
+    const startOfTodayLocal = startOfDay(today);
+    const endOfTodayLocal = endOfDay(today);
+    const startOfTodayUtc = fromZonedTime(startOfTodayLocal, timezone);
+    const endOfTodayUtc = fromZonedTime(endOfTodayLocal, timezone);
+
     const { data: sessionData, isLoading: loadingSessions } = useAttendanceSessions({
         companyId,
-        startDate: format(startOfDay(today), "yyyy-MM-dd'T'HH:mm:ss"),
-        endDate: format(endOfDay(today), "yyyy-MM-dd'T'HH:mm:ss"),
+        startDate: format(startOfTodayUtc, "yyyy-MM-dd'T'HH:mm:ss"),
+        endDate: format(endOfTodayUtc, "yyyy-MM-dd'T'HH:mm:ss"),
         limit: 100,
     });
 
@@ -244,7 +250,7 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                 {activeTab === "COMPLETED" && <><IconClockStop className="w-6 h-6 text-orange-500" /> Completed Logs</>}
                             </h2>
                             <p className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
-                                Workforce breakdown for today, {format(today, "MMMM dd")}
+                                Workforce breakdown for today, {formatInTimeZone(new Date(), timezone, "MMMM dd")}
                             </p>
                         </div>
                         <div className="relative w-full md:w-64">
@@ -331,7 +337,7 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                                         </div>
                                         <div className="text-right">
                                             <div className="text-sm font-black text-primary tabular-nums">Completed</div>
-                                            <div className="text-[9px] font-black text-muted-foreground uppercase mt-1">OUT AT {safeFormatTime(session.checkOutTime)}</div>
+                                            <div className="text-[9px] font-black text-muted-foreground uppercase mt-1">OUT AT {safeFormatTime(session.checkOutTime, timezone)}</div>
                                         </div>
                                     </motion.div>
                                 )) : (
@@ -455,8 +461,8 @@ export function AttendanceOverviewTab({ companyId, onOpenSession }: AttendanceOv
                         </div>
                     </Card>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 

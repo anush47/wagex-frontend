@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { IconCalendarStats, IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useCompanyPolicy, useEffectivePolicy } from "@/hooks/use-policies";
 import { format, subMonths, startOfMonth, endOfMonth, setDate, addDays, getYear, isSameMonth, subWeeks, startOfWeek, endOfWeek, isWithinInterval, getDate } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { PayCycleFrequency, Policy } from "@/types/policy";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ interface SalaryPeriodQuickSelectProps {
     onRangeSelect: (start: string, end: string) => void;
     currentStart?: string;
     currentEnd?: string;
+    timezone?: string;
 }
 
 export function SalaryPeriodQuickSelect({
@@ -34,7 +36,8 @@ export function SalaryPeriodQuickSelect({
     employeeId,
     onRangeSelect,
     currentStart,
-    currentEnd
+    currentEnd,
+    timezone = "UTC"
 }: SalaryPeriodQuickSelectProps) {
     const [open, setOpen] = useState(false);
     const { data: defaultPolicy, isLoading: isLoadingDefault } = useCompanyPolicy(companyId);
@@ -47,7 +50,7 @@ export function SalaryPeriodQuickSelect({
     const periods = useMemo(() => {
         if (!payrollConfig) return [];
 
-        const today = new Date();
+        const today = toZonedTime(new Date(), timezone);
         const result = [];
         const frequency = payrollConfig.frequency;
 

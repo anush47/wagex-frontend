@@ -12,6 +12,7 @@ import { AttendanceStatsTab } from "./components/AttendanceStatsTab";
 import { CreateEventDialog } from "./components/CreateEventDialog";
 import { SessionDetailsDialog } from "./components/SessionDetailsDialog";
 import { useAttendanceSession, useAttendanceSessions } from "@/hooks/use-attendance";
+import { useCompany } from "@/hooks/use-companies";
 
 export default function AttendancePage() {
     const params = useParams();
@@ -42,6 +43,10 @@ export default function AttendancePage() {
         limit: 1
     });
     const hasPending = ((pendingSessions as any)?.meta?.total || 0) > 0;
+
+    // Fetch company to get timezone
+    const { data: company } = useCompany(companyId);
+    const timezone = company?.timezone || 'UTC';
 
     // Sync tab state with URL parameter
     useEffect(() => {
@@ -177,16 +182,18 @@ export default function AttendancePage() {
                     </TabsList>
                 </div>
 
-                <TabsContent value="overview" className="mt-6">
+                <TabsContent value="overview" className="space-y-6">
                     <AttendanceOverviewTab
                         companyId={companyId}
+                        timezone={timezone}
                         onOpenSession={handleOpenSession}
                     />
                 </TabsContent>
 
-                <TabsContent value="sessions" className="mt-6">
+                <TabsContent value="sessions" className="space-y-6">
                     <AttendanceSessionsTab
                         companyId={companyId}
+                        timezone={timezone}
                         initialEmployeeId={employeeId}
                         initialDate={date}
                         startDate={startDate}
@@ -196,9 +203,10 @@ export default function AttendancePage() {
                     />
                 </TabsContent>
 
-                <TabsContent value="events" className="mt-6">
+                <TabsContent value="events" className="space-y-6">
                     <AttendanceEventsTab
                         companyId={companyId}
+                        timezone={timezone}
                         initialEmployeeId={employeeId}
                         initialDate={date}
                         startDate={startDate}
@@ -211,6 +219,7 @@ export default function AttendancePage() {
                 <TabsContent value="stats" className="mt-6">
                     <AttendanceStatsTab
                         companyId={companyId}
+                        timezone={timezone}
                         startDate={startDate}
                         endDate={endDate}
                         initialDate={date}
@@ -229,6 +238,7 @@ export default function AttendancePage() {
                 }}
                 session={sessionData || null}
                 isLoading={loadingSession}
+                timezone={timezone}
             />
 
             {/* Create Dialog */}

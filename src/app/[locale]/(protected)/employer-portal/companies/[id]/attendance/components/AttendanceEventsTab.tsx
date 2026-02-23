@@ -25,6 +25,7 @@ import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceEvent, AttendanceSession, EventType, EventSource, EventStatus } from "@/types/attendance";
 import { useAttendanceEvents, useAttendanceSessions } from "@/hooks/use-attendance";
 import { format, subDays, addDays } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
 import { SearchableSessionSelect } from "@/components/ui/searchable-session-select";
 import { useAttendanceMutations } from "@/hooks/use-attendance";
@@ -45,6 +46,7 @@ interface AttendanceEventsTabProps {
         tab?: string
     }) => void;
     onOpenSession: (id: string) => void;
+    timezone?: string;
 }
 
 export function AttendanceEventsTab({
@@ -54,7 +56,8 @@ export function AttendanceEventsTab({
     startDate,
     endDate,
     onFilterChange,
-    onOpenSession
+    onOpenSession,
+    timezone = "UTC"
 }: AttendanceEventsTabProps) {
     const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(initialEmployeeId);
     const [statusFilter, setStatusFilter] = useState<EventStatus | "ALL">("ALL");
@@ -203,9 +206,10 @@ export function AttendanceEventsTab({
                     <div className="flex items-center gap-2">
                         <SalaryPeriodQuickSelect
                             companyId={companyId}
+                            timezone={timezone}
                             onRangeSelect={(start, end) => onFilterChange?.({ startDate: start, endDate: end })}
-                            currentStart={startDate || initialDate}
-                            currentEnd={endDate || initialDate}
+                            currentStart={startDate}
+                            currentEnd={endDate}
                         />
                         <Button
                             variant="outline"
@@ -386,10 +390,10 @@ export function AttendanceEventsTab({
                                             <TableCell className="whitespace-nowrap">
                                                 <div className="flex flex-col">
                                                     <span className="font-medium text-sm">
-                                                        {format(new Date(event.eventTime), "MMM d, yyyy")}
+                                                        {formatInTimeZone(new Date(event.eventTime), timezone, "MMM d, yyyy")}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {format(new Date(event.eventTime), "h:mm:ss a")}
+                                                        {formatInTimeZone(new Date(event.eventTime), timezone, "h:mm:ss a")}
                                                     </span>
                                                 </div>
                                             </TableCell>

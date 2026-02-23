@@ -25,6 +25,7 @@ import { LeaveRequestType } from "@/types/leave";
 import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatInTimeZone } from "date-fns-tz";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 
 interface AttendanceStatsTabProps {
@@ -34,6 +35,7 @@ interface AttendanceStatsTabProps {
     initialDate?: string;
     employeeId?: string;
     onFilterChange?: (filters: any) => void;
+    timezone?: string;
 }
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -47,6 +49,7 @@ export function AttendanceStatsTab({
     initialDate,
     employeeId,
     onFilterChange,
+    timezone = "UTC",
 }: AttendanceStatsTabProps) {
     const [activeSection, setActiveSection] = useState<string | null>("all");
 
@@ -85,6 +88,7 @@ export function AttendanceStatsTab({
             if (l.status !== "APPROVED") return false;
             const leaveStart = new Date(l.startDate);
             const leaveEnd = new Date(l.endDate);
+            // These comparisons are fine for UTC boundaries but let's be safe
             return (leaveStart >= start && leaveStart <= end) || (leaveEnd >= start && leaveEnd <= end);
         });
     }, [leaves, startDate, endDate, initialDate]);
@@ -227,6 +231,7 @@ export function AttendanceStatsTab({
                 <div className="flex flex-wrap items-center gap-3">
                     <SalaryPeriodQuickSelect
                         companyId={companyId}
+                        timezone={timezone}
                         onRangeSelect={(start, end) => onFilterChange?.({ startDate: start, endDate: end })}
                         currentStart={startDate || initialDate}
                         currentEnd={endDate || initialDate}
