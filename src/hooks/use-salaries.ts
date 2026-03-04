@@ -35,8 +35,8 @@ export function useSalaries(params: SalaryQueryParams) {
     });
 
     const saveDraftsMutation = useMutation({
-        mutationFn: async (drafts: any[]) => {
-            const response = await SalaryService.saveDrafts(drafts);
+        mutationFn: async ({ companyId, previews }: { companyId: string, previews: any[] }) => {
+            const response = await SalaryService.saveDrafts(companyId, previews);
             if (response.error) throw new Error(response.error.message);
             return (response.data as any)?.data || response.data || [];
         },

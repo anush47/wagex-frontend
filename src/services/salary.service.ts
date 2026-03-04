@@ -29,7 +29,7 @@ export class SalaryService {
         return backendApiClient.post<any[]>('/salaries/generate-preview', dto);
     }
 
-    static async saveDrafts(drafts: any[]): Promise<ApiResponse<Salary[]>> {
-        return backendApiClient.post<Salary[]>('/salaries/save-drafts', drafts);
+    static async saveDrafts(companyId: string, previews: any[]): Promise<ApiResponse<any>> {
+        return backendApiClient.post<any>(`/salaries/save-drafts/${companyId}`, previews);
     }
 }

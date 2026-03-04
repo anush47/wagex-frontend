@@ -9,26 +9,31 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { IconCalendarStats, IconCheck, IconChevronDown } from "@tabler/icons-react";
+import { Popover as PopoverPrimitive } from "radix-ui";
 import { useCompanyPolicy, useEffectivePolicy } from "@/hooks/use-policies";
 import { format, subMonths, startOfMonth, endOfMonth, setDate, addDays, getYear, isSameMonth, subWeeks, startOfWeek, endOfWeek, isWithinInterval, getDate } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { PayCycleFrequency, Policy } from "@/types/policy";
 import { cn } from "@/lib/utils";
+import { subDays } from "date-fns";
+
+const DEFAULT_PAYROLL_CONFIG = {
+    frequency: PayCycleFrequency.MONTHLY,
+    runDay: "LAST",
+    cutoffDaysBeforePayDay: 5
+};
 
 interface SalaryPeriodQuickSelectProps {
     companyId: string;
     employeeId?: string | null;
-    onRangeSelect: (start: string, end: string) => void;
+    onRangeSelect: (start: string, end: string, fullPeriod?: any) => void;
     currentStart?: string;
     currentEnd?: string;
     timezone?: string;
+    manualPolicy?: Policy | null;
 }
 
 export function SalaryPeriodQuickSelect({
@@ -37,19 +42,18 @@ export function SalaryPeriodQuickSelect({
     onRangeSelect,
     currentStart,
     currentEnd,
-    timezone = "UTC"
+    timezone = "UTC",
+    manualPolicy
 }: SalaryPeriodQuickSelectProps) {
     const [open, setOpen] = useState(false);
     const { data: defaultPolicy, isLoading: isLoadingDefault } = useCompanyPolicy(companyId);
     const { data: effectiveData, isLoading: isLoadingEffective } = useEffectivePolicy(employeeId || null);
 
     const isLoading = isLoadingDefault || (!!employeeId && isLoadingEffective);
-    const policy = employeeId ? (effectiveData?.effective as unknown as Policy) : defaultPolicy;
-    const payrollConfig = policy?.settings?.payrollConfiguration;
+    const policy = manualPolicy || (employeeId ? (effectiveData?.effective as unknown as Policy) : defaultPolicy);
+    const payrollConfig = policy?.settings?.payrollConfiguration || DEFAULT_PAYROLL_CONFIG;
 
     const periods = useMemo(() => {
-        if (!payrollConfig) return [];
-
         const today = toZonedTime(new Date(), timezone);
         const result = [];
         const frequency = payrollConfig.frequency;
@@ -81,9 +85,16 @@ export function SalaryPeriodQuickSelect({
                     start = addDays(setDate(prevMonth, day), 1);
                 }
 
+                const attendanceEnd = subDays(end, parseInt(payrollConfig.cutoffDaysBeforePayDay as any) || 0);
+                const prevPeriodEnd = day === 0 || day >= 28 ? endOfMonth(subMonths(referenceDate, 1)) : setDate(subMonths(referenceDate, 1), day);
+                const attendanceStart = addDays(subDays(prevPeriodEnd, parseInt(payrollConfig.cutoffDaysBeforePayDay as any) || 0), 1);
+
                 return {
                     start: format(start, "yyyy-MM-dd"),
                     end: format(end, "yyyy-MM-dd"),
+                    attendanceStart: format(attendanceStart, "yyyy-MM-dd"),
+                    attendanceEnd: format(attendanceEnd, "yyyy-MM-dd"),
+                    payDay: format(end, "yyyy-MM-dd"),
                     label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
                     monthLabel: format(end, "MMMM"),
                     year: getYear(end),
@@ -96,7 +107,7 @@ export function SalaryPeriodQuickSelect({
             // -1: 1 month in future
             // 0: Current month
             // 1...60: Past months
-            for (let i = -2; i < 60; i++) {
+            for (let i = -2; i < 120; i++) {
                 const periodDate = subMonths(today, i);
                 const periodData = getPeriodForDate(periodDate);
 
@@ -217,7 +228,7 @@ export function SalaryPeriodQuickSelect({
             // Find the period that corresponds to 'this month' (i=0)
             const current = periods.find(p => p.status === "current");
             if (current) {
-                onRangeSelect(current.start, current.end);
+                onRangeSelect(current.start, current.end, current);
             }
         }
     }, [periods, currentStart, currentEnd, onRangeSelect]);
@@ -226,10 +237,8 @@ export function SalaryPeriodQuickSelect({
         return <div className="h-10 w-full md:w-[240px] rounded-xl bg-muted/50 animate-pulse" />;
     }
 
-    if (!payrollConfig) return null;
-
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={false}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
@@ -266,10 +275,20 @@ export function SalaryPeriodQuickSelect({
                     <IconChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0 rounded-2xl shadow-xl border-border/60 bg-white dark:bg-neutral-900" align="start">
-                <Command className="rounded-2xl">
+            <PopoverPrimitive.Content
+                className="w-[300px] p-0 rounded-2xl shadow-xl border border-border/60 bg-white dark:bg-neutral-900 z-[100] outline-none"
+                align="start"
+                side="bottom"
+                sideOffset={8}
+                onWheel={(e) => e.stopPropagation()}
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                avoidCollisions={true}
+            >
+                <Command className="rounded-2xl border-none">
                     <CommandInput placeholder="Search month or year..." className="h-11 text-xs" />
-                    <CommandList className="max-h-[300px] scrollbar-hide py-1">
+                    <CommandList
+                        className="h-[320px] max-h-[400px] overflow-y-auto py-1 custom-scrollbar"
+                    >
                         <CommandEmpty>No period found.</CommandEmpty>
                         <CommandGroup heading="Recent & Upcoming">
                             {periods.filter(p => ['current', 'upcoming'].includes(p.status)).map((period) => (
@@ -277,7 +296,7 @@ export function SalaryPeriodQuickSelect({
                                     key={period.key}
                                     value={period.fullLabel}
                                     onSelect={() => {
-                                        onRangeSelect(period.start, period.end);
+                                        onRangeSelect(period.start, period.end, period);
                                         setOpen(false);
                                     }}
                                     className="cursor-pointer aria-selected:bg-primary/5 m-1 rounded-lg"
@@ -311,13 +330,13 @@ export function SalaryPeriodQuickSelect({
                                 </CommandItem>
                             ))}
                         </CommandGroup>
-                        <CommandGroup heading="Past Periods">
+                        <CommandGroup heading="Historical Periods">
                             {periods.filter(p => p.status === 'past').map((period) => (
                                 <CommandItem
                                     key={period.key}
                                     value={period.fullLabel}
                                     onSelect={() => {
-                                        onRangeSelect(period.start, period.end);
+                                        onRangeSelect(period.start, period.end, period);
                                         setOpen(false);
                                     }}
                                     className="cursor-pointer aria-selected:bg-muted/50 m-1 rounded-lg"
@@ -343,7 +362,7 @@ export function SalaryPeriodQuickSelect({
                         </CommandGroup>
                     </CommandList>
                 </Command>
-            </PopoverContent>
+            </PopoverPrimitive.Content>
         </Popover>
     );
 }
