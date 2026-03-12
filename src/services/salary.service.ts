@@ -36,4 +36,8 @@ export class SalaryService {
     static async updateSalary(id: string, data: any): Promise<ApiResponse<Salary>> {
         return backendApiClient.post<Salary>(`/salaries/${id}`, data);
     }
+
+    static async approveSalary(id: string): Promise<ApiResponse<Salary>> {
+        return backendApiClient.post<Salary>(`/salaries/${id}/approve`);
+    }
 }

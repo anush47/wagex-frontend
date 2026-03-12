@@ -69,11 +69,32 @@ export function useSalaries(params: SalaryQueryParams) {
         }
     });
 
+    const approveSalaryMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await SalaryService.approveSalary(id);
+            if (response.error) throw new Error(response.error.message);
+            return (response.data as any)?.data || response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Approving salary...') };
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['salaries'] });
+            toast.dismiss(context?.toastId);
+            toast.success('Salary approved successfully');
+        },
+        onError: (error: any, variables, context) => {
+            toast.dismiss(context?.toastId);
+            toast.error(error.message || 'Failed to approve salary');
+        }
+    });
+
     return {
         salariesQuery,
         salaryQuery,
         generatePreviewsMutation,
         saveDraftsMutation,
         updateSalaryMutation,
+        approveSalaryMutation,
     };
 }

@@ -67,6 +67,11 @@ export interface Salary {
     otAdjustmentReason?: string;
     recoveryAdjustment?: number;
     recoveryAdjustmentReason?: string;
+    approvedById?: string;
+    approvedAt?: string;
+    approvedBy?: {
+        fullName: string;
+    };
     sessions?: AttendanceSession[];
     employee?: {
         fullName: string;

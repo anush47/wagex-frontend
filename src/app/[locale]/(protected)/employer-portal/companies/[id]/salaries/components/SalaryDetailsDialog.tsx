@@ -28,7 +28,8 @@ import {
     IconReceipt,
     IconClock,
     IconTable,
-    IconTrendingUp
+    IconTrendingUp,
+    IconCheck
 } from "@tabler/icons-react";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
@@ -39,7 +40,9 @@ interface SalaryDetailsDialogProps {
     onOpenChange: (open: boolean) => void;
     salary: Salary | null;
     onSave?: (updatedSalary: any) => void;
+    onApprove?: () => void;
     isSaving?: boolean;
+    isApproving?: boolean;
 }
 
 export function SalaryDetailsDialog({
@@ -47,7 +50,9 @@ export function SalaryDetailsDialog({
     onOpenChange,
     salary,
     onSave,
+    onApprove,
     isSaving,
+    isApproving,
 }: SalaryDetailsDialogProps) {
     const [editableComponents, setEditableComponents] = React.useState<any[]>(salary?.components || []);
     const [editableBasicSalary, setEditableBasicSalary] = React.useState<number>(salary?.basicSalary || 0);
@@ -527,36 +532,64 @@ export function SalaryDetailsDialog({
                     )}
                 </div>
 
-                <DialogFooter className="p-4 md:p-6 border-t bg-background">
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground">Pay Date</span>
-                            <span className="font-medium text-sm">
-                                {format(new Date(salary.payDate), "MMM d, yyyy")}
-                            </span>
+                <DialogFooter className="p-4 md:p-6 border-t bg-background shrink-0">
+                    <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
+                        <div className="flex flex-col self-start md:self-auto">
+                            {salary.status === SalaryStatus.APPROVED && salary.approvedBy ? (
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold uppercase text-green-600">Approved By</span>
+                                    <span className="font-bold text-sm text-foreground">
+                                        {salary.approvedBy.fullName} 
+                                        {salary.approvedAt && (
+                                            <span className="text-muted-foreground font-normal ml-1">
+                                                • {format(new Date(salary.approvedAt), "MMM d, HH:mm")}
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold uppercase text-muted-foreground">Pay Date</span>
+                                    <span className="font-medium text-sm">
+                                        {format(new Date(salary.payDate), "MMM d, yyyy")}
+                                    </span>
+                                </div>
+                            )}
                         </div>
-                        <Button
-                            className="bg-primary hover:bg-primary/90 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={isSaving || !isDirty}
-                            onClick={() => {
-                                onSave?.({
-                                    ...salary,
-                                    basicSalary: editableBasicSalary,
-                                    components: editableComponents,
-                                    otAdjustment: editableOtAdjustment,
-                                    otAdjustmentReason: editableOtAdjustmentReason,
-                                    recoveryAdjustment: editableRecoveryAdjustment,
-                                    recoveryAdjustmentReason: editableRecoveryAdjustmentReason,
-                                    remarks: editableRemarks,
-                                    sessions: editableSessions,
-                                    sessionIds: editableSessions.map(s => s.id),
-                                    netSalary: currentNetSalary
-                                });
-                            }}
-                        >
-                            <IconDeviceFloppy className="h-4 w-4 mr-2" /> 
-                            {isSaving ? "Saving..." : "Save Changes"}
-                        </Button>
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            {salary.status === SalaryStatus.DRAFT && (
+                                <Button
+                                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 font-bold flex-1 md:flex-none shadow-md shadow-green-200"
+                                    disabled={isSaving || isApproving}
+                                    onClick={() => onApprove?.()}
+                                >
+                                    <IconCheck className="h-4 w-4 mr-2" />
+                                    {isApproving ? "Approving..." : "Approve Salary"}
+                                </Button>
+                            )}
+                            <Button
+                                className="bg-primary hover:bg-primary/90 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex-1 md:flex-none"
+                                disabled={isSaving || !isDirty || isApproving}
+                                onClick={() => {
+                                    onSave?.({
+                                        ...salary,
+                                        basicSalary: editableBasicSalary,
+                                        components: editableComponents,
+                                        otAdjustment: editableOtAdjustment,
+                                        otAdjustmentReason: editableOtAdjustmentReason,
+                                        recoveryAdjustment: editableRecoveryAdjustment,
+                                        recoveryAdjustmentReason: editableRecoveryAdjustmentReason,
+                                        remarks: editableRemarks,
+                                        sessions: editableSessions,
+                                        sessionIds: editableSessions.map(s => s.id),
+                                        netSalary: currentNetSalary
+                                    });
+                                }}
+                            >
+                                <IconDeviceFloppy className="h-4 w-4 mr-2" /> 
+                                {isSaving ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </div>
                     </div>
                 </DialogFooter>
             </DialogContent>
