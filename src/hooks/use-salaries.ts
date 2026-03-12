@@ -49,10 +49,31 @@ export function useSalaries(params: SalaryQueryParams) {
         }
     });
 
+    const updateSalaryMutation = useMutation({
+        mutationFn: async ({ id, data }: { id: string, data: any }) => {
+            const response = await SalaryService.updateSalary(id, data);
+            if (response.error) throw new Error(response.error.message);
+            return (response.data as any)?.data || response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Saving salary changes...') };
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['salaries'] });
+            toast.dismiss(context?.toastId);
+            toast.success('Salary updated successfully');
+        },
+        onError: (error: any, variables, context) => {
+            toast.dismiss(context?.toastId);
+            toast.error(error.message || 'Failed to update salary');
+        }
+    });
+
     return {
         salariesQuery,
         salaryQuery,
         generatePreviewsMutation,
         saveDraftsMutation,
+        updateSalaryMutation,
     };
 }

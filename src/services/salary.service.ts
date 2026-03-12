@@ -32,4 +32,8 @@ export class SalaryService {
     static async saveDrafts(companyId: string, previews: any[]): Promise<ApiResponse<any>> {
         return backendApiClient.post<any>(`/salaries/save-drafts/${companyId}`, previews);
     }
+
+    static async updateSalary(id: string, data: any): Promise<ApiResponse<Salary>> {
+        return backendApiClient.post<Salary>(`/salaries/${id}`, data);
+    }
 }

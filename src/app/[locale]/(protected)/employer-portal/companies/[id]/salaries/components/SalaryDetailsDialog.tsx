@@ -39,6 +39,7 @@ interface SalaryDetailsDialogProps {
     onOpenChange: (open: boolean) => void;
     salary: Salary | null;
     onSave?: (updatedSalary: any) => void;
+    isSaving?: boolean;
 }
 
 export function SalaryDetailsDialog({
@@ -46,6 +47,7 @@ export function SalaryDetailsDialog({
     onOpenChange,
     salary,
     onSave,
+    isSaving,
 }: SalaryDetailsDialogProps) {
     const [editableComponents, setEditableComponents] = React.useState<any[]>(salary?.components || []);
     const [editableBasicSalary, setEditableBasicSalary] = React.useState<number>(salary?.basicSalary || 0);
@@ -102,6 +104,17 @@ export function SalaryDetailsDialog({
     const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + totalAdditions;
     const totalRecoveries = salary.noPayAmount + salary.advanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
     const currentNetSalary = grossEarnings - totalRecoveries;
+
+    const isDirty = (
+        editableBasicSalary !== salary.basicSalary ||
+        (editableRemarks || "") !== (salary.remarks || "") ||
+        editableOtAdjustment !== (salary.otAdjustment || 0) ||
+        (editableOtAdjustmentReason || "") !== (salary.otAdjustmentReason || "") ||
+        editableRecoveryAdjustment !== (salary.recoveryAdjustment || 0) ||
+        (editableRecoveryAdjustmentReason || "") !== (salary.recoveryAdjustmentReason || "") ||
+        JSON.stringify(editableComponents) !== JSON.stringify(salary.components || []) ||
+        JSON.stringify(editableSessions.map(s => s.id)) !== JSON.stringify((salary.sessions || []).map((s: any) => s.id))
+    );
 
     const getStatusBadge = (status: SalaryStatus) => {
         const styles: Record<string, string> = {
@@ -506,7 +519,8 @@ export function SalaryDetailsDialog({
                             </span>
                         </div>
                         <Button
-                            className="bg-primary hover:bg-primary/90 rounded-xl px-8 font-bold shadow-lg shadow-primary/20"
+                            className="bg-primary hover:bg-primary/90 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isSaving || !isDirty}
                             onClick={() => {
                                 onSave?.({
                                     ...salary,
@@ -521,10 +535,10 @@ export function SalaryDetailsDialog({
                                     sessionIds: editableSessions.map(s => s.id),
                                     netSalary: currentNetSalary
                                 });
-                                onOpenChange(false);
                             }}
                         >
-                            <IconDeviceFloppy className="h-4 w-4 mr-2" /> Save Changes
+                            <IconDeviceFloppy className="h-4 w-4 mr-2" /> 
+                            {isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                     </div>
                 </DialogFooter>

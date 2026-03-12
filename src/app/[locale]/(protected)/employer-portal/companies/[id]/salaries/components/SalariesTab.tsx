@@ -42,7 +42,7 @@ export function SalariesTab({
     const [showFilters, setShowFilters] = useState(false);
     const [selectedSalary, setSelectedSalary] = useState<Salary | null>(null);
 
-    const { salariesQuery } = useSalaries({
+    const { salariesQuery, updateSalaryMutation } = useSalaries({
         companyId,
         ...filters,
         page: page || 1,
@@ -330,6 +330,16 @@ export function SalariesTab({
                 open={!!selectedSalary}
                 onOpenChange={(open) => !open && setSelectedSalary(null)}
                 salary={selectedSalary}
+                isSaving={updateSalaryMutation.isPending}
+                onSave={(data) => {
+                    if (selectedSalary) {
+                        updateSalaryMutation.mutate({ id: selectedSalary.id, data }, {
+                            onSuccess: () => {
+                                setSelectedSalary(null);
+                            }
+                        });
+                    }
+                }}
             />
         </>
     );
