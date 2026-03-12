@@ -382,9 +382,19 @@ export function SalariesTab({
                                                 })()}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <span className="font-bold text-sm text-foreground">
-                                                    {salary.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                </span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-bold text-sm text-foreground">
+                                                        {salary.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                    {(salary.status === 'APPROVED' || salary.status === 'PARTIALLY_PAID') && (
+                                                        <span className="text-[10px] font-black text-orange-600 mt-0.5">
+                                                            DUE: {(() => {
+                                                                const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
+                                                                return (salary.netSalary - paid).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                            })()}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 {getStatusBadge(salary.status)}
