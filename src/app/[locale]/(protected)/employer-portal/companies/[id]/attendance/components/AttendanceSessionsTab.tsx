@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconRefresh, IconX, IconEdit, IconTrash, IconChevronLeft, IconChevronRight, IconCalendarStats, IconCheck, IconFilter } from "@tabler/icons-react";
+import { IconRefresh, IconX, IconEdit, IconChevronLeft, IconChevronRight, IconCalendarStats, IconCheck, IconFilter } from "@tabler/icons-react";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import type { AttendanceSession, ApprovalStatus } from "@/types/attendance";
 import { useAttendanceSessions, useAttendanceMutations } from "@/hooks/use-attendance";
@@ -61,8 +61,6 @@ export function AttendanceSessionsTab({
     const [approvalFilter, setApprovalFilter] = useState<string>("ALL");
     const [showFilters, setShowFilters] = useState(false);
     const [page, setPage] = useState(1);
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
 
     // Sync with initial filters
     useEffect(() => {
@@ -91,30 +89,6 @@ export function AttendanceSessionsTab({
 
     const { deleteSession, updateSession } = useAttendanceMutations();
 
-    const executeDelete = async (id: string) => {
-        try {
-            await deleteSession.mutateAsync(id);
-        } catch (error) {
-            console.error("Failed to delete session", error);
-        }
-    };
-
-    const handleDeleteClick = (id: string) => {
-        setSessionToDelete(id);
-        setDeleteConfirmOpen(true);
-    };
-
-    const confirmDelete = async () => {
-        if (!sessionToDelete) return;
-        try {
-            await executeDelete(sessionToDelete);
-            setDeleteConfirmOpen(false);
-        } catch (error) {
-            // Error handling already done in executeDelete
-        } finally {
-            setSessionToDelete(null);
-        }
-    };
 
     const getApprovalBadge = (status: ApprovalStatus) => {
         const styles: Record<string, string> = {
@@ -437,6 +411,11 @@ export function AttendanceSessionsTab({
                                                     </TableCell>
                                                     <TableCell className="py-3">
                                                         <div className="flex flex-wrap gap-1">
+                                                            {session.payrollStatus === 'PROCESSED' && (
+                                                                <Badge variant="outline" className="bg-green-600 text-white border-green-700 text-[10px] py-0 px-1.5 h-4 font-black shadow-sm" title="Session processed in a salary slip">
+                                                                    PAYROLL
+                                                                </Badge>
+                                                            )}
                                                             {session.isLate && (
                                                                 <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
                                                                     LATE
@@ -538,22 +517,6 @@ export function AttendanceSessionsTab({
                 </CardContent>
             </Card>
 
-            <ConfirmationDialog
-                open={deleteConfirmOpen}
-                onOpenChange={setDeleteConfirmOpen}
-                title="Delete Attendance Session"
-                description="Are you sure you want to delete this attendance session? This action cannot be undone."
-                icon={<IconTrash className="h-8 w-8" />}
-                actionLabel="Delete"
-                cancelLabel="Cancel"
-                onAction={confirmDelete}
-                onCancel={() => {
-                    setDeleteConfirmOpen(false);
-                    setSessionToDelete(null);
-                }}
-                loading={false}
-                variant="destructive"
-            />
         </>
     );
 }

@@ -1,3 +1,5 @@
+import { AttendanceSession } from './attendance';
+
 export enum SalaryStatus {
     DRAFT = 'DRAFT',
     APPROVED = 'APPROVED',
@@ -58,6 +60,11 @@ export interface Salary {
     netSalary: number;
     status: SalaryStatus;
     remarks?: string;
+    otAdjustment?: number;
+    otAdjustmentReason?: string;
+    recoveryAdjustment?: number;
+    recoveryAdjustmentReason?: string;
+    sessions?: AttendanceSession[];
     employee?: {
         fullName: string;
         employeeNo: number;

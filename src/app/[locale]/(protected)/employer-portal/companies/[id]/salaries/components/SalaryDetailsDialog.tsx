@@ -14,19 +14,21 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
-    IconWallet,
-    IconCalendarEvent,
-    IconClock,
-    IconReceipt,
-    IconX,
-    IconTable,
-    IconTrendingUp,
     IconTrendingDown,
     IconCash,
     IconNotes,
     IconDeviceFloppy,
     IconPlus,
-    IconTrash
+    IconTrash,
+    IconEdit,
+    IconListDetails,
+    IconX,
+    IconWallet,
+    IconCalendarEvent,
+    IconReceipt,
+    IconClock,
+    IconTable,
+    IconTrendingUp
 } from "@tabler/icons-react";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
@@ -45,11 +47,25 @@ export function SalaryDetailsDialog({
     salary,
     onSave,
 }: SalaryDetailsDialogProps) {
-    const [editableComponents, setEditableComponents] = React.useState<any[]>([]);
+    const [editableComponents, setEditableComponents] = React.useState<any[]>(salary?.components || []);
+    const [editableBasicSalary, setEditableBasicSalary] = React.useState<number>(salary?.basicSalary || 0);
+    const [editableRemarks, setEditableRemarks] = React.useState<string>(salary?.remarks || "");
+    const [editableOtAdjustment, setEditableOtAdjustment] = React.useState<number>(salary?.otAdjustment || 0);
+    const [editableOtAdjustmentReason, setEditableOtAdjustmentReason] = React.useState<string>(salary?.otAdjustmentReason || "");
+    const [editableRecoveryAdjustment, setEditableRecoveryAdjustment] = React.useState<number>(salary?.recoveryAdjustment || 0);
+    const [editableRecoveryAdjustmentReason, setEditableRecoveryAdjustmentReason] = React.useState<string>(salary?.recoveryAdjustmentReason || "");
+    const [editableSessions, setEditableSessions] = React.useState<any[]>(salary?.sessions || []);
 
     React.useEffect(() => {
-        if (salary?.components) {
-            setEditableComponents(salary.components);
+        if (salary) {
+            setEditableComponents(salary.components || []);
+            setEditableBasicSalary(salary.basicSalary);
+            setEditableRemarks(salary.remarks || "");
+            setEditableOtAdjustment(salary.otAdjustment || 0);
+            setEditableOtAdjustmentReason(salary.otAdjustmentReason || "");
+            setEditableRecoveryAdjustment(salary.recoveryAdjustment || 0);
+            setEditableRecoveryAdjustmentReason(salary.recoveryAdjustmentReason || "");
+            setEditableSessions(salary.sessions || []);
         }
     }, [salary]);
 
@@ -74,13 +90,17 @@ export function SalaryDetailsDialog({
         setEditableComponents(prev => [...prev, newComp]);
     };
 
+    const removeSession = (id: string) => {
+        setEditableSessions(prev => prev.filter(s => s.id !== id));
+    };
+
     const additions = editableComponents.filter(c => c.category === 'ADDITION') || [];
     const deductions = editableComponents.filter(c => c.category === 'DEDUCTION') || [];
 
     const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
     const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
-    const grossEarnings = salary.basicSalary + salary.otAmount + totalAdditions;
-    const totalRecoveries = salary.noPayAmount + salary.advanceDeduction + salary.taxAmount + totalDeductions;
+    const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + totalAdditions;
+    const totalRecoveries = salary.noPayAmount + salary.advanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
     const currentNetSalary = grossEarnings - totalRecoveries;
 
     const getStatusBadge = (status: SalaryStatus) => {
@@ -174,20 +194,60 @@ export function SalaryDetailsDialog({
                             </div>
 
                             <div className="bg-background rounded-xl border shadow-sm overflow-hidden divide-y">
-                                <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
+                                <div className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                     <span className="font-medium text-muted-foreground flex items-center gap-2">
                                         <IconReceipt className="h-3.5 w-3.5" /> Basic Salary
                                     </span>
-                                    <span className="font-bold">{salary.basicSalary.toLocaleString()}</span>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={editableBasicSalary}
+                                            onChange={(e) => setEditableBasicSalary(parseFloat(e.target.value) || 0)}
+                                            className="h-8 w-32 font-bold text-right border-transparent hover:border-input focus:border-primary bg-transparent"
+                                        />
+                                        <IconEdit className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                    </div>
                                 </div>
+
                                 {salary.otAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground flex items-center gap-2">
-                                            <IconClock className="h-3.5 w-3.5" /> Overtime (OT)
+                                            <IconClock className="h-3.5 w-3.5" /> Calculated Overtime (OT)
                                         </span>
                                         <span className="font-bold text-blue-600">+{salary.otAmount.toLocaleString()}</span>
                                     </div>
                                 )}
+
+                                {/* OT Adjustment Row */}
+                                <div className="p-3 px-4 space-y-3 bg-blue-50/10 border-l-2 border-l-blue-400">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-black uppercase tracking-tight text-blue-600 flex items-center gap-1.5">
+                                            <IconTrendingUp className="h-3 w-3" /> OT Adjustment
+                                        </span>
+                                        <div className="relative">
+                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-600 font-bold text-xs">±</span>
+                                            <Input
+                                                type="number"
+                                                placeholder="0.00"
+                                                value={editableOtAdjustment || ""}
+                                                onChange={(e) => setEditableOtAdjustment(parseFloat(e.target.value) || 0)}
+                                                className="h-7 w-28 pl-5 text-right font-bold text-blue-600 border-dashed border-blue-200 focus:border-blue-400 bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    {(editableOtAdjustment !== 0) && (
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] font-bold text-blue-500 uppercase tracking-widest pl-1">Adjustment Reason</Label>
+                                            <Input
+                                                value={editableOtAdjustmentReason}
+                                                onChange={(e) => setEditableOtAdjustmentReason(e.target.value)}
+                                                placeholder="e.g. Manual correction, Approved extra shift..."
+                                                className="h-7 text-xs border-dashed border-blue-200 focus:border-blue-400 bg-white italic"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
                                 {additions.map((comp, idx) => (
                                     <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                         <Input
@@ -290,6 +350,36 @@ export function SalaryDetailsDialog({
                                     </div>
                                 )}
 
+                                {/* Recovery Adjustment Row */}
+                                <div className="p-3 px-4 space-y-3 bg-red-50/10 border-l-2 border-l-red-400">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-black uppercase tracking-tight text-red-600 flex items-center gap-1.5">
+                                            <IconTrendingDown className="h-3 w-3" /> Recovery Adjustment
+                                        </span>
+                                        <div className="relative">
+                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-600 font-bold text-xs">±</span>
+                                            <Input
+                                                type="number"
+                                                placeholder="0.00"
+                                                value={editableRecoveryAdjustment || ""}
+                                                onChange={(e) => setEditableRecoveryAdjustment(parseFloat(e.target.value) || 0)}
+                                                className="h-7 w-28 pl-5 text-right font-bold text-red-600 border-dashed border-red-200 focus:border-red-400 bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    {(editableRecoveryAdjustment !== 0) && (
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] font-bold text-red-500 uppercase tracking-widest pl-1">Reason for Adjustment</Label>
+                                            <Input
+                                                value={editableRecoveryAdjustmentReason}
+                                                onChange={(e) => setEditableRecoveryAdjustmentReason(e.target.value)}
+                                                placeholder="e.g. Loan settlement, Damage recovery..."
+                                                className="h-7 text-xs border-dashed border-red-200 focus:border-red-400 bg-white italic"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="p-3 px-4 bg-muted/30 flex justify-between items-center border-t">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Total Recoveries</span>
                                     <span className="font-bold text-red-700">{totalRecoveries.toLocaleString()}</span>
@@ -303,12 +393,15 @@ export function SalaryDetailsDialog({
                         <div className="bg-background p-4 rounded-xl border shadow-sm space-y-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <IconTable className="w-4 h-4" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Attendance Details</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">Calculation Factors</span>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {salary.otBreakdown?.length > 0 && (
                                     <div className="space-y-2">
-                                        <span className="text-[10px] font-bold uppercase text-muted-foreground block border-b pb-1">OT Breakdown</span>
+                                        <div className="flex justify-between border-b pb-1">
+                                            <span className="text-[10px] font-bold uppercase text-muted-foreground">OT Breakdown</span>
+                                            <span className="text-[10px] font-black text-blue-600 uppercase">Rate Multiplier</span>
+                                        </div>
                                         {salary.otBreakdown.map((ot, idx) => (
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
                                                 <span className="text-muted-foreground">{ot.type} OT ({ot.hours.toFixed(2)}h)</span>
@@ -332,14 +425,74 @@ export function SalaryDetailsDialog({
                         </div>
                     )}
 
-                    {/* Remarks */}
-                    {salary.remarks && (
-                        <div className="bg-muted/30 p-4 rounded-xl border space-y-2">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <IconNotes className="h-3.5 w-3.5" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Remarks</span>
+                    {/* Remarks Section */}
+                    <div className="bg-muted/30 p-5 rounded-2xl border space-y-3">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <IconNotes className="h-4 w-4" />
+                            <span className="text-xs font-black uppercase tracking-widest">Internal Remarks / Observations</span>
+                        </div>
+                        <textarea
+                            value={editableRemarks}
+                            onChange={(e) => setEditableRemarks(e.target.value)}
+                            placeholder="Add any specific notes for this salary slip..."
+                            className="w-full bg-white border border-border rounded-xl p-3 text-sm min-h-[80px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all italic"
+                        />
+                    </div>
+
+                    {/* Linked Sessions Breakdown */}
+                    {salary.sessions && salary.sessions.length > 0 && (
+                        <div className="bg-background p-5 rounded-2xl border shadow-sm space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <IconListDetails className="w-4 h-4" />
+                                    <span className="text-xs font-black uppercase tracking-wider">Attendance Sessions</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                    {salary.sessions.length} Logs Used
+                                </span>
                             </div>
-                            <p className="text-sm text-foreground">{salary.remarks}</p>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr className="border-b text-muted-foreground uppercase text-[9px] font-black">
+                                            <th className="pb-2">Date</th>
+                                            <th className="pb-2">Clock In</th>
+                                            <th className="pb-2">Clock Out</th>
+                                            <th className="pb-2 text-right">Work</th>
+                                            <th className="pb-2 text-right">OT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/30">
+                                        {editableSessions.map((session: any, sIdx: number) => {
+                                            const sessionDate = session.date ? new Date(session.date) : null;
+                                            const checkIn = session.checkInTime ? new Date(session.checkInTime) : sessionDate;
+                                            const checkOut = session.checkOutTime ? new Date(session.checkOutTime) : null;
+
+                                            return (
+                                                <tr key={sIdx} className="group hover:bg-muted/30 transition-colors">
+                                                    <td className="py-2.5 font-bold">
+                                                        {sessionDate ? format(sessionDate, "MMM d (EEE)") : 'N/A'}
+                                                    </td>
+                                                    <td className="py-2.5 text-muted-foreground font-medium">
+                                                        {checkIn && !isNaN(checkIn.getTime()) ? format(checkIn, "HH:mm") : '--:--'}
+                                                    </td>
+                                                    <td className="py-2.5 text-muted-foreground font-medium">
+                                                        {checkOut && !isNaN(checkOut.getTime()) ? format(checkOut, "HH:mm") : '--:--'}
+                                                    </td>
+                                                    <td className="py-2.5 text-right font-medium">
+                                                        {((session.workMinutes || 0) / 60).toFixed(1)}h
+                                                    </td>
+                                                    <td className="py-2.5 text-right flex items-center justify-end pr-4">
+                                                        <span className="font-bold text-blue-600">
+                                                            {((session.overtimeMinutes || 0) / 60).toFixed(1)}h
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -357,7 +510,15 @@ export function SalaryDetailsDialog({
                             onClick={() => {
                                 onSave?.({
                                     ...salary,
+                                    basicSalary: editableBasicSalary,
                                     components: editableComponents,
+                                    otAdjustment: editableOtAdjustment,
+                                    otAdjustmentReason: editableOtAdjustmentReason,
+                                    recoveryAdjustment: editableRecoveryAdjustment,
+                                    recoveryAdjustmentReason: editableRecoveryAdjustmentReason,
+                                    remarks: editableRemarks,
+                                    sessions: editableSessions,
+                                    sessionIds: editableSessions.map(s => s.id),
                                     netSalary: currentNetSalary
                                 });
                                 onOpenChange(false);

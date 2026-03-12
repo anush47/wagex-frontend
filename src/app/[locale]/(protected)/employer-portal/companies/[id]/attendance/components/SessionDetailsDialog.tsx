@@ -16,7 +16,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
-import { IconClock, IconX, IconTrash, IconCheck } from "@tabler/icons-react";
+import { IconClock, IconX, IconCheck } from "@tabler/icons-react";
 import { AttendanceSession, ApprovalStatus, UpdateSessionDto, SessionWorkDayStatus, EventType, AttendanceEvent } from "@/types/attendance";
 import { Badge } from "@/components/ui/badge";
 import { EventDetailsDialog } from "./EventDetailsDialog";
@@ -48,7 +48,6 @@ export function SessionDetailsDialog({
     timezone = "UTC",
 }: SessionDetailsDialogProps) {
     const [processing, setProcessing] = useState(false);
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editing, setEditing] = useState(false);
 
     // Form state
@@ -206,22 +205,6 @@ export function SessionDetailsDialog({
         }
     };
 
-    const handleDelete = () => {
-        if (!onDelete) return;
-        setDeleteConfirmOpen(true);
-    };
-
-    const confirmDelete = async () => {
-        if (!onDelete || !session) return;
-        setProcessing(true);
-        try {
-            await onDelete(session.id);
-            setDeleteConfirmOpen(false);
-            onOpenChange(false);
-        } finally {
-            setProcessing(false);
-        }
-    };
 
     const getApprovalBadge = (status: ApprovalStatus, type: "IN" | "OUT") => {
         const styles: Record<string, string> = {
@@ -384,18 +367,6 @@ export function SessionDetailsDialog({
 
                 <DialogFooter className="p-4 md:p-6 bg-muted/60 border-t border-border shrink-0 z-10">
                     <div className="flex flex-row gap-3 w-full justify-between items-center">
-                        {onDelete && !editing && (
-                            <Button
-                                variant="outline"
-                                className="rounded-xl h-10 w-10 p-0 md:w-auto md:px-8 md:h-11 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200 shrink-0"
-                                onClick={handleDelete}
-                                disabled={processing}
-                                title="Delete Session"
-                            >
-                                <IconTrash className="h-4 w-4 md:mr-2" />
-                                <span className="hidden md:inline">Delete</span>
-                            </Button>
-                        )}
                         <div className="flex flex-row gap-2 md:gap-3 ml-auto">
                             {editing ? (
                                 <>
@@ -446,19 +417,6 @@ export function SessionDetailsDialog({
                 event={selectedEventForDialog}
             />
 
-            <ConfirmationDialog
-                open={deleteConfirmOpen}
-                onOpenChange={setDeleteConfirmOpen}
-                title="Delete Attendance Session"
-                description="Are you sure you want to delete this attendance session? This action cannot be undone."
-                icon={<IconTrash className="h-8 w-8" />}
-                actionLabel="Delete"
-                cancelLabel="Cancel"
-                onAction={confirmDelete}
-                onCancel={() => setDeleteConfirmOpen(false)}
-                loading={processing}
-                variant="destructive"
-            />
         </Dialog>
     );
 }

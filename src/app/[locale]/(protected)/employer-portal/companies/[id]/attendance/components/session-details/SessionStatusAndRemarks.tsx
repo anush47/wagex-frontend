@@ -72,6 +72,11 @@ export function SessionStatusAndRemarks({
             <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
                 <Label className="text-xs font-bold text-neutral-500 mb-3">Status Flags</Label>
                 <div className="flex flex-wrap gap-2">
+                    {session.payrollStatus === 'PROCESSED' && (
+                        <Badge variant="outline" className="bg-green-600 text-white border-green-700 font-black shadow-sm">
+                            Processed in Payroll
+                        </Badge>
+                    )}
                     {session.isLate && (
                         <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">
                             Late

@@ -29,6 +29,11 @@ export enum SessionWorkDayStatus {
     OFF = 'OFF'
 }
 
+export enum SessionPayrollStatus {
+    UNPROCESSED = 'UNPROCESSED',
+    PROCESSED = 'PROCESSED'
+}
+
 // Attendance Event (Raw Log)
 export interface AttendanceEvent {
     id: string;
@@ -100,6 +105,8 @@ export interface AttendanceSession {
     // Approval
     inApprovalStatus: ApprovalStatus;
     outApprovalStatus: ApprovalStatus;
+    payrollStatus: SessionPayrollStatus;
+    salaryId?: string;
     approvedById?: string;
     approvedAt?: string;
     // Notes

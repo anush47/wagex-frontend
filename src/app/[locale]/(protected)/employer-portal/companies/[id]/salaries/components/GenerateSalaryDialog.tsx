@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { IconArrowRight, IconChecks, IconDeviceFloppy, IconChevronLeft, IconUsers, IconCalendarEvent, IconTable, IconCalculator, IconCheck } from "@tabler/icons-react";
+import { IconArrowRight, IconChecks, IconDeviceFloppy, IconChevronLeft, IconUsers, IconCalendarEvent, IconTable, IconCalculator, IconCheck, IconAlertCircle, IconShieldCheck, IconInfoCircle, IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
 import { useSalaries } from "@/hooks/use-salaries";
 import { useEmployees } from "@/hooks/use-employees";
 import { useCompanyPolicies, useCompanyPolicy } from "@/hooks/use-policies";
@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-type Step = "SELECTION" | "PERIOD" | "PREVIEW";
+type Step = "SELECTION" | "PERIOD" | "VALIDATION" | "PREVIEW";
 
 export function GenerateSalaryDialog({
     open,
@@ -145,7 +145,7 @@ export function GenerateSalaryDialog({
                 employeeIds: selectedEmployees,
             });
             setPreviewData(data);
-            setStep("PREVIEW");
+            setStep("VALIDATION");
         } catch (error) {
             toast.error("Failed to generate previews");
         }
@@ -193,6 +193,7 @@ export function GenerateSalaryDialog({
     const steps = [
         { id: "SELECTION", icon: IconUsers, label: "Staff" },
         { id: "PERIOD", icon: IconCalendarEvent, label: "Period" },
+        { id: "VALIDATION", icon: IconShieldCheck, label: "Validate" },
         { id: "PREVIEW", icon: IconTable, label: "Preview" },
     ];
 
@@ -382,6 +383,114 @@ export function GenerateSalaryDialog({
                         </div>
                     )}
 
+                    {step === "VALIDATION" && (
+                        <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 max-w-2xl mx-auto">
+                            <div className="text-center space-y-2 mb-8 relative">
+                                <h3 className="text-2xl font-black tracking-tight">Audit & Validation</h3>
+                                <p className="text-sm text-muted-foreground italic">Checking staff records for conflicts, missing logs, or pending approvals.</p>
+                                <div className="pt-2 flex justify-center">
+                                    <Button
+                                        variant="outline"
+                                        size="xs"
+                                        onClick={handleGeneratePreview}
+                                        disabled={generatePreviewsMutation.isPending}
+                                        className="h-7 text-[10px] font-black uppercase tracking-wider gap-1.5 border-neutral-200"
+                                    >
+                                        <IconRefresh className={`h-3 w-3 ${generatePreviewsMutation.isPending ? 'animate-spin' : ''}`} />
+                                        {generatePreviewsMutation.isPending ? 'Re-auditing...' : 'Re-run Audit'}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Card className="p-6 border-2 border-green-100 bg-green-50/10 flex flex-col items-center gap-2">
+                                    <div className="h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                        <IconCheck className="h-6 w-6" />
+                                    </div>
+                                    <span className="text-2xl font-black text-green-700">
+                                        {previewData.reduce((s, g) => s + g.employees.filter((e: any) => !e.hasProblems).length, 0)}
+                                    </span>
+                                    <span className="text-[10px] font-black uppercase text-green-600 tracking-wider">Ready for Payroll</span>
+                                </Card>
+                                <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
+                                        <IconAlertTriangle className="h-6 w-6" />
+                                    </div>
+                                    <span className={`text-2xl font-black ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
+                                        {previewData.reduce((s, g) => s + (g.problemCount || 0), 0)}
+                                    </span>
+                                    <span className={`text-[10px] font-black uppercase tracking-wider ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
+                                        {previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention')}
+                                    </span>
+                                </Card>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="text-xs font-black uppercase tracking-widest text-muted-foreground pl-1">Identified Issues By Staff</div>
+                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                                    {previewData.flatMap(g => g.employees).filter((e: any) => e.hasProblems).map((employee: any, idx) => (
+                                        <div key={idx} className={`bg-white border-2 rounded-2xl p-4 flex flex-col gap-3 shadow-sm ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'border-red-50' : 'border-amber-50'}`}>
+                                            <div className={`flex justify-between items-center pb-2 border-b ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'border-red-50' : 'border-amber-50'}`}>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-sm text-neutral-800">{employee.employeeName}</span>
+                                                    <span className="text-[9px] font-mono font-bold text-muted-foreground tracking-tighter uppercase opacity-70">EMP {employee.employeeNo}</span>
+                                                </div>
+                                                <Badge
+                                                    variant={employee.problems.some((p: any) => p.severity === 'ERROR') ? "destructive" : "outline"}
+                                                    className={`font-bold px-2 py-0 text-[10px] ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'bg-red-500' : 'border-amber-400 text-amber-700 bg-amber-50'}`}
+                                                >
+                                                    {employee.problems.some((p: any) => p.severity === 'ERROR') ? 'FIX REQUIRED' : 'REVIEW NEEDED'}
+                                                </Badge>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {employee.problems.map((prob: any, pIdx: number) => (
+                                                    <div key={pIdx} className={`flex gap-2 text-xs font-medium ${prob.severity === 'ERROR' ? 'text-red-600/90' : 'text-amber-600/90'}`}>
+                                                        <IconAlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                                        <span>{prob.message}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {previewData.reduce((s, g) => s + (g.problemCount || 0), 0) === 0 && (
+                                        <div className="bg-green-50/30 border-2 border-dashed border-green-200 rounded-3xl p-12 flex flex-col items-center justify-center gap-4">
+                                            <div className="h-16 w-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                                <IconShieldCheck className="h-10 w-10" />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-lg font-black text-green-700">All Clear!</div>
+                                                <p className="text-sm text-green-600/70 italic font-medium">No unresolved sessions or pending leaves found for this period.</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? (
+                                <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex gap-3 items-start">
+                                    <IconAlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <span className="text-xs font-bold text-red-800 uppercase tracking-tighter block">Unresolved Errors</span>
+                                        <p className="text-[11px] font-medium text-red-700/80 leading-relaxed italic">
+                                            Salaries cannot be generated while sessions are missing clock-out times or attendance is pending approval. Please resolve these errors to proceed.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : previewData.some(g => (g.problemCount || 0) > 0) && (
+                                <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3 items-start">
+                                    <IconInfoCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <span className="text-xs font-bold text-amber-800 uppercase tracking-tighter block">Data Warnings</span>
+                                        <p className="text-[11px] font-medium text-amber-700/80 leading-relaxed italic">
+                                            Some working days have no attendance or leave records. These will be treated as unpaid absences. You may proceed to preview or fix them in the Attendance tab.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {step === "PREVIEW" && (
                         <div className="space-y-6">
                             <Card className="overflow-hidden">
@@ -415,14 +524,14 @@ export function GenerateSalaryDialog({
                                                                 <span className="text-[10px] text-muted-foreground font-mono">{row.employeeId.slice(0, 8)}...</span>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>{row.basicSalary.toLocaleString()}</TableCell>
+                                                        <TableCell>{row.basicSalary?.toLocaleString()}</TableCell>
                                                         <TableCell className="text-green-600">+{adds.toLocaleString()}</TableCell>
-                                                        <TableCell className="text-blue-600">+{row.otAmount.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-blue-600">+{(row.otAmount + (row.otAdjustment || 0)).toLocaleString()}</TableCell>
                                                         <TableCell className="text-red-500">-{row.noPayAmount.toLocaleString()}</TableCell>
                                                         <TableCell className="text-red-500">-{deds.toLocaleString()}</TableCell>
                                                         <TableCell className="text-orange-500">-{row.advanceDeduction.toLocaleString()}</TableCell>
                                                         <TableCell className="text-right font-bold">
-                                                            {row.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                            {row.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </TableCell>
                                                     </TableRow>
                                                 );
@@ -467,7 +576,11 @@ export function GenerateSalaryDialog({
                     {step !== "SELECTION" && (
                         <Button
                             variant="outline"
-                            onClick={() => setStep(step === "PERIOD" ? "SELECTION" : "PERIOD")}
+                            onClick={() => {
+                                if (step === "PERIOD") setStep("SELECTION");
+                                else if (step === "VALIDATION") setStep("PERIOD");
+                                else if (step === "PREVIEW") setStep("VALIDATION");
+                            }}
                             className="mr-auto"
                         >
                             <IconChevronLeft className="mr-2 h-4 w-4" /> Back
@@ -490,7 +603,17 @@ export function GenerateSalaryDialog({
                             onClick={handleGeneratePreview}
                             className="w-full md:w-auto"
                         >
-                            {generatePreviewsMutation.isPending ? "Calculating..." : "Generate Preview"} <IconArrowRight className="ml-2 h-4 w-4" />
+                            {generatePreviewsMutation.isPending ? "Calculating..." : "Run Audit & Validate"} <IconArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+
+                    {step === "VALIDATION" && (
+                        <Button
+                            disabled={previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR')))}
+                            onClick={() => setStep("PREVIEW")}
+                            className="w-full md:w-auto"
+                        >
+                            Proceed to Preview <IconArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                     )}
 
