@@ -535,11 +535,11 @@ export function SalaryDetailsDialog({
                 <DialogFooter className="p-4 md:p-6 border-t bg-background shrink-0">
                     <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
                         <div className="flex flex-col self-start md:self-auto">
-                            {salary.status === SalaryStatus.APPROVED && salary.approvedBy ? (
+                            {salary.status === SalaryStatus.APPROVED ? (
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold uppercase text-green-600">Approved By</span>
                                     <span className="font-bold text-sm text-foreground">
-                                        {salary.approvedBy.fullName} 
+                                        {salary.approvedBy?.fullName || "Verified User"} 
                                         {salary.approvedAt && (
                                             <span className="text-muted-foreground font-normal ml-1">
                                                 • {format(new Date(salary.approvedAt), "MMM d, HH:mm")}
@@ -557,7 +557,7 @@ export function SalaryDetailsDialog({
                             )}
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto">
-                            {salary.status === SalaryStatus.DRAFT && (
+                            {salary.status === "DRAFT" && (
                                 <Button
                                     className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 font-bold flex-1 md:flex-none shadow-md shadow-green-200"
                                     disabled={isSaving || isApproving}

@@ -70,7 +70,7 @@ export function SalariesTab({
     const getStatusBadge = (status: SalaryStatus) => {
         const styles: Record<string, string> = {
             DRAFT: "bg-neutral-100 text-neutral-700 hover:bg-neutral-100 border-neutral-200",
-            APPROVED: "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200",
+            APPROVED: "bg-green-50 text-green-700 hover:bg-green-50 border-green-200",
             PARTIALLY_PAID: "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200",
             PAID: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
         };
@@ -93,10 +93,34 @@ export function SalariesTab({
                                 <div className="flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-xl border border-primary/10 mr-2">
                                     <span className="text-[10px] font-black uppercase text-primary">{selectedIds.length} Selected</span>
                                     <Button size="sm" variant="ghost" className="h-7 px-2 font-black text-[10px] uppercase hover:bg-primary/10" onClick={() => setSelectedIds([])}>Clear</Button>
-                                    <div className="w-[1px] h-4 bg-primary/20" />
-                                    <Button size="sm" variant="default" className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm">
-                                        <IconCheck className="h-3 w-3 mr-1" /> Approve
-                                    </Button>
+                                    
+                                    {(() => {
+                                        const selectedDrafts = salaries.filter((s: any) => 
+                                            selectedIds.includes(s.id) && s.status === 'DRAFT'
+                                        );
+                                        
+                                        if (selectedDrafts.length > 0) {
+                                            return (
+                                                <>
+                                                    <div className="w-[1px] h-4 bg-primary/20" />
+                                                    <Button 
+                                                        size="sm" 
+                                                        variant="default" 
+                                                        className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm"
+                                                        onClick={() => {
+                                                            // For now we just show the logic is there
+                                                            // In a real scenario we'd call a bulk approval mutation
+                                                            selectedDrafts.forEach((s: any) => approveSalaryMutation.mutate(s.id));
+                                                            setSelectedIds([]);
+                                                        }}
+                                                    >
+                                                        <IconCheck className="h-3 w-3 mr-1" /> Approve {selectedDrafts.length > 1 ? `(${selectedDrafts.length})` : ''}
+                                                    </Button>
+                                                </>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
                                 </div>
                             )}
 
