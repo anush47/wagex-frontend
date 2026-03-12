@@ -180,7 +180,7 @@ export function SalaryDetailsDialog({
                         <div className="md:w-1/3 bg-background p-4 rounded-2xl border shadow-sm flex flex-col justify-center">
                             <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Net Salary</Label>
                             <div className="text-2xl font-black text-foreground">
-                                LKR {currentNetSalary.toLocaleString()}
+                                LKR {currentNetSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </div>
                         </div>
                     </div>
@@ -214,7 +214,8 @@ export function SalaryDetailsDialog({
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
-                                            value={editableBasicSalary}
+                                            step="0.01"
+                                            value={editableBasicSalary.toFixed(2)}
                                             onChange={(e) => setEditableBasicSalary(parseFloat(e.target.value) || 0)}
                                             className="h-8 w-32 font-bold text-right border-transparent hover:border-input focus:border-primary bg-transparent"
                                         />
@@ -227,7 +228,7 @@ export function SalaryDetailsDialog({
                                         <span className="font-medium text-muted-foreground flex items-center gap-2">
                                             <IconClock className="h-3.5 w-3.5" /> Calculated Overtime (OT)
                                         </span>
-                                        <span className="font-bold text-blue-600">+{salary.otAmount.toLocaleString()}</span>
+                                        <span className="font-bold text-blue-600">+{salary.otAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
 
@@ -241,10 +242,17 @@ export function SalaryDetailsDialog({
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-600 font-bold text-xs">±</span>
                                             <Input
                                                 type="number"
+                                                step="0.01"
                                                 placeholder="0.00"
-                                                value={editableOtAdjustment || ""}
+                                                value={editableOtAdjustment === 0 ? "" : editableOtAdjustment.toFixed(2)}
                                                 onChange={(e) => setEditableOtAdjustment(parseFloat(e.target.value) || 0)}
-                                                className="h-7 w-28 pl-5 text-right font-bold text-blue-600 border-dashed border-blue-200 focus:border-blue-400 bg-white"
+                                                onBlur={(e) => {
+                                                    if (e.target.value) {
+                                                        const val = parseFloat(parseFloat(e.target.value).toFixed(2));
+                                                        setEditableOtAdjustment(val);
+                                                    }
+                                                }}
+                                                className="h-7 w-32 pl-5 text-right font-bold text-blue-600 border-dashed border-blue-200 focus:border-blue-400 bg-white"
                                             />
                                         </div>
                                     </div>
@@ -273,9 +281,10 @@ export function SalaryDetailsDialog({
                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-green-600 font-bold text-xs">+</span>
                                                 <Input
                                                     type="number"
-                                                    value={comp.amount}
+                                                    step="0.01"
+                                                    value={comp.amount.toFixed(2)}
                                                     onChange={(e) => handleComponentChange(comp.id, comp.name, parseFloat(e.target.value) || 0)}
-                                                    className="h-7 w-24 pl-5 text-right font-bold text-green-600 border-transparent hover:border-input focus:border-primary bg-transparent"
+                                                    className="h-7 w-32 pl-5 text-right font-bold text-green-600 border-transparent hover:border-input focus:border-primary bg-transparent"
                                                 />
                                             </div>
                                             <Button
@@ -291,7 +300,7 @@ export function SalaryDetailsDialog({
                                 ))}
                                 <div className="p-3 px-4 bg-muted/30 flex justify-between items-center border-t">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Gross Earnings</span>
-                                    <span className="font-bold text-green-700">{grossEarnings.toLocaleString()}</span>
+                                    <span className="font-bold text-green-700">{grossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         </div>
@@ -319,13 +328,13 @@ export function SalaryDetailsDialog({
                                 {salary.noPayAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">No Pay Deduction</span>
-                                        <span className="font-bold text-red-600">-{salary.noPayAmount.toLocaleString()}</span>
+                                        <span className="font-bold text-red-600">-{salary.noPayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
                                 {salary.advanceDeduction > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">Advance Recovery</span>
-                                        <span className="font-bold text-orange-600">-{salary.advanceDeduction.toLocaleString()}</span>
+                                        <span className="font-bold text-orange-600">-{salary.advanceDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
                                 {deductions.map((comp, idx) => (
@@ -340,9 +349,10 @@ export function SalaryDetailsDialog({
                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-600 font-bold text-xs">-</span>
                                                 <Input
                                                     type="number"
-                                                    value={comp.amount}
+                                                    step="0.01"
+                                                    value={comp.amount.toFixed(2)}
                                                     onChange={(e) => handleComponentChange(comp.id, comp.name, parseFloat(e.target.value) || 0)}
-                                                    className="h-7 w-24 pl-5 text-right font-bold text-red-600 border-transparent hover:border-input focus:border-primary bg-transparent"
+                                                    className="h-7 w-32 pl-5 text-right font-bold text-red-600 border-transparent hover:border-input focus:border-primary bg-transparent"
                                                 />
                                             </div>
                                             <Button
@@ -359,7 +369,7 @@ export function SalaryDetailsDialog({
                                 {salary.taxAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">Tax Payee</span>
-                                        <span className="font-bold text-red-600">-{salary.taxAmount.toLocaleString()}</span>
+                                        <span className="font-bold text-red-600">-{salary.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
 
@@ -373,10 +383,17 @@ export function SalaryDetailsDialog({
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-600 font-bold text-xs">±</span>
                                             <Input
                                                 type="number"
+                                                step="0.01"
                                                 placeholder="0.00"
-                                                value={editableRecoveryAdjustment || ""}
+                                                value={editableRecoveryAdjustment === 0 ? "" : editableRecoveryAdjustment.toFixed(2)}
                                                 onChange={(e) => setEditableRecoveryAdjustment(parseFloat(e.target.value) || 0)}
-                                                className="h-7 w-28 pl-5 text-right font-bold text-red-600 border-dashed border-red-200 focus:border-red-400 bg-white"
+                                                onBlur={(e) => {
+                                                    if (e.target.value) {
+                                                        const val = parseFloat(parseFloat(e.target.value).toFixed(2));
+                                                        setEditableRecoveryAdjustment(val);
+                                                    }
+                                                }}
+                                                className="h-7 w-32 pl-5 text-right font-bold text-red-600 border-dashed border-red-200 focus:border-red-400 bg-white"
                                             />
                                         </div>
                                     </div>
@@ -395,7 +412,7 @@ export function SalaryDetailsDialog({
 
                                 <div className="p-3 px-4 bg-muted/30 flex justify-between items-center border-t">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Total Recoveries</span>
-                                    <span className="font-bold text-red-700">{totalRecoveries.toLocaleString()}</span>
+                                    <span className="font-bold text-red-700">{totalRecoveries.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         </div>
@@ -418,7 +435,7 @@ export function SalaryDetailsDialog({
                                         {salary.otBreakdown.map((ot, idx) => (
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
                                                 <span className="text-muted-foreground">{ot.type} OT ({ot.hours.toFixed(2)}h)</span>
-                                                <span className="font-medium">+{ot.amount.toLocaleString()}</span>
+                                                <span className="font-medium">+{ot.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -429,7 +446,7 @@ export function SalaryDetailsDialog({
                                         {salary.noPayBreakdown.map((np, idx) => (
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
                                                 <span className="text-muted-foreground">{np.type} ({np.count})</span>
-                                                <span className="font-medium text-red-600">-{np.amount.toLocaleString()}</span>
+                                                <span className="font-medium text-red-600">-{np.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                             </div>
                                         ))}
                                     </div>

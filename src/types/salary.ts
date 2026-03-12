@@ -25,9 +25,12 @@ export interface SalaryComponentResult {
     id: string;
     name: string;
     category: 'ADDITION' | 'DEDUCTION';
-    type: 'FLAT' | 'PERCENTAGE';
+    type: 'FLAT' | 'PERCENTAGE' | 'FLAT_AMOUNT' | 'PERCENTAGE_TOTAL_EARNINGS';
     value: number;
     amount: number;
+    affectsTotalEarnings?: boolean;
+    isStatutory?: boolean;
+    systemType?: string;
 }
 
 export interface OTBreakdownItem {
