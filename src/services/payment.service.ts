@@ -10,4 +10,8 @@ export class PaymentService {
     static async createPayment(dto: any): Promise<ApiResponse<Payment>> {
         return backendApiClient.post<Payment>('/payments', dto);
     }
+
+    static async deletePayment(id: string): Promise<ApiResponse<void>> {
+        return backendApiClient.delete<void>(`/payments/${id}`);
+    }
 }

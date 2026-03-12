@@ -33,8 +33,31 @@ export function usePayments(params: PaymentQueryParams) {
         }
     });
 
+    const deletePaymentMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await PaymentService.deletePayment(id);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting payment...') };
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            queryClient.invalidateQueries({ queryKey: ['salaries'] });
+            queryClient.invalidateQueries({ queryKey: ['advances'] });
+            toast.dismiss(context?.toastId);
+            toast.success('Payment deleted successfully');
+        },
+        onError: (error: any, variables, context) => {
+            toast.dismiss(context?.toastId);
+            toast.error(error.message || 'Failed to delete payment');
+        }
+    });
+
     return {
         paymentsQuery,
         createPaymentMutation,
+        deletePaymentMutation,
     };
 }

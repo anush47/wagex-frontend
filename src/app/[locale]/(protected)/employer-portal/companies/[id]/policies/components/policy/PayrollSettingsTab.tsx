@@ -23,7 +23,10 @@ const DEFAULT_CONFIG: PayrollSettingsConfig = {
     autoDeductUnpaidLeaves: false,
     unpaidLeaveAction: UnpaidLeaveAction.DEDUCT_FROM_TOTAL,
     lateDeductionType: LateDeductionType.DIVISOR_BASED,
-    lateDeductionValue: 8
+    lateDeductionValue: 8,
+    enableAutoDraft: false,
+    draftCreationDaysBeforePayDay: 3,
+    autoAcknowledgePayments: false
 };
 
 export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps) {
@@ -269,6 +272,72 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                 </div>
                             </div>
 
+                        </CardContent>
+                    </Card>
+
+                    {/* 4. Acknowledge Rules Card */}
+                    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
+                        <CardHeader className="pb-2">
+                            <div className="flex items-center gap-2 text-neutral-500">
+                                <IconCheck className="w-5 h-5" />
+                                <span className="text-xs font-bold uppercase tracking-widest">Acknowledge Rules</span>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-transparent shadow-sm">
+                                <div className="space-y-0.5">
+                                    <Label className="text-sm font-bold block">Auto-Acknowledge Payments</Label>
+                                    <p className="text-xs text-neutral-500">Payments will be automatically marked as acknowledged.</p>
+                                </div>
+                                <Switch
+                                    checked={config.autoAcknowledgePayments || false}
+                                    onCheckedChange={(v) => handleChange("autoAcknowledgePayments", v)}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* 5. Automation Card */}
+                    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
+                        <CardHeader className="pb-2">
+                            <div className="flex items-center gap-2 text-neutral-500">
+                                <IconCalculator className="w-5 h-5" />
+                                <span className="text-xs font-bold uppercase tracking-widest">Automation</span>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-transparent shadow-sm">
+                                <div className="space-y-0.5">
+                                    <Label className="text-sm font-bold block">Auto-Create Draft Salaries</Label>
+                                    <p className="text-xs text-neutral-500">Automatically generate draft salaries before payday.</p>
+                                </div>
+                                <Switch
+                                    checked={config.enableAutoDraft || false}
+                                    onCheckedChange={(v) => handleChange("enableAutoDraft", v)}
+                                />
+                            </div>
+
+                            {config.enableAutoDraft && (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                    <Label className="text-sm font-bold">Draft Creation Timing</Label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={30}
+                                            value={config.draftCreationDaysBeforePayDay || 3}
+                                            onChange={(e) => handleChange("draftCreationDaysBeforePayDay", parseInt(e.target.value) || 1)}
+                                            className="h-12 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-20"
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-400 pointer-events-none">
+                                            days before
+                                        </span>
+                                    </div>
+                                    <p className="text-[10px] text-neutral-400 ml-1">
+                                        Drafts will be generated this many days before the scheduled payday.
+                                    </p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

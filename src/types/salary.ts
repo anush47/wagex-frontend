@@ -21,6 +21,11 @@ export enum PaymentMethod {
     OTHER = 'OTHER',
 }
 
+export enum PaymentStatus {
+    PENDING_ACKNOWLEDGEMENT = 'PENDING_ACKNOWLEDGEMENT',
+    ACKNOWLEDGED = 'ACKNOWLEDGED',
+}
+
 export interface SalaryComponentResult {
     id: string;
     name: string;
@@ -118,6 +123,7 @@ export interface Payment {
     paymentMethod: PaymentMethod;
     referenceNo?: string;
     remarks?: string;
+    status: PaymentStatus;
     salary?: Salary;
     advance?: SalaryAdvance;
     createdAt: string;

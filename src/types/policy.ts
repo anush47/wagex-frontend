@@ -145,6 +145,20 @@ export interface PayrollSettingsConfig {
     unpaidLeaveAction: UnpaidLeaveAction;
     lateDeductionType: LateDeductionType;
     lateDeductionValue: number;
+
+    // Acknowledge Rules
+    autoAcknowledgePayments?: boolean;
+
+    // Auto Draft
+    enableAutoDraft: boolean;
+    draftCreationDaysBeforePayDay?: number;
+
+    // OT Rules
+    otCalculationMethod?: string;
+    otDivisor?: number;
+    otNormalRate?: number;
+    otDoubleRate?: number;
+    otTripleRate?: number;
 }
 
 export enum LateDeductionType {

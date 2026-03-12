@@ -56,6 +56,8 @@ export function SalariesTab({
         limit: 20,
     });
 
+    const { deletePaymentMutation } = usePayments({ companyId });
+
     const salaries = (salariesQuery.data as any)?.items || [];
     const meta = salariesQuery.data as any;
     const lastPage = meta?.lastPage || (meta?.total ? Math.ceil(meta.total / (meta.limit || 20)) : 1);
@@ -207,6 +209,7 @@ export function SalariesTab({
                                     <SelectItem value="ALL">All Status</SelectItem>
                                     <SelectItem value="DRAFT">Draft</SelectItem>
                                     <SelectItem value="APPROVED">Approved</SelectItem>
+                                    <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
                                     <SelectItem value="PAID">Paid</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -281,12 +284,10 @@ export function SalariesTab({
                                         </TableHead>
                                         <TableHead>Employee</TableHead>
                                         <TableHead>Period</TableHead>
-                                        <TableHead>Basic</TableHead>
-                                        <TableHead>Additions</TableHead>
-                                        <TableHead>OT</TableHead>
+                                        <TableHead className="text-right">Earnings</TableHead>
                                         <TableHead className="text-right">Deductions</TableHead>
-                                        <TableHead>Total Earnings</TableHead>
-                                        <TableHead className="text-right">Net Salary</TableHead>
+                                        <TableHead className="text-right">Advance</TableHead>
+                                        <TableHead className="text-right whitespace-nowrap">Net Pay</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
@@ -327,67 +328,44 @@ export function SalariesTab({
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>
-                                                <span className="text-sm font-medium text-muted-foreground/80">
-                                                    {salary.basicSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                {(() => {
-                                                    const adds = (salary.components || [])
-                                                        .filter(c => c.category === 'ADDITION')
-                                                        .reduce((acc, c) => acc + c.amount, 0);
-                                                    return adds > 0 ? (
-                                                        <span className="text-green-600 font-medium text-sm">
-                                                            +{adds.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                    ) : "-";
-                                                })()}
-                                            </TableCell>
-                                            <TableCell>
-                                                {(() => {
-                                                    const otTotal = salary.otAmount + (salary.otAdjustment || 0);
-                                                    return otTotal > 0 ? (
-                                                        <span className="text-blue-600 font-bold text-sm">
-                                                            +{otTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                    ) : "-";
-                                                })()}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {(() => {
-                                                    const allDeductions = (salary.advanceDeduction || 0) + 
-                                                                         (salary.taxAmount || 0) + 
-                                                                         (salary.recoveryAdjustment || 0) + 
-                                                                         (salary.noPayAmount || 0) +
-                                                                         ((salary.components || []).filter(c => c.category === 'DEDUCTION').reduce((acc, c) => acc + c.amount, 0));
-                                                    return allDeductions > 0 ? (
-                                                        <span className="text-red-600 font-medium text-sm">
-                                                            -{allDeductions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                    ) : "-";
-                                                })()}
-                                            </TableCell>
-                                            <TableCell>
-                                                {(() => {
-                                                    const epfAdditions = (salary.components || [])
-                                                        .filter(c => c.category === 'ADDITION' && c.affectsTotalEarnings)
-                                                        .reduce((acc, c) => acc + c.amount, 0);
-                                                    const epfBase = salary.basicSalary + epfAdditions - (salary.noPayAmount || 0);
-                                                    return (
-                                                        <span className="font-bold text-sm text-foreground">
-                                                            {epfBase.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-sm text-foreground">
+                                                        {(salary.basicSalary + salary.otAmount + (salary.components || []).filter(c => c.category === 'ADDITION').reduce((acc, c) => acc + c.amount, 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground font-medium">Gross</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-bold text-sm text-red-500">
+                                                        {(() => {
+                                                            const compDeductions = (salary.components || [])
+                                                                .filter(c => c.category === 'DEDUCTION')
+                                                                .reduce((acc, c) => acc + c.amount, 0);
+                                                            const total = compDeductions + salary.noPayAmount + salary.taxAmount;
+                                                            return total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                        })()}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {salary.advanceDeduction > 0 ? (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="font-bold text-sm text-orange-600">
+                                                            {salary.advanceDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                        <span className="text-[9px] font-black text-orange-600/50 uppercase">Recovery</span>
+                                                    </div>
+                                                ) : <span className="text-neutral-300">---</span>}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-black text-sm text-foreground">
                                                         {salary.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                     </span>
                                                     {(salary.status === 'APPROVED' || salary.status === 'PARTIALLY_PAID') && (
-                                                        <span className="text-[10px] font-black text-orange-600 mt-0.5">
+                                                        <span className={`text-[10px] font-black mt-0.5 ${new Date(salary.payDate) < new Date() ? 'text-red-500' : 'text-primary'}`}>
                                                             DUE: {(() => {
                                                                 const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
                                                                 return (salary.netSalary - paid).toLocaleString(undefined, { minimumFractionDigits: 2 });
@@ -469,6 +447,10 @@ export function SalariesTab({
                     setIsPaymentDialogOpen(true);
                 }}
                 onDelete={() => setIsDeleteDialogOpen(true)}
+                onDeletePayment={async (id) => {
+                    await deletePaymentMutation.mutateAsync(id);
+                }}
+                isDeletingPayment={deletePaymentMutation.isPending}
             />
 
             <RecordPaymentDialog

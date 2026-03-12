@@ -37,6 +37,7 @@ import {
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
+import { PaymentDetailsDialog } from "./PaymentDetailsDialog";
 
 interface SalaryDetailsDialogProps {
     open: boolean;
@@ -49,6 +50,8 @@ interface SalaryDetailsDialogProps {
     isSaving?: boolean;
     isApproving?: boolean;
     isDeleting?: boolean;
+    onDeletePayment?: (id: string) => Promise<void>;
+    isDeletingPayment?: boolean;
 }
 
 export function SalaryDetailsDialog({
@@ -62,6 +65,8 @@ export function SalaryDetailsDialog({
     isSaving,
     isApproving,
     isDeleting,
+    onDeletePayment,
+    isDeletingPayment,
 }: SalaryDetailsDialogProps) {
     const [editableComponents, setEditableComponents] = React.useState<any[]>(salary?.components || []);
     const [editableBasicSalary, setEditableBasicSalary] = React.useState<number>(salary?.basicSalary || 0);
@@ -71,6 +76,8 @@ export function SalaryDetailsDialog({
     const [editableRecoveryAdjustment, setEditableRecoveryAdjustment] = React.useState<number>(salary?.recoveryAdjustment || 0);
     const [editableRecoveryAdjustmentReason, setEditableRecoveryAdjustmentReason] = React.useState<string>(salary?.recoveryAdjustmentReason || "");
     const [editableSessions, setEditableSessions] = React.useState<any[]>(salary?.sessions || []);
+    const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
+    const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = React.useState(false);
 
     React.useEffect(() => {
         if (salary) {
@@ -132,10 +139,10 @@ export function SalaryDetailsDialog({
 
     const getStatusBadge = (status: SalaryStatus) => {
         const styles: Record<string, string> = {
-            DRAFT: "bg-neutral-100 text-neutral-700 hover:bg-neutral-100 border-neutral-200",
-            APPROVED: "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200",
-            PARTIALLY_PAID: "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200",
-            PAID: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200",
+            DRAFT: "bg-muted text-muted-foreground hover:bg-muted border-border",
+            APPROVED: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/15 border-blue-500/20",
+            PARTIALLY_PAID: "bg-orange-500/10 text-orange-600 hover:bg-orange-500/15 border-orange-500/20",
+            PAID: "bg-green-500/10 text-green-600 hover:bg-green-500/15 border-green-500/20",
         };
 
         return (
@@ -164,7 +171,7 @@ export function SalaryDetailsDialog({
                         <div className="flex-1">
                             <div className="flex items-center gap-3">
                                 <DialogTitle className="text-xl font-bold tracking-tight">
-                                    Salary Details
+                                    Net Pay Details
                                 </DialogTitle>
                                 {getStatusBadge(salary.status)}
                             </div>
@@ -192,7 +199,7 @@ export function SalaryDetailsDialog({
                         </div>
 
                         <div className="md:w-1/3 bg-background p-4 rounded-2xl border shadow-sm flex flex-col justify-center">
-                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Net Salary</Label>
+                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Net Payable</Label>
                             <div className="text-2xl font-black text-foreground">
                                 LKR {currentNetSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </div>
@@ -205,7 +212,7 @@ export function SalaryDetailsDialog({
                         <div className="space-y-4">
                             <div className="flex items-center justify-between px-1">
                                 <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-md bg-green-100 text-green-700 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded-md bg-green-500/10 text-green-600 flex items-center justify-center">
                                         <IconTrendingUp className="h-4 w-4" />
                                     </div>
                                     <h3 className="text-sm font-bold text-foreground">Earnings</h3>
@@ -213,7 +220,7 @@ export function SalaryDetailsDialog({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 text-xs font-bold text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    className="h-7 text-xs font-bold text-green-600 hover:text-green-700 hover:bg-green-500/10"
                                     onClick={() => addComponent('ADDITION')}
                                 >
                                     <IconPlus className="h-3.5 w-3.5 mr-1" /> Add
@@ -277,7 +284,7 @@ export function SalaryDetailsDialog({
                                                 value={editableOtAdjustmentReason}
                                                 onChange={(e) => setEditableOtAdjustmentReason(e.target.value)}
                                                 placeholder="e.g. Manual correction, Approved extra shift..."
-                                                className="h-7 text-xs border-dashed border-blue-200 focus:border-blue-400 bg-white italic"
+                                                className="h-7 text-xs border-dashed border-blue-500/30 focus:border-blue-500 bg-muted/30 italic"
                                             />
                                         </div>
                                     )}
@@ -312,9 +319,9 @@ export function SalaryDetailsDialog({
                                         </div>
                                     </div>
                                 ))}
-                                <div className="p-3 px-4 bg-muted/30 flex justify-between items-center border-t">
+                                <div className="p-3 px-4 bg-muted/50 flex justify-between items-center border-t border-border/50">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Gross Earnings</span>
-                                    <span className="font-bold text-green-700">{grossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-bold text-green-600 tabular-nums">{grossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         </div>
@@ -323,7 +330,7 @@ export function SalaryDetailsDialog({
                         <div className="space-y-4">
                             <div className="flex items-center justify-between px-1">
                                 <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-md bg-red-100 text-red-700 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded-md bg-red-500/10 text-red-600 flex items-center justify-center">
                                         <IconTrendingDown className="h-4 w-4" />
                                     </div>
                                     <h3 className="text-sm font-bold text-foreground">Deductions</h3>
@@ -331,7 +338,7 @@ export function SalaryDetailsDialog({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    className="h-7 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-500/10"
                                     onClick={() => addComponent('DEDUCTION')}
                                 >
                                     <IconPlus className="h-3.5 w-3.5 mr-1" /> Add
@@ -380,6 +387,19 @@ export function SalaryDetailsDialog({
                                         </div>
                                     </div>
                                 ))}
+
+                                {salary.advanceDeduction > 0 && (
+                                    <div className="p-3 px-4 flex justify-between items-center text-sm bg-orange-500/5 border-y border-orange-500/10">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-orange-600 flex items-center gap-1.5 uppercase text-[10px] tracking-tight">
+                                                <IconCash className="h-3.5 w-3.5" /> Advance Recovery
+                                            </span>
+                                            <span className="text-[10px] text-orange-500/60 font-medium italic mt-0.5">Automated deduction installment</span>
+                                        </div>
+                                        <span className="font-black text-red-600">-{salary.advanceDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                )}
+
                                 {salary.taxAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">Tax Payee</span>
@@ -418,15 +438,15 @@ export function SalaryDetailsDialog({
                                                 value={editableRecoveryAdjustmentReason}
                                                 onChange={(e) => setEditableRecoveryAdjustmentReason(e.target.value)}
                                                 placeholder="e.g. Loan settlement, Damage recovery..."
-                                                className="h-7 text-xs border-dashed border-red-200 focus:border-red-400 bg-white italic"
+                                                className="h-7 text-xs border-dashed border-red-500/30 focus:border-red-500 bg-muted/30 italic"
                                             />
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="p-3 px-4 bg-muted/30 flex justify-between items-center border-t">
+                                <div className="p-3 px-4 bg-muted/50 flex justify-between items-center border-t border-border/50">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Total Recoveries</span>
-                                    <span className="font-bold text-red-700">{totalRecoveries.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-bold text-red-600 tabular-nums">{totalRecoveries.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         </div>
@@ -470,7 +490,7 @@ export function SalaryDetailsDialog({
                     )}
 
                     {/* Remarks Section */}
-                    <div className="bg-muted/30 p-5 rounded-2xl border space-y-3">
+                    <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-3">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <IconNotes className="h-4 w-4" />
                             <span className="text-xs font-black uppercase tracking-widest">Internal Remarks / Observations</span>
@@ -479,7 +499,7 @@ export function SalaryDetailsDialog({
                             value={editableRemarks}
                             onChange={(e) => setEditableRemarks(e.target.value)}
                             placeholder="Add any specific notes for this salary slip..."
-                            className="w-full bg-white border border-border rounded-xl p-3 text-sm min-h-[80px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all italic"
+                            className="w-full bg-background border border-border rounded-xl p-3 text-sm min-h-[80px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all italic"
                         />
                     </div>
 
@@ -543,31 +563,41 @@ export function SalaryDetailsDialog({
                         <div className="space-y-4 pt-4 animate-in slide-in-from-bottom-2 duration-500">
                             <div className="flex items-center gap-2 px-1">
                                 <IconWallet className="h-4 w-4 text-green-600" />
-                                <h4 className="text-xs font-black uppercase tracking-widest text-neutral-400">Transaction History</h4>
+                                <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Transaction History</h4>
                             </div>
-                            <div className="bg-neutral-50/50 rounded-2xl border border-neutral-100 overflow-hidden">
+                            <div className="bg-muted/10 rounded-2xl border border-border/50 overflow-hidden shadow-sm">
                                 <table className="w-full text-[11px]">
-                                    <thead className="bg-neutral-50 border-b border-neutral-100">
+                                    <thead className="bg-muted/30 border-b border-border/50">
                                         <tr>
-                                            <th className="py-2 pl-4 text-left font-black uppercase tracking-tighter text-neutral-400">Date</th>
-                                            <th className="py-2 text-left font-black uppercase tracking-tighter text-neutral-400">Method</th>
-                                            <th className="py-2 text-left font-black uppercase tracking-tighter text-neutral-400">Ref</th>
-                                            <th className="py-2 pr-4 text-right font-black uppercase tracking-tighter text-neutral-400">Amount</th>
+                                            <th className="py-2.5 pl-4 text-left font-black uppercase tracking-tighter text-muted-foreground">Date</th>
+                                            <th className="py-2.5 text-left font-black uppercase tracking-tighter text-muted-foreground">Method</th>
+                                            <th className="py-2.5 text-left font-black uppercase tracking-tighter text-muted-foreground">Ref</th>
+                                            <th className="py-2.5 pr-4 text-right font-black uppercase tracking-tighter text-muted-foreground">Amount</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-neutral-100">
+                                    <tbody className="divide-y divide-border/20">
                                         {salary.payments.map((payment, pIdx) => (
-                                            <tr key={pIdx} className="hover:bg-neutral-50/80 transition-colors">
-                                                <td className="py-3 pl-4 font-bold text-neutral-700">
-                                                    {format(new Date(payment.date), "MMM d, yyyy")}
+                                            <tr 
+                                                key={pIdx} 
+                                                className="hover:bg-muted/30 transition-colors cursor-pointer group"
+                                                onClick={() => {
+                                                    setSelectedPayment(payment);
+                                                    setIsPaymentDetailsOpen(true);
+                                                }}
+                                            >
+                                                <td className="py-3 pl-4 font-bold">
+                                                    <div className="flex items-center gap-2 tabular-nums">
+                                                        {format(new Date(payment.date), "MMM d, yyyy")}
+                                                        <IconArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                                                    </div>
                                                 </td>
-                                                <td className="py-3 text-neutral-600 font-medium">
-                                                    {payment.paymentMethod.replace('_', ' ')}
+                                                <td className="py-3 text-muted-foreground font-medium capitalize">
+                                                    {payment.paymentMethod.toLowerCase().replace('_', ' ')}
                                                 </td>
-                                                <td className="py-3 text-neutral-500 font-mono">
+                                                <td className="py-3 text-muted-foreground/60 font-mono">
                                                     {payment.referenceNo || '-'}
                                                 </td>
-                                                <td className="py-3 pr-4 text-right font-black text-neutral-800">
+                                                <td className="py-3 pr-4 text-right font-black tabular-nums">
                                                     {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                 </td>
                                             </tr>
@@ -667,6 +697,14 @@ export function SalaryDetailsDialog({
                     </div>
                 </DialogFooter>
             </DialogContent>
+
+            <PaymentDetailsDialog
+                open={isPaymentDetailsOpen}
+                onOpenChange={setIsPaymentDetailsOpen}
+                payment={selectedPayment}
+                onDelete={onDeletePayment}
+                isDeleting={isDeletingPayment}
+            />
         </Dialog>
     );
 }
