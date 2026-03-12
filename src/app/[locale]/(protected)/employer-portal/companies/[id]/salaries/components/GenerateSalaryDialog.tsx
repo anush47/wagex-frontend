@@ -412,15 +412,15 @@ export function GenerateSalaryDialog({
                                     </span>
                                     <span className="text-[10px] font-black uppercase text-green-600 tracking-wider">Ready for Payroll</span>
                                 </Card>
-                                <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
+                                <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
                                         <IconAlertTriangle className="h-6 w-6" />
                                     </div>
-                                    <span className={`text-2xl font-black ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
+                                    <span className={`text-2xl font-black ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
                                         {previewData.reduce((s, g) => s + (g.problemCount || 0), 0)}
                                     </span>
-                                    <span className={`text-[10px] font-black uppercase tracking-wider ${previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
-                                        {previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention')}
+                                    <span className={`text-[10px] font-black uppercase tracking-wider ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
+                                        {previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention')}
                                     </span>
                                 </Card>
                             </div>
@@ -467,7 +467,7 @@ export function GenerateSalaryDialog({
                                 </div>
                             </div>
 
-                            {previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR'))) ? (
+                            {previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? (
                                 <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex gap-3 items-start">
                                     <IconAlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
@@ -609,7 +609,7 @@ export function GenerateSalaryDialog({
 
                     {step === "VALIDATION" && (
                         <Button
-                            disabled={previewData.some(g => g.employees.some(e => e.problems.some((p: any) => p.severity === 'ERROR')))}
+                            disabled={previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR')))}
                             onClick={() => setStep("PREVIEW")}
                             className="w-full md:w-auto"
                         >
