@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { SalaryService } from '@/services/salary.service';
+import { SalaryService } from "@/services/salary.service";
+import { PaymentService } from "@/services/payment.service";
+import { toast } from "sonner";
 import { SalaryQueryParams, SalaryPreviewDto } from '@/types/salary';
-import { toast } from 'sonner';
 
 export function useSalaries(params: SalaryQueryParams) {
     const queryClient = useQueryClient();
@@ -109,6 +110,27 @@ export function useSalaries(params: SalaryQueryParams) {
         }
     });
 
+    const createPaymentMutation = useMutation({
+        mutationFn: async (dto: any) => {
+            const response = await PaymentService.createPayment(dto);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Recording payment...') };
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['salaries'] });
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            toast.dismiss(context?.toastId);
+            toast.success('Payment recorded successfully');
+        },
+        onError: (error: any, variables, context) => {
+            toast.dismiss(context?.toastId);
+            toast.error(error.message || 'Failed to record payment');
+        }
+    });
+
     return {
         salariesQuery,
         salaryQuery,
@@ -117,5 +139,6 @@ export function useSalaries(params: SalaryQueryParams) {
         updateSalaryMutation,
         approveSalaryMutation,
         deleteSalaryMutation,
+        createPaymentMutation,
     };
 }

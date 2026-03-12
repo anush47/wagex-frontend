@@ -26,10 +26,13 @@ import {
     IconWallet,
     IconCalendarEvent,
     IconReceipt,
-    IconClock,
     IconTable,
     IconTrendingUp,
-    IconCheck
+    IconChecks,
+    IconCalendar,
+    IconClock,
+    IconArrowRight,
+    IconCheck,
 } from "@tabler/icons-react";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
@@ -41,6 +44,7 @@ interface SalaryDetailsDialogProps {
     salary: Salary | null;
     onSave?: (updatedSalary: any) => void;
     onApprove?: () => void;
+    onPay?: () => void;
     onDelete?: () => void;
     isSaving?: boolean;
     isApproving?: boolean;
@@ -53,6 +57,7 @@ export function SalaryDetailsDialog({
     salary,
     onSave,
     onApprove,
+    onPay,
     onDelete,
     isSaving,
     isApproving,
@@ -534,11 +539,67 @@ export function SalaryDetailsDialog({
                             </div>
                         </div>
                     )}
+                    {salary.payments && salary.payments.length > 0 && (
+                        <div className="space-y-4 pt-4 animate-in slide-in-from-bottom-2 duration-500">
+                            <div className="flex items-center gap-2 px-1">
+                                <IconWallet className="h-4 w-4 text-green-600" />
+                                <h4 className="text-xs font-black uppercase tracking-widest text-neutral-400">Transaction History</h4>
+                            </div>
+                            <div className="bg-neutral-50/50 rounded-2xl border border-neutral-100 overflow-hidden">
+                                <table className="w-full text-[11px]">
+                                    <thead className="bg-neutral-50 border-b border-neutral-100">
+                                        <tr>
+                                            <th className="py-2 pl-4 text-left font-black uppercase tracking-tighter text-neutral-400">Date</th>
+                                            <th className="py-2 text-left font-black uppercase tracking-tighter text-neutral-400">Method</th>
+                                            <th className="py-2 text-left font-black uppercase tracking-tighter text-neutral-400">Ref</th>
+                                            <th className="py-2 pr-4 text-right font-black uppercase tracking-tighter text-neutral-400">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-neutral-100">
+                                        {salary.payments.map((payment, pIdx) => (
+                                            <tr key={pIdx} className="hover:bg-neutral-50/80 transition-colors">
+                                                <td className="py-3 pl-4 font-bold text-neutral-700">
+                                                    {format(new Date(payment.date), "MMM d, yyyy")}
+                                                </td>
+                                                <td className="py-3 text-neutral-600 font-medium">
+                                                    {payment.paymentMethod.replace('_', ' ')}
+                                                </td>
+                                                <td className="py-3 text-neutral-500 font-mono">
+                                                    {payment.referenceNo || '-'}
+                                                </td>
+                                                <td className="py-3 pr-4 text-right font-black text-neutral-800">
+                                                    {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot className="bg-green-50/30 border-t border-green-100">
+                                        <tr>
+                                            <td colSpan={3} className="py-3 pl-4 font-black uppercase tracking-tighter text-green-700">Total Paid</td>
+                                            <td className="py-3 pr-4 text-right font-black text-green-800 text-sm">
+                                                {salary.payments.reduce((sum, p) => sum + p.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <DialogFooter className="p-4 md:p-6 border-t bg-background shrink-0">
                     <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
-                        <div className="flex flex-col self-start md:self-auto">
+                        <div className="flex items-center gap-4 self-start md:self-auto">
+                            <Button
+                                variant="ghost"
+                                className="h-10 w-10 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl shrink-0"
+                                disabled={isSaving || isApproving || isDeleting}
+                                onClick={() => onDelete?.()}
+                                title="Delete Salary"
+                            >
+                                <IconTrash className="h-5 w-5" />
+                            </Button>
+
                             {salary.status === SalaryStatus.APPROVED ? (
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold uppercase text-green-600">Approved By</span>
@@ -571,18 +632,18 @@ export function SalaryDetailsDialog({
                                     {isApproving ? "Approving..." : "Approve Salary"}
                                 </Button>
                             )}
-                            <Button
-                                variant="ghost"
-                                className="h-10 w-10 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
-                                disabled={isSaving || isApproving || isDeleting}
-                                onClick={() => onDelete?.()}
-                                title="Delete Salary"
-                            >
-                                <IconTrash className="h-5 w-5" />
-                            </Button>
+                             {(salary.status === "APPROVED" || salary.status === "PARTIALLY_PAID") && (
+                                <Button
+                                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 font-bold flex-1 md:flex-none shadow-md shadow-green-200"
+                                    onClick={() => onPay?.()}
+                                >
+                                    <IconCash className="h-4 w-4 mr-2" />
+                                    Pay
+                                </Button>
+                            )}
                             <Button
                                 className="bg-primary hover:bg-primary/90 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex-1 md:flex-none"
-                                disabled={isSaving || !isDirty || isApproving}
+                                disabled={isSaving || !isDirty || isApproving || isDeleting}
                                 onClick={() => {
                                     onSave?.({
                                         ...salary,

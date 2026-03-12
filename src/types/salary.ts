@@ -77,6 +77,7 @@ export interface Salary {
         fullName: string;
         employeeNo: number;
     };
+    payments?: Payment[];
     createdAt: string;
     updatedAt: string;
 }

@@ -20,8 +20,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconFilter, IconCheck, IconTrash } from "@tabler/icons-react";
+import { RecordPaymentDialog } from "./RecordPaymentDialog";
+import { IconSeparator, IconTrash, IconCheck, IconFilter, IconChevronRight, IconChevronLeft, IconX, IconRefresh, IconWallet, IconCash } from "@tabler/icons-react";
 import { useSalaries } from "@/hooks/use-salaries";
+import { usePayments } from "@/hooks/use-payments";
 import { SalaryStatus, Salary } from "@/types/salary";
 import { format } from "date-fns";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -44,8 +46,10 @@ export function SalariesTab({
     const [selectedSalary, setSelectedSalary] = useState<Salary | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [paymentSalary, setPaymentSalary] = useState<Salary | null>(null);
 
-    const { salariesQuery, updateSalaryMutation, approveSalaryMutation, deleteSalaryMutation } = useSalaries({
+    const { salariesQuery, updateSalaryMutation, approveSalaryMutation, deleteSalaryMutation, createPaymentMutation } = useSalaries({
         companyId,
         ...filters,
         page: page || 1,
@@ -118,6 +122,30 @@ export function SalariesTab({
                                                         }}
                                                     >
                                                         <IconCheck className="h-3 w-3 mr-1" /> Approve {selectedDrafts.length > 1 ? `(${selectedDrafts.length})` : ''}
+                                                    </Button>
+                                                </>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+                                    {(() => {
+                                        const payableSalaries = salaries.filter((s: any) => 
+                                            selectedIds.includes(s.id) && (s.status === 'APPROVED' || s.status === 'PARTIALLY_PAID')
+                                        );
+                                        
+                                        if (payableSalaries.length > 0) {
+                                            return (
+                                                <>
+                                                    <div className="w-[1px] h-4 bg-primary/20" />
+                                                    <Button 
+                                                        size="sm" 
+                                                        className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm bg-green-600 hover:bg-green-700 text-white"
+                                                        onClick={() => {
+                                                            setPaymentSalary(payableSalaries[0]);
+                                                            setIsPaymentDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <IconCash className="h-3 w-3 mr-1" /> Pay {payableSalaries.length > 1 ? `(${payableSalaries.length})` : ''}
                                                     </Button>
                                                 </>
                                             );
@@ -285,13 +313,18 @@ export function SalariesTab({
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex flex-col text-xs">
-                                                    <span className="font-medium">
+                                                <div className="flex flex-col text-xs space-y-0.5">
+                                                    <span className="font-medium text-muted-foreground whitespace-nowrap">
                                                         {format(new Date(salary.periodStartDate), "MMM d")} - {format(new Date(salary.periodEndDate), "MMM d")}
                                                     </span>
-                                                    <span className="text-muted-foreground">
-                                                        {format(new Date(salary.periodStartDate), "yyyy")}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`font-bold text-[10px] ${new Date(salary.payDate) < new Date() && salary.status !== 'PAID' ? 'text-red-600' : 'text-neutral-400'}`}>
+                                                            Pay: {format(new Date(salary.payDate), "MMM d")}
+                                                        </span>
+                                                        {new Date(salary.payDate) < new Date() && salary.status !== 'PAID' && (
+                                                            <span className="text-[8px] font-black uppercase bg-red-50 text-red-500 px-1 rounded shadow-sm border border-red-100">Overdue</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -421,7 +454,27 @@ export function SalariesTab({
                         });
                     }
                 }}
+                onPay={() => {
+                    setPaymentSalary(selectedSalary);
+                    setIsPaymentDialogOpen(true);
+                }}
                 onDelete={() => setIsDeleteDialogOpen(true)}
+            />
+
+            <RecordPaymentDialog
+                open={isPaymentDialogOpen}
+                onOpenChange={setIsPaymentDialogOpen}
+                salary={paymentSalary}
+                isSubmitting={createPaymentMutation.isPending}
+                onPay={(dto) => {
+                    createPaymentMutation.mutate(dto, {
+                        onSuccess: () => {
+                            setIsPaymentDialogOpen(false);
+                            setPaymentSalary(null);
+                            setSelectedSalary(null);
+                        }
+                    });
+                }}
             />
 
             <ConfirmationDialog
