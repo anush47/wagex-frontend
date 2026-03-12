@@ -40,4 +40,8 @@ export class SalaryService {
     static async approveSalary(id: string): Promise<ApiResponse<Salary>> {
         return backendApiClient.post<Salary>(`/salaries/${id}/approve`);
     }
+
+    static async deleteSalary(id: string): Promise<ApiResponse<void>> {
+        return backendApiClient.delete<void>(`/salaries/${id}`);
+    }
 }

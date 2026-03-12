@@ -20,10 +20,11 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconFilter, IconCheck } from "@tabler/icons-react";
+import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconFilter, IconCheck, IconTrash } from "@tabler/icons-react";
 import { useSalaries } from "@/hooks/use-salaries";
 import { SalaryStatus, Salary } from "@/types/salary";
 import { format } from "date-fns";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SalaryDetailsDialog } from "./SalaryDetailsDialog";
 import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
@@ -41,8 +42,10 @@ export function SalariesTab({
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedSalary, setSelectedSalary] = useState<Salary | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
-    const { salariesQuery, updateSalaryMutation, approveSalaryMutation } = useSalaries({
+    const { salariesQuery, updateSalaryMutation, approveSalaryMutation, deleteSalaryMutation } = useSalaries({
         companyId,
         ...filters,
         page: page || 1,
@@ -121,6 +124,16 @@ export function SalariesTab({
                                         }
                                         return null;
                                     })()}
+
+                                    <div className="w-[1px] h-4 bg-primary/20" />
+                                    <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        className="h-7 px-3 font-black text-[10px] uppercase text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                        onClick={() => setIsBulkDeleteDialogOpen(true)}
+                                    >
+                                        <IconTrash className="h-3 w-3 mr-1" /> Delete
+                                    </Button>
                                 </div>
                             )}
 
@@ -389,6 +402,7 @@ export function SalariesTab({
                 salary={selectedSalary}
                 isSaving={updateSalaryMutation.isPending}
                 isApproving={approveSalaryMutation.isPending}
+                isDeleting={deleteSalaryMutation.isPending}
                 onSave={(data) => {
                     if (selectedSalary) {
                         updateSalaryMutation.mutate({ id: selectedSalary.id, data }, {
@@ -407,6 +421,46 @@ export function SalariesTab({
                         });
                     }
                 }}
+                onDelete={() => setIsDeleteDialogOpen(true)}
+            />
+
+            <ConfirmationDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title="Delete Salary Record"
+                description="This action cannot be undone. Any linked attendance sessions will be unprocessed and become available for future payroll runs."
+                icon={<IconTrash className="h-8 w-8" />}
+                actionLabel="Delete Salary"
+                cancelLabel="Cancel"
+                onAction={() => {
+                    if (selectedSalary) {
+                        deleteSalaryMutation.mutate(selectedSalary.id, {
+                            onSuccess: () => {
+                                setIsDeleteDialogOpen(false);
+                                setSelectedSalary(null);
+                            }
+                        });
+                    }
+                }}
+                variant="destructive"
+                loading={deleteSalaryMutation.isPending}
+            />
+
+            <ConfirmationDialog
+                open={isBulkDeleteDialogOpen}
+                onOpenChange={setIsBulkDeleteDialogOpen}
+                title={`Delete ${selectedIds.length} Salary Records`}
+                description="This will permanently delete all selected records. Linked attendance sessions will be made available for reprocessing."
+                icon={<IconTrash className="h-8 w-8" />}
+                actionLabel="Delete Records"
+                cancelLabel="Cancel"
+                onAction={() => {
+                    selectedIds.forEach(id => deleteSalaryMutation.mutate(id));
+                    setIsBulkDeleteDialogOpen(false);
+                    setSelectedIds([]);
+                }}
+                variant="destructive"
+                loading={deleteSalaryMutation.isPending}
             />
         </>
     );

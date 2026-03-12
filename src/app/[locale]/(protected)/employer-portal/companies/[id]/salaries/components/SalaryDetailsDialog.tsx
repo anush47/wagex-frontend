@@ -41,8 +41,10 @@ interface SalaryDetailsDialogProps {
     salary: Salary | null;
     onSave?: (updatedSalary: any) => void;
     onApprove?: () => void;
+    onDelete?: () => void;
     isSaving?: boolean;
     isApproving?: boolean;
+    isDeleting?: boolean;
 }
 
 export function SalaryDetailsDialog({
@@ -51,8 +53,10 @@ export function SalaryDetailsDialog({
     salary,
     onSave,
     onApprove,
+    onDelete,
     isSaving,
     isApproving,
+    isDeleting,
 }: SalaryDetailsDialogProps) {
     const [editableComponents, setEditableComponents] = React.useState<any[]>(salary?.components || []);
     const [editableBasicSalary, setEditableBasicSalary] = React.useState<number>(salary?.basicSalary || 0);
@@ -567,6 +571,15 @@ export function SalaryDetailsDialog({
                                     {isApproving ? "Approving..." : "Approve Salary"}
                                 </Button>
                             )}
+                            <Button
+                                variant="ghost"
+                                className="h-10 w-10 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                                disabled={isSaving || isApproving || isDeleting}
+                                onClick={() => onDelete?.()}
+                                title="Delete Salary"
+                            >
+                                <IconTrash className="h-5 w-5" />
+                            </Button>
                             <Button
                                 className="bg-primary hover:bg-primary/90 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex-1 md:flex-none"
                                 disabled={isSaving || !isDirty || isApproving}

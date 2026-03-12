@@ -89,6 +89,26 @@ export function useSalaries(params: SalaryQueryParams) {
         }
     });
 
+    const deleteSalaryMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await SalaryService.deleteSalary(id);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Deleting salary...') };
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['salaries'] });
+            toast.dismiss(context?.toastId);
+            toast.success('Salary deleted successfully');
+        },
+        onError: (error: any, variables, context) => {
+            toast.dismiss(context?.toastId);
+            toast.error(error.message || 'Failed to delete salary');
+        }
+    });
+
     return {
         salariesQuery,
         salaryQuery,
@@ -96,5 +116,6 @@ export function useSalaries(params: SalaryQueryParams) {
         saveDraftsMutation,
         updateSalaryMutation,
         approveSalaryMutation,
+        deleteSalaryMutation,
     };
 }
