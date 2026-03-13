@@ -76,12 +76,9 @@ export const useAuthStore = create<AuthStore>()(
                             // Handle inactive user error (401)
                             if (profileResult.error.statusCode === 401 && profileResult.error.message === 'User inactive') {
                                 logger.warn('Inactive user session detected');
-                                userProfile = {
-                                    id: session.user.id,
-                                    email: session.user.email!,
-                                    active: false,
-                                    role: 'EMPLOYEE' as any
-                                };
+                                // The backend now allows /users/me for inactive users
+                                const freshProfile = await authService.getProfile();
+                                userProfile = freshProfile.data;
                             } else {
                                 logger.error('Failed to fetch profile during store initialization', profileResult.error);
                             }

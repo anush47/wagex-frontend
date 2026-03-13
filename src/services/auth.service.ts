@@ -46,11 +46,11 @@ export class AuthService {
                     // Handle inactive user error (401)
                     if (profileResult.error.statusCode === 401 && profileResult.error.message === 'User inactive') {
                         logger.warn('Inactive user attempted login', { userId: data.user?.id });
-                        // We return the session so the user is "logged in" in Supabase, 
-                        // but we will mark them as inactive in the store to trigger the restricted UI.
+                        // The actual profile is now accessible via the backend even if inactive
+                        const freshProfile = await this.getProfile();
                         return {
                             user: data.user,
-                            profile: { id: data.user.id, email: data.user.email!, active: false, role: 'EMPLOYEE' as any },
+                            profile: freshProfile.data || null,
                             session: data.session,
                             error: null
                         };

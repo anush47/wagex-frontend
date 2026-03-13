@@ -1,16 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { Button } from "@/components/ui/button";
-import { IconAlertCircle, IconLogout } from "@tabler/icons-react";
+import { IconAlertCircle, IconLogout, IconRefresh, IconLoader2 } from "@tabler/icons-react";
 
 export default function RestrictedPage() {
-    const { user, signOut } = useAuthStore();
+    const { user, signOut, fetchProfile } = useAuthStore();
+    const [checking, setChecking] = useState(false);
 
-    if (user?.active !== false) {
-        // Technically this page shouldn't be accessible if active,
-        // but AuthGuard will handle redirection away from here if needed.
-    }
+    const handleCheckStatus = async () => {
+        setChecking(true);
+        try {
+            await fetchProfile();
+        } finally {
+            setChecking(false);
+        }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-6 text-center">
@@ -29,6 +35,20 @@ export default function RestrictedPage() {
                 </p>
 
                 <div className="space-y-4">
+                    <Button
+                        onClick={handleCheckStatus}
+                        disabled={checking}
+                        variant="outline"
+                        className="w-full h-14 rounded-2xl border-2 font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
+                        {checking ? (
+                            <IconLoader2 className="w-5 h-5 mr-3 animate-spin" />
+                        ) : (
+                            <IconRefresh className="w-5 h-5 mr-3" />
+                        )}
+                        Check Approval Status
+                    </Button>
+
                     <Button
                         onClick={() => signOut()}
                         className="w-full h-14 rounded-2xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"

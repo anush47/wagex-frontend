@@ -17,7 +17,7 @@ import { Role } from "@/types/user";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { signIn, user: storeUser } = useAuthStore();
+    const { signIn, user: storeUser, fetchProfile } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [needsRegistration, setNeedsRegistration] = useState(false);
@@ -77,8 +77,15 @@ export default function LoginPage() {
                 return;
             }
 
-            // Registration complete, redirect to dashboard
-            router.push("/employer-portal/dashboard");
+            // Registration complete, refresh the store profile
+            await fetchProfile();
+            const user = useAuthStore.getState().user;
+
+            if (user?.active === false) {
+                router.push("/restricted");
+            } else {
+                router.push(user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
+            }
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred");
         } finally {

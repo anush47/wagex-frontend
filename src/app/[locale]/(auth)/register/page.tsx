@@ -37,6 +37,7 @@ export default function RegisterPage() {
         fullName: "",
         address: "",
         phone: "",
+        role: Role.EMPLOYER, // Default role
     });
 
     // Check for existing session on mount
@@ -116,9 +117,13 @@ export default function RegisterPage() {
 
             // Registration complete, refresh the store profile
             await fetchProfile();
+            const user = useAuthStore.getState().user;
 
-            // Then redirect to companies
-            router.push("/employer-portal/companies");
+            if (user?.active === false) {
+                router.push("/restricted");
+            } else {
+                router.push(user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
+            }
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred");
         } finally {
@@ -277,14 +282,20 @@ export default function RegisterPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
-                                        Phone Number
+                                        Role
                                     </Label>
-                                    <Input
-                                        placeholder="+94 77 XXX XXXX"
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                        value={profileData.phone}
-                                        onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                    />
+                                    <Select
+                                        value={profileData.role}
+                                        onValueChange={(v) => setProfileData({ ...profileData, role: v as Role })}
+                                    >
+                                        <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            <SelectItem value={Role.EMPLOYER}>Employer</SelectItem>
+                                            <SelectItem value={Role.EMPLOYEE}>Employee</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
