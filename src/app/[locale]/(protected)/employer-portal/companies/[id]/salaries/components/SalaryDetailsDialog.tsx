@@ -75,6 +75,7 @@ export function SalaryDetailsDialog({
     const [editableOtAdjustmentReason, setEditableOtAdjustmentReason] = React.useState<string>(salary?.otAdjustmentReason || "");
     const [editableRecoveryAdjustment, setEditableRecoveryAdjustment] = React.useState<number>(salary?.recoveryAdjustment || 0);
     const [editableRecoveryAdjustmentReason, setEditableRecoveryAdjustmentReason] = React.useState<string>(salary?.recoveryAdjustmentReason || "");
+    const [editableAdvanceDeduction, setEditableAdvanceDeduction] = React.useState<number>(salary?.advanceDeduction || 0);
     const [editableSessions, setEditableSessions] = React.useState<any[]>(salary?.sessions || []);
     const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
     const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = React.useState(false);
@@ -88,6 +89,7 @@ export function SalaryDetailsDialog({
             setEditableOtAdjustmentReason(salary.otAdjustmentReason || "");
             setEditableRecoveryAdjustment(salary.recoveryAdjustment || 0);
             setEditableRecoveryAdjustmentReason(salary.recoveryAdjustmentReason || "");
+            setEditableAdvanceDeduction(salary.advanceDeduction || 0);
             setEditableSessions(salary.sessions || []);
         }
     }, [salary]);
@@ -123,7 +125,7 @@ export function SalaryDetailsDialog({
     const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
     const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
     const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + totalAdditions;
-    const totalRecoveries = salary.noPayAmount + salary.advanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
+    const totalRecoveries = salary.noPayAmount + editableAdvanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
     const currentNetSalary = grossEarnings - totalRecoveries;
 
     const isDirty = (
@@ -352,12 +354,24 @@ export function SalaryDetailsDialog({
                                         <span className="font-bold text-red-600">-{salary.noPayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
-                                {salary.advanceDeduction > 0 && (
-                                    <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
-                                        <span className="font-medium text-muted-foreground">Advance Recovery</span>
-                                        <span className="font-bold text-orange-600">-{salary.advanceDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <div className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
+                                        <span className="font-medium text-muted-foreground flex items-center gap-2">
+                                            <IconCash className="h-3.5 w-3.5" /> Advance Recovery
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative">
+                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-orange-600 font-bold text-xs">-</span>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={editableAdvanceDeduction.toFixed(2)}
+                                                    onChange={(e) => setEditableAdvanceDeduction(parseFloat(e.target.value) || 0)}
+                                                    className="h-8 w-32 pl-5 text-right font-bold text-orange-600 border-transparent hover:border-input focus:border-primary bg-transparent"
+                                                />
+                                            </div>
+                                            <IconEdit className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                        </div>
                                     </div>
-                                )}
                                 {deductions.map((comp, idx) => (
                                     <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                         <Input
@@ -388,15 +402,16 @@ export function SalaryDetailsDialog({
                                     </div>
                                 ))}
 
-                                {salary.advanceDeduction > 0 && (
-                                    <div className="p-3 px-4 flex justify-between items-center text-sm bg-orange-500/5 border-y border-orange-500/10">
+                                {editableAdvanceDeduction !== salary.advanceDeduction && (
+                                    <div className="p-3 px-4 bg-orange-500/5 border-y border-orange-500/10">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-orange-600 flex items-center gap-1.5 uppercase text-[10px] tracking-tight">
-                                                <IconCash className="h-3.5 w-3.5" /> Advance Recovery
+                                                <IconAlertCircle className="h-3.5 w-3.5" /> Recovery Auto-Correction
                                             </span>
-                                            <span className="text-[10px] text-orange-500/60 font-medium italic mt-0.5">Automated deduction installment</span>
+                                            <span className="text-[10px] text-orange-500/60 font-medium italic mt-0.5">
+                                                Changing this will auto-distribute the balance to future installments.
+                                            </span>
                                         </div>
-                                        <span className="font-black text-red-600">-{salary.advanceDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
 
@@ -603,10 +618,10 @@ export function SalaryDetailsDialog({
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot className="bg-green-50/30 border-t border-green-100">
+                                    <tfoot className="bg-green-50/50 dark:bg-green-500/5 border-t border-green-100 dark:border-green-500/10">
                                         <tr>
-                                            <td colSpan={3} className="py-3 pl-4 font-black uppercase tracking-tighter text-green-700">Total Paid</td>
-                                            <td className="py-3 pr-4 text-right font-black text-green-800 text-sm">
+                                            <td colSpan={3} className="py-3 pl-4 font-black uppercase tracking-tighter text-green-600 dark:text-green-500">Total Paid</td>
+                                            <td className="py-3 pr-4 text-right font-black text-green-700 dark:text-green-400 text-sm">
                                                 {salary.payments.reduce((sum, p) => sum + p.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </td>
                                         </tr>
@@ -683,6 +698,7 @@ export function SalaryDetailsDialog({
                                         otAdjustmentReason: editableOtAdjustmentReason,
                                         recoveryAdjustment: editableRecoveryAdjustment,
                                         recoveryAdjustmentReason: editableRecoveryAdjustmentReason,
+                                        advanceDeduction: editableAdvanceDeduction,
                                         remarks: editableRemarks,
                                         sessions: editableSessions,
                                         sessionIds: editableSessions.map(s => s.id),

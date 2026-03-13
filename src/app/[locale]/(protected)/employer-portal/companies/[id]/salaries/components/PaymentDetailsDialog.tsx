@@ -69,7 +69,7 @@ export function PaymentDetailsDialog({ open, onOpenChange, payment, onDelete, is
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <Badge variant="outline" className={`rounded-xl px-2 py-0.5 font-black uppercase text-[9px] ${payment.salaryId ? 'bg-primary/20 text-primary border-primary/20' : 'bg-orange-500/20 text-orange-500 border-orange-500/20'}`}>
-                                {payment.salaryId ? 'Salary Payment' : 'Advance Issuance'}
+                                {payment.salaryId ? 'Salary' : 'Advance'}
                             </Badge>
                             <Badge variant="outline" className={`rounded-xl px-2 py-0.5 font-black uppercase text-[9px] ${payment.status === 'ACKNOWLEDGED' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}`}>
                                 {payment.status === 'PENDING_ACKNOWLEDGEMENT' ? 'Pending' : payment.status?.replace('_', ' ') || 'PENDING'}

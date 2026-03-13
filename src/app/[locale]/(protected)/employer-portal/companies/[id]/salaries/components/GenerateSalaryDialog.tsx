@@ -41,7 +41,14 @@ export function GenerateSalaryDialog({
     const employeesQuery = useEmployees({ companyId, status: 'ACTIVE', limit: 100 });
     const employeesData = employeesQuery.data as any;
     const employees = Array.isArray(employeesData) ? employeesData : (employeesData?.data || []);
-    const { generatePreviewsMutation, saveDraftsMutation } = useSalaries({});
+    const { generatePreviewsMutation, saveDraftsMutation, salariesQuery: existingSalariesQuery } = useSalaries({
+        companyId,
+        startDate: period?.start,
+        endDate: period?.end,
+    });
+
+    const existingSalaries = (existingSalariesQuery.data as any)?.items || [];
+    const hasExistingSalaries = existingSalaries.length > 0;
 
     const payrollGroups = useMemo(() => {
         if (!employees || employees.length === 0) return [];
@@ -403,48 +410,64 @@ export function GenerateSalaryDialog({
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Card className="p-6 border-2 border-green-100 bg-green-50/10 flex flex-col items-center gap-2">
-                                    <div className="h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                <Card className="p-6 border-2 border-green-500/10 bg-green-500/5 flex flex-col items-center gap-2">
+                                    <div className="h-10 w-10 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center">
                                         <IconCheck className="h-6 w-6" />
                                     </div>
-                                    <span className="text-2xl font-black text-green-700">
+                                    <span className="text-2xl font-black text-green-600">
                                         {previewData.reduce((s, g) => s + g.employees.filter((e: any) => !e.hasProblems).length, 0)}
                                     </span>
                                     <span className="text-[10px] font-black uppercase text-green-600 tracking-wider">Ready for Payroll</span>
                                 </Card>
-                                <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
+                                 <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
                                         <IconAlertTriangle className="h-6 w-6" />
                                     </div>
-                                    <span className={`text-2xl font-black ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
-                                        {previewData.reduce((s, g) => s + (g.problemCount || 0), 0)}
+                                    <span className={`text-2xl font-black ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
+                                        {hasExistingSalaries ? 'Conflict' : previewData.reduce((s, g) => s + (g.problemCount || 0), 0)}
                                     </span>
-                                    <span className={`text-[10px] font-black uppercase tracking-wider ${previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
-                                        {previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention')}
+                                    <span className={`text-[10px] font-black uppercase tracking-wider ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
+                                        {hasExistingSalaries ? 'Already Generated' : (previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention'))}
                                     </span>
                                 </Card>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="text-xs font-black uppercase tracking-widest text-muted-foreground pl-1">Identified Issues By Staff</div>
-                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                                    {hasExistingSalaries && (
+                                        <div className="bg-red-500/5 border-2 border-red-500/20 rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
+                                            <div className="flex justify-between items-center pb-2 border-b border-red-500/10">
+                                                <div className="flex items-center gap-2">
+                                                    <IconAlertTriangle className="h-5 w-5 text-red-500" />
+                                                    <span className="font-bold text-sm text-foreground">Conflict: Existing Records</span>
+                                                </div>
+                                                <Badge variant="destructive" className="font-bold px-2 py-0 text-[10px]">CRITICAL</Badge>
+                                            </div>
+                                            <div className="text-xs font-medium text-red-600/90 leading-relaxed italic">
+                                                Salaries have already been generated for {existingSalaries.length} employees in this period ({format(new Date(period.start), "MMM d")} - {format(new Date(period.end), "MMM d, yyyy")}). 
+                                                You cannot generate duplicate payroll records.
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {previewData.flatMap(g => g.employees).filter((e: any) => e.hasProblems).map((employee: any, idx) => (
-                                        <div key={idx} className={`bg-white border-2 rounded-2xl p-4 flex flex-col gap-3 shadow-sm ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'border-red-50' : 'border-amber-50'}`}>
-                                            <div className={`flex justify-between items-center pb-2 border-b ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'border-red-50' : 'border-amber-50'}`}>
+                                        <div key={idx} className={`bg-background/50 border-2 rounded-2xl p-4 flex flex-col gap-3 shadow-sm ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'border-red-500/10' : 'border-amber-500/10'}`}>
+                                            <div className={`flex justify-between items-center pb-2 border-b ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'border-red-500/10' : 'border-amber-500/10'}`}>
                                                 <div className="flex flex-col">
-                                                    <span className="font-bold text-sm text-neutral-800">{employee.employeeName}</span>
+                                                    <span className="font-bold text-sm text-foreground">{employee.employeeName}</span>
                                                     <span className="text-[9px] font-mono font-bold text-muted-foreground tracking-tighter uppercase opacity-70">EMP {employee.employeeNo}</span>
                                                 </div>
                                                 <Badge
                                                     variant={employee.problems.some((p: any) => p.severity === 'ERROR') ? "destructive" : "outline"}
-                                                    className={`font-bold px-2 py-0 text-[10px] ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'bg-red-500' : 'border-amber-400 text-amber-700 bg-amber-50'}`}
+                                                    className={`font-bold px-2 py-0 text-[10px] ${employee.problems.some((p: any) => p.severity === 'ERROR') ? 'bg-red-500 text-white' : 'border-amber-500/30 text-amber-600 bg-amber-500/5'}`}
                                                 >
                                                     {employee.problems.some((p: any) => p.severity === 'ERROR') ? 'FIX REQUIRED' : 'REVIEW NEEDED'}
                                                 </Badge>
                                             </div>
                                             <div className="space-y-2">
                                                 {employee.problems.map((prob: any, pIdx: number) => (
-                                                    <div key={pIdx} className={`flex gap-2 text-xs font-medium ${prob.severity === 'ERROR' ? 'text-red-600/90' : 'text-amber-600/90'}`}>
+                                                    <div key={pIdx} className={`flex gap-2 text-xs font-medium ${prob.severity === 'ERROR' ? 'text-red-500/80' : 'text-amber-600/80'}`}>
                                                         <IconAlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                                         <span>{prob.message}</span>
                                                     </div>
@@ -453,36 +476,46 @@ export function GenerateSalaryDialog({
                                         </div>
                                     ))}
 
-                                    {previewData.reduce((s, g) => s + (g.problemCount || 0), 0) === 0 && (
-                                        <div className="bg-green-50/30 border-2 border-dashed border-green-200 rounded-3xl p-12 flex flex-col items-center justify-center gap-4">
-                                            <div className="h-16 w-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                     {previewData.reduce((s, g) => s + (g.problemCount || 0), 0) === 0 && (
+                                        <div className="bg-green-500/5 border-2 border-dashed border-green-500/20 rounded-3xl p-12 flex flex-col items-center justify-center gap-4">
+                                            <div className="h-16 w-16 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center">
                                                 <IconShieldCheck className="h-10 w-10" />
                                             </div>
                                             <div className="text-center">
-                                                <div className="text-lg font-black text-green-700">All Clear!</div>
-                                                <p className="text-sm text-green-600/70 italic font-medium">No unresolved sessions or pending leaves found for this period.</p>
+                                                <div className="text-lg font-black text-green-500">All Clear!</div>
+                                                <p className="text-sm text-green-500/60 italic font-medium">No unresolved sessions or pending leaves found for this period.</p>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? (
-                                <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex gap-3 items-start">
-                                    <IconAlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                            {hasExistingSalaries ? (
+                                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex gap-3 items-start">
+                                    <IconAlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
-                                        <span className="text-xs font-bold text-red-800 uppercase tracking-tighter block">Unresolved Errors</span>
-                                        <p className="text-[11px] font-medium text-red-700/80 leading-relaxed italic">
+                                        <span className="text-xs font-bold text-red-500 uppercase tracking-tighter block">Duplicate Prevention</span>
+                                        <p className="text-[11px] font-medium text-red-500/70 leading-relaxed italic">
+                                            Payroll for this period has already been initiated. Please check existing records or select a different period to continue.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? (
+                                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex gap-3 items-start">
+                                    <IconAlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <span className="text-xs font-bold text-red-500 uppercase tracking-tighter block">Unresolved Errors</span>
+                                        <p className="text-[11px] font-medium text-red-500/70 leading-relaxed italic">
                                             Salaries cannot be generated while sessions are missing clock-out times or attendance is pending approval. Please resolve these errors to proceed.
                                         </p>
                                     </div>
                                 </div>
                             ) : previewData.some(g => (g.problemCount || 0) > 0) && (
-                                <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3 items-start">
-                                    <IconInfoCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex gap-3 items-start">
+                                    <IconInfoCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
-                                        <span className="text-xs font-bold text-amber-800 uppercase tracking-tighter block">Data Warnings</span>
-                                        <p className="text-[11px] font-medium text-amber-700/80 leading-relaxed italic">
+                                        <span className="text-xs font-bold text-amber-500 uppercase tracking-tighter block">Data Warnings</span>
+                                        <p className="text-[11px] font-medium text-amber-600/70 leading-relaxed italic">
                                             Some working days have no attendance or leave records. These will be treated as unpaid absences. You may proceed to preview or fix them in the Attendance tab.
                                         </p>
                                     </div>
@@ -609,7 +642,7 @@ export function GenerateSalaryDialog({
 
                     {step === "VALIDATION" && (
                         <Button
-                            disabled={previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR')))}
+                            disabled={hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR')))}
                             onClick={() => setStep("PREVIEW")}
                             className="w-full md:w-auto"
                         >

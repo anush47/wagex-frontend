@@ -1,80 +1,281 @@
 "use client";
 
 import React from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAdvances } from "@/hooks/use-advances";
 import { format } from "date-fns";
-import { IconCash, IconCalendarRepeat, IconAlertCircle } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { IconCash, IconCalendarRepeat, IconAlertCircle, IconPlus, IconWallet, IconHistory, IconChevronRight, IconTrendingUp, IconCheck } from "@tabler/icons-react";
+import { IssueAdvanceDialog } from "./IssueAdvanceDialog";
+import { AdvanceDetailsDialog } from "./AdvanceDetailsDialog";
+import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export function AdvancesTab({ companyId }: { companyId: string }) {
-    const { advancesQuery } = useAdvances({ companyId });
+    const queryClient = useQueryClient();
+    const { advancesQuery, createAdvanceMutation, approveAdvanceMutation } = useAdvances({ companyId });
     const data = advancesQuery.data as any;
     const advances = Array.isArray(data) ? data : (data?.items || []);
+    const [isIssueOpen, setIsIssueOpen] = React.useState(false);
+    const [selectedAdvance, setSelectedAdvance] = React.useState<any>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
+    const [isPaymentsOpen, setIsPaymentsOpen] = React.useState(false);
+    const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+    const [initialPayIds, setInitialPayIds] = React.useState<string[]>([]);
+
+    const totalOutstanding = advances.reduce((sum: number, adv: any) => sum + (adv.remainingAmount || 0), 0);
+    const totalDisbursed = advances.reduce((sum: number, adv: any) => sum + (adv.totalAmount || 0), 0);
+    const activeAdvances = advances.filter((adv: any) => adv.remainingAmount > 0).length;
 
     return (
-        <div className="space-y-6">
-            <Card>
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Header & Main Actions */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+                <div className="space-y-1">
+                    <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90">Advances & Recoveries</h3>
+                    <p className="text-neutral-500 font-medium text-xs">Manage employee loans and salary advance schedules</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    {selectedIds.length > 0 && (
+                        <Button
+                            onClick={() => {
+                                setInitialPayIds(selectedIds);
+                                setIsPaymentsOpen(true);
+                            }}
+                            className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            <IconCash className="mr-2 h-5 w-5" />
+                            Pay Selected ({selectedIds.length})
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => setIsIssueOpen(true)}
+                        className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
+                        <IconPlus className="mr-2 h-5 w-5" />
+                        Issue Advance
+                    </Button>
+                </div>
+            </div>
+
+            {/* Metrics Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="shadow-sm bg-blue-500/5 border border-blue-500/30 rounded-[2rem]">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2 text-blue-500">
+                            <IconTrendingUp className="h-4 w-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Total Issued</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col">
+                            <span className="text-3xl font-black text-foreground tabular-nums">
+                                {totalDisbursed.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Lifetime Issuance</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="shadow-sm bg-amber-500/5 border border-amber-500/30 rounded-[2rem]">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2 text-amber-500">
+                            <IconWallet className="h-4 w-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Outstanding Liability</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col">
+                            <span className="text-3xl font-black text-foreground tabular-nums">
+                                {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">
+                                {activeAdvances} Active Recovery Plans
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="shadow-sm bg-primary/5 border border-primary/30 rounded-[2rem]">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2 text-primary">
+                            <IconCalendarRepeat className="h-4 w-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Next Recovery Run</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col">
+                            <span className="text-3xl font-black text-foreground tabular-nums">
+                                {advances.reduce((sum: number, adv: any) => {
+                                    const nextDeduction = adv.deductionSchedule?.find((s: any) => !s.isDeducted);
+                                    return sum + (nextDeduction?.amount || 0);
+                                }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">
+                                Estimated from active schedules
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
                 <CardHeader>
-                    <CardTitle>Active Advances</CardTitle>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <IconCash className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">Recovery Plans</CardTitle>
+                                <p className="text-xs font-medium text-muted-foreground">Manage ongoing employee salary advances and recoveries.</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-[50px]">
+                                        <Checkbox 
+                                            checked={selectedIds.length === advances.filter((a:any) => a.status === 'APPROVED').length && advances.filter((a:any) => a.status === 'APPROVED').length > 0}
+                                            onCheckedChange={(checked) => {
+                                                if (checked) {
+                                                    setSelectedIds(advances.filter((a:any) => a.status === 'APPROVED').map((a:any) => a.id));
+                                                } else {
+                                                    setSelectedIds([]);
+                                                }
+                                            }}
+                                        />
+                                    </TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Employee</TableHead>
-                                    <TableHead>Total Amount</TableHead>
-                                    <TableHead>Recovery Progress</TableHead>
-                                    <TableHead className="text-right">Remaining</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-center">Progress</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Balance</TableHead>
+                                    <TableHead className="w-[80px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {advancesQuery.isLoading ? (
-                                    [1, 2].map(i => <TableRow key={i} className="animate-pulse h-16" />)
+                                    [1, 2, 3].map(i => (
+                                        <TableRow key={i} className="animate-pulse">
+                                            <TableCell className="py-5 pl-6"><div className="h-4 w-24 bg-muted rounded" /></TableCell>
+                                            <TableCell className="py-5"><div className="h-4 w-32 bg-muted rounded" /></TableCell>
+                                            <TableCell className="py-5"><div className="h-4 w-20 bg-muted rounded" /></TableCell>
+                                            <TableCell className="py-5"><div className="h-6 w-40 bg-muted rounded-full" /></TableCell>
+                                            <TableCell className="py-5"><div className="h-6 w-16 bg-muted rounded-full" /></TableCell>
+                                            <TableCell className="py-5 pr-6"><div className="h-4 w-16 bg-muted rounded ml-auto" /></TableCell>
+                                        </TableRow>
+                                    ))
                                 ) : advances.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No active advances found.</TableCell>
+                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground font-medium">No active advances found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     advances.map((advance: any) => {
-                                        const recovered = advance.totalAmount - advance.remainingAmount;
-                                        const progress = (recovered / advance.totalAmount) * 100;
+                                        const recovered = (advance.totalAmount || 0) - (advance.remainingAmount || 0);
+                                        const progress = advance.totalAmount > 0 ? (recovered / advance.totalAmount) * 100 : 0;
+                                        const isSettled = advance.remainingAmount <= 0;
+
                                         return (
-                                            <TableRow key={advance.id} className="hover:bg-muted/50">
-                                                <TableCell className="font-medium">
+                                            <TableRow 
+                                                key={advance.id} 
+                                                className="hover:bg-muted/50 transition-colors cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedAdvance(advance);
+                                                    setIsDetailsOpen(true);
+                                                }}
+                                            >
+                                                <TableCell onClick={(e) => e.stopPropagation()}>
+                                                    <Checkbox 
+                                                        checked={selectedIds.includes(advance.id)}
+                                                        disabled={advance.status !== 'APPROVED'}
+                                                        onCheckedChange={(checked) => {
+                                                            if (checked) {
+                                                                setSelectedIds([...selectedIds, advance.id]);
+                                                            } else {
+                                                                setSelectedIds(selectedIds.filter(id => id !== advance.id));
+                                                            }
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="font-medium text-sm">
                                                     {format(new Date(advance.date), "MMM d, yyyy")}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="py-4">
                                                     <div className="flex flex-col">
                                                         <span className="font-medium text-sm">{advance.employee?.fullName}</span>
-                                                        <span className="text-xs text-muted-foreground font-mono">EMP-{advance.employee?.employeeNo}</span>
+                                                        <span className="text-xs text-muted-foreground font-mono">
+                                                            {advance.employee?.employeeNo && `(${advance.employee.employeeNo})`}
+                                                        </span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="font-medium">
+                                                <TableCell className="text-right font-medium">
                                                     {advance.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                 </TableCell>
-                                                <TableCell className="w-[200px]">
-                                                    <div className="flex flex-col gap-2">
-                                                        <Progress value={progress} className="h-1.5" />
-                                                        <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase font-bold">
-                                                            <span>{progress.toFixed(0)}% Recovered</span>
-                                                            <span>{recovered.toLocaleString()} LKR</span>
-                                                        </div>
+                                                <TableCell className="text-center">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-xs font-black tabular-nums">{progress.toFixed(0)}%</span>
+                                                        <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter opacity-50">
+                                                            {advance.remainingAmount.toLocaleString()} LKR REM.
+                                                        </span>
                                                     </div>
                                                 </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "font-bold text-[10px] uppercase",
+                                                            advance.status === 'RECOVERED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                                advance.status === 'PAID' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                                    'bg-amber-50 text-amber-700 border-amber-200'
+                                                        )}
+                                                    >
+                                                        {advance.status === 'APPROVED' ? 'UNPAID' : advance.status?.replace('_', ' ') || 'PENDING'}
+                                                    </Badge>
+                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    {advance.remainingAmount > 0 ? (
-                                                        <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 border-orange-200">
-                                                            {advance.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                                            Settled
-                                                        </Badge>
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        {!isSettled ? (
+                                                            <div className="flex flex-col items-end mr-1">
+                                                                <span className="text-sm font-bold text-foreground tabular-nums">
+                                                                    {advance.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center justify-end gap-1.5 text-green-600 font-black text-[9px] uppercase tracking-widest bg-green-500/5 px-4 py-2 rounded-2xl border border-green-500/10 shadow-sm shadow-green-500/5">
+                                                                <IconCheck className="h-3.5 w-3.5" />
+                                                                Settled
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {advance.status === 'APPROVED' && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-8 rounded-xl font-bold text-[10px] uppercase bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20 border-none"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setInitialPayIds([advance.id]);
+                                                                setIsPaymentsOpen(true);
+                                                            }}
+                                                        >
+                                                            Pay
+                                                        </Button>
                                                     )}
                                                 </TableCell>
                                             </TableRow>
@@ -87,45 +288,33 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                 </CardContent>
             </Card>
 
-            {/* Quick Actions / Insights */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-primary text-primary-foreground border-none shadow-md">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                        <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                            <IconCalendarRepeat className="h-5 w-5" />
-                        </div>
-                        <CardTitle className="text-lg">Next Cycle Recovery</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-primary-foreground/80 text-sm mb-4">
-                            Estimated recovery for the upcoming pay cycle based on all active deduction schedules.
-                        </p>
-                        <div className="text-3xl font-black mb-2">
-                            LKR {advances.reduce((sum: number, adv: any) => {
-                                const nextDeduction = adv.deductionSchedule.find((s: any) => !s.isDeducted);
-                                return sum + (nextDeduction?.amount || 0);
-                            }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </div>
-                        <div className="text-xs font-bold uppercase opacity-80">
-                            From {advances.filter((adv: any) => adv.remainingAmount > 0).length} active advances
-                        </div>
-                    </CardContent>
-                </Card>
+            <IssueAdvanceDialog
+                open={isIssueOpen}
+                onOpenChange={setIsIssueOpen}
+                companyId={companyId}
+                onSubmit={async (dto) => {
+                    await createAdvanceMutation.mutateAsync(dto);
+                    setIsIssueOpen(false);
+                }}
+                isSubmitting={createAdvanceMutation.isPending}
+            />
 
-                <Card>
-                    <CardHeader className="flex flex-row items-start gap-4 pb-2">
-                        <IconAlertCircle className="h-5 w-5 text-muted-foreground mt-1" />
-                        <div>
-                            <CardTitle className="text-lg">Recovery Policy</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                            Advances are recovered automatically during salary generation based on the custom schedule defined at creation. Any remaining balance is displayed on the Salary record.
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+            <AdvanceDetailsDialog 
+                open={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+                advance={selectedAdvance}
+                onPay={(id: string) => {
+                    setInitialPayIds([id]);
+                    setIsPaymentsOpen(true);
+                }}
+            />
+
+            <SettlePaymentsDialog
+                open={isPaymentsOpen}
+                onOpenChange={setIsPaymentsOpen}
+                companyId={companyId}
+                initialAdvanceIds={initialPayIds}
+            />
         </div>
     );
 }

@@ -1,20 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
+import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePayments } from "@/hooks/use-payments";
 import { useSalaries } from "@/hooks/use-salaries";
 import { format } from "date-fns";
-import { IconHistory, IconCash, IconCreditCard, IconReceipt, IconWallet, IconCalendarTime, IconArrowRight, IconInfoCircle } from "@tabler/icons-react";
+import { IconHistory, IconCash, IconCreditCard, IconReceipt, IconWallet, IconCalendarTime, IconArrowRight, IconInfoCircle, IconPlus } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PaymentDetailsDialog } from "./PaymentDetailsDialog";
+import { cn } from "@/lib/utils";
 
 export function PaymentsTab({ companyId }: { companyId: string }) {
     const { paymentsQuery, deletePaymentMutation } = usePayments({ companyId });
     const { salariesQuery } = useSalaries({ companyId, limit: 1000 }); // Large limit to calculate totals
     const [selectedPayment, setSelectedPayment] = useState<any>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [isBatchPaymentOpen, setIsBatchPaymentOpen] = useState(false);
 
     const data = paymentsQuery.data as any;
     const payments = Array.isArray(data) ? data : (data?.items || []);
@@ -45,9 +49,22 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+                <div className="space-y-1">
+                    <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90">Payment History</h3>
+                    <p className="text-neutral-500 font-medium text-xs">Track salary disbursements and settlement status</p>
+                </div>
+                <Button
+                    onClick={() => setIsBatchPaymentOpen(true)}
+                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                    <IconPlus className="mr-2 h-5 w-5" />
+                    Do Payment
+                </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-sm bg-blue-500/5 border border-blue-500/20">
+                <Card className="shadow-sm bg-blue-500/5 border border-blue-500/30 rounded-[2rem]">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2 text-blue-500">
                             <IconCash className="h-4 w-4" />
@@ -64,7 +81,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-amber-500/5 border border-amber-500/20">
+                <Card className="shadow-sm bg-amber-500/5 border border-amber-500/30 rounded-[2rem]">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2 text-amber-500">
                             <IconWallet className="h-4 w-4" />
@@ -83,7 +100,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-red-500/5 border border-red-500/20">
+                <Card className="shadow-sm bg-red-500/5 border border-red-500/30 rounded-[2rem]">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2 text-red-500">
                             <IconCalendarTime className="h-4 w-4" />
@@ -103,30 +120,32 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                 </Card>
             </div>
 
-            <Card className="border border-border/50 shadow-sm overflow-hidden">
-                <CardHeader className="px-6 py-5 flex flex-row items-center justify-between border-b bg-muted/30">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner">
-                            <IconHistory className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex flex-col">
-                            <CardTitle className="text-sm font-black uppercase tracking-widest">Payment Logs</CardTitle>
-                            <span className="text-[10px] text-muted-foreground font-bold font-mono">Real-time settlement history</span>
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <IconHistory className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">Payment Logs</CardTitle>
+                                <p className="text-xs font-medium text-muted-foreground">Real-time history of salary disbursements and advances.</p>
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="p-0">
+                <CardContent>
                     <div className="overflow-x-auto">
                         <Table>
-                            <TableHeader className="bg-muted/30">
-                                <TableRow className="hover:bg-transparent border-b">
-                                    <TableHead className="pl-6 py-4 font-black text-[10px] uppercase tracking-widest">Date</TableHead>
-                                    <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest">Reference</TableHead>
-                                    <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest">Recipient</TableHead>
-                                    <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-center">Type</TableHead>
-                                    <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest">Method</TableHead>
-                                    <TableHead className="py-4 font-black text-[10px] uppercase tracking-widest text-center">Status</TableHead>
-                                    <TableHead className="pr-6 py-4 text-right font-black text-[10px] uppercase tracking-widest">Amount</TableHead>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Reference</TableHead>
+                                    <TableHead>Recipient</TableHead>
+                                    <TableHead className="text-center">Type</TableHead>
+                                    <TableHead>Method</TableHead>
+                                    <TableHead className="text-center">Status</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -156,38 +175,51 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                                                 setIsDetailsOpen(true);
                                             }}
                                         >
-                                            <TableCell className="pl-6 py-4 font-bold text-xs tabular-nums">
+                                            <TableCell className="py-4 font-medium text-sm">
                                                 {format(new Date(payment.date), "MMM d, yyyy")}
                                             </TableCell>
-                                            <TableCell className="font-mono text-[10px] text-muted-foreground font-bold uppercase">
+                                            <TableCell className="font-mono text-xs text-muted-foreground">
                                                 {payment.referenceNo || payment.id.split("-")[0]}
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="flex flex-col text-xs">
-                                                    <span className="font-bold">{payment.salary?.employee?.fullName || payment.advance?.employee?.fullName}</span>
-                                                    <span className="text-[10px] text-muted-foreground font-medium font-mono">
-                                                        {(payment.salary?.employee?.employeeNo || payment.advance?.employee?.employeeNo) && `#${payment.salary?.employee?.employeeNo || payment.advance?.employee?.employeeNo}`}
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-sm">{payment.salary?.employee?.fullName || payment.advance?.employee?.fullName}</span>
+                                                    <span className="text-xs text-muted-foreground font-mono">
+                                                        {(payment.salary?.employee?.employeeNo || payment.advance?.employee?.employeeNo) && `(${payment.salary?.employee?.employeeNo || payment.advance?.employee?.employeeNo})`}
                                                     </span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Badge variant="outline" className={`rounded-lg px-2 py-0.5 text-[9px] font-black uppercase ${payment.salaryId ? 'bg-primary/5 text-primary border-primary/10' : 'bg-orange-500/5 text-orange-500 border-orange-500/10'}`}>
+                                                <Badge 
+                                                    variant="outline" 
+                                                    className={cn(
+                                                        "font-black uppercase text-[9px] px-2 py-0.5 rounded-lg",
+                                                        payment.salaryId 
+                                                            ? 'bg-primary/5 text-primary border-primary/20' 
+                                                            : 'bg-amber-500/5 text-amber-600 border-amber-500/20'
+                                                    )}
+                                                >
                                                     {payment.salaryId ? 'Salary' : 'Advance'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground capitalize bg-muted/40 w-fit px-2 py-1.5 rounded-xl border border-border shadow-sm">
+                                                <div className="flex items-center gap-2 text-xs font-medium capitalize">
                                                     {getMethodIcon(payment.paymentMethod)}
                                                     {payment.paymentMethod.toLowerCase().replace('_', ' ')}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Badge variant="outline" className={`rounded-xl px-2 py-0.5 font-black uppercase text-[9px] ${payment.status === 'ACKNOWLEDGED' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}`}>
+                                                <Badge variant="outline" className={`font-bold ${payment.status === 'ACKNOWLEDGED' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200'}`}>
                                                     {payment.status === 'PENDING_ACKNOWLEDGEMENT' ? 'Pending' : payment.status?.replace('_', ' ') || 'PENDING'}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="pr-6 text-right font-black text-sm tabular-nums">
-                                                {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            <TableCell className="text-right">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-bold text-sm text-foreground tabular-nums">
+                                                        {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground font-medium">LKR</span>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -204,6 +236,12 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                 payment={selectedPayment} 
                 onDelete={(id) => deletePaymentMutation.mutate(id)}
                 isDeleting={deletePaymentMutation.isPending}
+            />
+
+            <SettlePaymentsDialog
+                open={isBatchPaymentOpen}
+                onOpenChange={setIsBatchPaymentOpen}
+                companyId={companyId}
             />
         </div>
     );

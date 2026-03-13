@@ -20,8 +20,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { RecordPaymentDialog } from "./RecordPaymentDialog";
-import { IconSeparator, IconTrash, IconCheck, IconFilter, IconChevronRight, IconChevronLeft, IconX, IconRefresh, IconWallet, IconCash } from "@tabler/icons-react";
+import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
+import { IconSeparator, IconTrash, IconCheck, IconFilter, IconChevronRight, IconChevronLeft, IconX, IconRefresh, IconWallet, IconCash, IconPlus, IconCalendarTime } from "@tabler/icons-react";
 import { useSalaries } from "@/hooks/use-salaries";
 import { usePayments } from "@/hooks/use-payments";
 import { SalaryStatus, Salary } from "@/types/salary";
@@ -34,11 +34,13 @@ import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPerio
 export function SalariesTab({
     companyId,
     filters,
-    onFilterChange
+    onFilterChange,
+    onGenerateClick
 }: {
     companyId: string;
     filters: any;
     onFilterChange: (f: any) => void;
+    onGenerateClick: () => void;
 }) {
     const [page, setPage] = useState(1);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -47,7 +49,7 @@ export function SalariesTab({
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-    const [paymentSalary, setPaymentSalary] = useState<Salary | null>(null);
+    const [initialPayIds, setInitialPayIds] = useState<string[]>([]);
 
     const { salariesQuery, updateSalaryMutation, approveSalaryMutation, deleteSalaryMutation, createPaymentMutation } = useSalaries({
         companyId,
@@ -92,29 +94,51 @@ export function SalariesTab({
     };
 
     return (
-        <>
-            <Card>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+                <div className="space-y-1">
+                    <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90">Salaries & Payroll</h3>
+                    <p className="text-neutral-500 font-medium text-xs">Review and approve employee payroll entries</p>
+                </div>
+                <Button
+                    onClick={onGenerateClick}
+                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                    <IconPlus className="mr-2 h-5 w-5" />
+                    Generate Salaries
+                </Button>
+            </div>
+
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
                 <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <CardTitle>Salary Records</CardTitle>
-                        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <IconCalendarTime className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">Salary Records</CardTitle>
+                                <p className="text-xs font-medium text-muted-foreground">Detailed payroll breakdown for the current period.</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                             {selectedIds.length > 0 && (
                                 <div className="flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-xl border border-primary/10 mr-2">
                                     <span className="text-[10px] font-black uppercase text-primary">{selectedIds.length} Selected</span>
                                     <Button size="sm" variant="ghost" className="h-7 px-2 font-black text-[10px] uppercase hover:bg-primary/10" onClick={() => setSelectedIds([])}>Clear</Button>
-                                    
+
                                     {(() => {
-                                        const selectedDrafts = salaries.filter((s: any) => 
+                                        const selectedDrafts = salaries.filter((s: any) =>
                                             selectedIds.includes(s.id) && s.status === 'DRAFT'
                                         );
-                                        
+
                                         if (selectedDrafts.length > 0) {
                                             return (
                                                 <>
                                                     <div className="w-[1px] h-4 bg-primary/20" />
-                                                    <Button 
-                                                        size="sm" 
-                                                        variant="default" 
+                                                    <Button
+                                                        size="sm"
+                                                        variant="default"
                                                         className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm"
                                                         onClick={() => {
                                                             // For now we just show the logic is there
@@ -131,19 +155,19 @@ export function SalariesTab({
                                         return null;
                                     })()}
                                     {(() => {
-                                        const payableSalaries = salaries.filter((s: any) => 
+                                        const payableSalaries = salaries.filter((s: any) =>
                                             selectedIds.includes(s.id) && (s.status === 'APPROVED' || s.status === 'PARTIALLY_PAID')
                                         );
-                                        
+
                                         if (payableSalaries.length > 0) {
                                             return (
                                                 <>
                                                     <div className="w-[1px] h-4 bg-primary/20" />
-                                                    <Button 
-                                                        size="sm" 
+                                                    <Button
+                                                        size="sm"
                                                         className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm bg-green-600 hover:bg-green-700 text-white"
                                                         onClick={() => {
-                                                            setPaymentSalary(payableSalaries[0]);
+                                                            setInitialPayIds(payableSalaries.map((s: any) => s.id));
                                                             setIsPaymentDialogOpen(true);
                                                         }}
                                                     >
@@ -156,9 +180,9 @@ export function SalariesTab({
                                     })()}
 
                                     <div className="w-[1px] h-4 bg-primary/20" />
-                                    <Button 
-                                        size="sm" 
-                                        variant="ghost" 
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
                                         className="h-7 px-3 font-black text-[10px] uppercase text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
                                         onClick={() => setIsBulkDeleteDialogOpen(true)}
                                     >
@@ -443,8 +467,10 @@ export function SalariesTab({
                     }
                 }}
                 onPay={() => {
-                    setPaymentSalary(selectedSalary);
-                    setIsPaymentDialogOpen(true);
+                    if (selectedSalary) {
+                        setInitialPayIds([selectedSalary.id]);
+                        setIsPaymentDialogOpen(true);
+                    }
                 }}
                 onDelete={() => setIsDeleteDialogOpen(true)}
                 onDeletePayment={async (id) => {
@@ -453,20 +479,11 @@ export function SalariesTab({
                 isDeletingPayment={deletePaymentMutation.isPending}
             />
 
-            <RecordPaymentDialog
+            <SettlePaymentsDialog
                 open={isPaymentDialogOpen}
                 onOpenChange={setIsPaymentDialogOpen}
-                salary={paymentSalary}
-                isSubmitting={createPaymentMutation.isPending}
-                onPay={(dto) => {
-                    createPaymentMutation.mutate(dto, {
-                        onSuccess: () => {
-                            setIsPaymentDialogOpen(false);
-                            setPaymentSalary(null);
-                            setSelectedSalary(null);
-                        }
-                    });
-                }}
+                companyId={companyId}
+                initialSalaryIds={initialPayIds}
             />
 
             <ConfirmationDialog
@@ -507,6 +524,6 @@ export function SalariesTab({
                 variant="destructive"
                 loading={deleteSalaryMutation.isPending}
             />
-        </>
+        </div>
     );
 }

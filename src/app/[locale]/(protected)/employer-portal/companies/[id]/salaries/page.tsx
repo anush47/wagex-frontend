@@ -58,14 +58,6 @@ export default function SalariesPage() {
                         Generate and manage employee salaries, advances, and payments.
                     </p>
                 </div>
-
-                <Button
-                    onClick={() => setGenerateDialogOpen(true)}
-                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                    <IconPlus className="mr-2 h-5 w-5" />
-                    Generate Salaries
-                </Button>
             </div>
 
             {/* Tabs */}
@@ -97,6 +89,7 @@ export default function SalariesPage() {
                             status: searchParams.get('status'),
                         }}
                         onFilterChange={handleFilterChange}
+                        onGenerateClick={() => setGenerateDialogOpen(true)}
                     />
                 </TabsContent>
 

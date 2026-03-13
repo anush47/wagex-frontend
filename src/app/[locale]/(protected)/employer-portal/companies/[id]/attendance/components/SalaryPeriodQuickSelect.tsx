@@ -34,6 +34,7 @@ interface SalaryPeriodQuickSelectProps {
     currentEnd?: string;
     timezone?: string;
     manualPolicy?: Policy | null;
+    className?: string;
 }
 
 export function SalaryPeriodQuickSelect({
@@ -43,7 +44,8 @@ export function SalaryPeriodQuickSelect({
     currentStart,
     currentEnd,
     timezone = "UTC",
-    manualPolicy
+    manualPolicy,
+    className
 }: SalaryPeriodQuickSelectProps) {
     const [open, setOpen] = useState(false);
     const { data: defaultPolicy, isLoading: isLoadingDefault } = useCompanyPolicy(companyId);
@@ -244,7 +246,7 @@ export function SalaryPeriodQuickSelect({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full md:w-[280px] justify-between h-10 rounded-xl px-3 font-normal border-border hover:bg-muted/50 transition-all bg-background"
+                    className={cn("w-full md:w-[280px] justify-between h-10 rounded-xl px-3 font-normal border-border hover:bg-muted/50 transition-all bg-background", className)}
                 >
                     <div className="flex items-center gap-3 overflow-hidden">
                         <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
