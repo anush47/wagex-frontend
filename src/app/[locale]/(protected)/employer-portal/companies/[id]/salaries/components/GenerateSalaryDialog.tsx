@@ -557,7 +557,25 @@ export function GenerateSalaryDialog({
                                                                 <span className="text-[10px] text-muted-foreground font-mono">{row.employeeId.slice(0, 8)}...</span>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>{row.basicSalary?.toLocaleString()}</TableCell>
+                                                        <TableCell>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-sm text-foreground">
+                                                                    {row.basicSalary?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                </span>
+                                                                <div className="flex items-center gap-1 mt-0.5">
+                                                                    <span className="text-[9px] font-black text-primary uppercase">Tot. Earn.:</span>
+                                                                    <span className="text-[9px] font-bold text-primary">
+                                                                        {(() => {
+                                                                            const epfComp = (row.components as any[]).find(c => c.systemType === 'EPF_EMPLOYEE');
+                                                                            if (epfComp && epfComp.value > 0) {
+                                                                                return (epfComp.amount / (epfComp.value / 100)).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                                            }
+                                                                            return row.basicSalary?.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                                        })()}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
                                                         <TableCell className="text-green-600">+{adds.toLocaleString()}</TableCell>
                                                         <TableCell className="text-blue-600">+{(row.otAmount + (row.otAdjustment || 0)).toLocaleString()}</TableCell>
                                                         <TableCell className="text-red-500">-{row.noPayAmount.toLocaleString()}</TableCell>

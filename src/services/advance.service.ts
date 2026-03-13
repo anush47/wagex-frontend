@@ -18,4 +18,12 @@ export class AdvanceService {
     static async approveAdvance(id: string): Promise<ApiResponse<SalaryAdvance>> {
         return backendApiClient.patch<SalaryAdvance>(`/advances/${id}/approve`, {});
     }
+
+    static async deleteAdvance(id: string): Promise<ApiResponse<void>> {
+        return backendApiClient.delete<void>(`/advances/${id}`);
+    }
+
+    static async deleteAdvances(ids: string[]): Promise<ApiResponse<void>> {
+        return backendApiClient.delete<void>('/advances', { body: JSON.stringify({ ids }) });
+    }
 }

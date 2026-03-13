@@ -1,0 +1,300 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { 
+    IconX, 
+    IconFileText, 
+    IconCalendar, 
+    IconBuildingBank, 
+    IconDeviceFloppy,
+    IconDownload,
+    IconPaperclip,
+    IconTrash
+} from "@tabler/icons-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select";
+import { format } from "date-fns";
+import { EtfRecord } from "@/types/statutory";
+import { PaymentMethod } from "@/types/salary";
+import { FileUpload } from "@/components/ui/file-upload";
+import { Badge } from "@/components/ui/badge";
+import { useEtf } from "@/hooks/use-statutory";
+import { toast } from "sonner";
+
+export const EtfDetailsDialog = ({ 
+    open, 
+    onOpenChange, 
+    record,
+    onDelete
+}: { 
+    open: boolean; 
+    onOpenChange: (open: boolean) => void; 
+    record: EtfRecord | null;
+    onDelete?: (id: string) => void;
+}) => {
+    const { updateEtfMutation } = useEtf({ companyId: record?.companyId || "" });
+    const [formData, setFormData] = useState<Partial<EtfRecord>>({});
+    const [showUpload, setShowUpload] = useState(false);
+
+    useEffect(() => {
+        if (record) {
+            setFormData({
+                paidDate: record.paidDate ? format(new Date(record.paidDate), "yyyy-MM-dd") : "",
+                paymentMethod: record.paymentMethod || PaymentMethod.CASH,
+                bankName: record.bankName || "",
+                bankBranch: record.bankBranch || "",
+                chequeNo: record.chequeNo || "",
+                surcharge: record.surcharge || 0,
+                remarks: record.remarks || "",
+                slipUrl: record.slipUrl || "",
+            });
+        }
+    }, [record]);
+
+    if (!record) return null;
+
+    const handleSave = () => {
+        updateEtfMutation.mutate({
+            id: record.id,
+            data: {
+                ...formData,
+                paidDate: formData.paidDate ? new Date(formData.paidDate).toISOString() : null,
+                surcharge: parseFloat(formData.surcharge?.toString() || "0"),
+            }
+        }, {
+            onSuccess: () => {
+                onOpenChange(false);
+            }
+        });
+    };
+
+    const isPaid = !!record.paidDate || !!formData.paidDate;
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-3xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl">
+                <div className="bg-orange-500/5 p-8 border-b border-orange-500/10">
+                    <DialogHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                    <IconFileText className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic text-orange-600">
+                                        ETF - {format(new Date(record.year, record.month - 1), "MMMM yyyy")}
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs font-bold uppercase text-orange-500/60 tracking-wider">
+                                        Submission Details & Payment
+                                    </DialogDescription>
+                                </div>
+                            </div>
+                            <Badge 
+                                variant="outline" 
+                                className={cn(
+                                    "font-black uppercase text-[10px] tracking-widest px-3 py-1 rounded-xl",
+                                    isPaid ? "bg-green-50 text-green-600 border-green-200" : "bg-orange-50 text-orange-600 border-orange-200"
+                                )}
+                            >
+                                {isPaid ? "Paid" : "Unpaid"}
+                            </Badge>
+                        </div>
+                    </DialogHeader>
+                </div>
+
+                <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Summary Section */}
+                        <div className="space-y-6">
+                            <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
+                                <span className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic">Total Contribution</span>
+                                <span className="text-3xl font-black italic tracking-tighter text-orange-600">
+                                    LKR {record.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </span>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic px-1 text-left">Submission Information</h4>
+                                <div className="space-y-3 text-left">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Surcharge (if any)</Label>
+                                        <Input 
+                                            type="number"
+                                            value={formData.surcharge} 
+                                            onChange={(e) => setFormData(prev => ({ ...prev, surcharge: parseFloat(e.target.value) }))}
+                                            className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Payment Section */}
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic px-1 text-left">Payment Details</h4>
+                            <div className="space-y-4 text-left">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Paid Date</Label>
+                                    <Input 
+                                        type="date"
+                                        value={formData.paidDate} 
+                                        onChange={(e) => setFormData(prev => ({ ...prev, paidDate: e.target.value }))}
+                                        className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Payment Method</Label>
+                                    <Select 
+                                        value={formData.paymentMethod} 
+                                        onValueChange={(v) => setFormData(prev => ({ ...prev, paymentMethod: v as PaymentMethod }))}
+                                    >
+                                        <SelectTrigger className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold">
+                                            <SelectValue placeholder="Method" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl border-neutral-100 shadow-xl">
+                                            <SelectItem value={PaymentMethod.CASH} className="font-bold py-3">Cash</SelectItem>
+                                            <SelectItem value={PaymentMethod.BANK_TRANSFER} className="font-bold py-3">Bank Transfer</SelectItem>
+                                            <SelectItem value={PaymentMethod.CHEQUE} className="font-bold py-3">Cheque</SelectItem>
+                                            <SelectItem value={PaymentMethod.OTHER} className="font-bold py-3">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {(formData.paymentMethod === PaymentMethod.BANK_TRANSFER || formData.paymentMethod === PaymentMethod.CHEQUE) && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Name</Label>
+                                            <Input 
+                                                value={formData.bankName} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                                                className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1 text-left">{formData.paymentMethod === PaymentMethod.CHEQUE ? "Cheque No" : "Branch"}</Label>
+                                            <Input 
+                                                value={formData.paymentMethod === PaymentMethod.CHEQUE ? formData.chequeNo : formData.bankBranch} 
+                                                onChange={(e) => setFormData(prev => ({ ...prev, [formData.paymentMethod === PaymentMethod.CHEQUE ? 'chequeNo' : 'bankBranch']: e.target.value }))}
+                                                className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                            <h4 className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic">Payment Slip</h4>
+                            {formData.slipUrl ? (
+                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-orange-600" onClick={() => setShowUpload(true)}>
+                                    Replace Slip
+                                </Button>
+                            ) : (
+                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-orange-600" onClick={() => setShowUpload(true)}>
+                                    Upload Slip
+                                </Button>
+                            )}
+                        </div>
+                        
+                        {showUpload ? (
+                            <FileUpload 
+                                companyId={record.companyId}
+                                folder="statutory/etf"
+                                onUpload={(file) => {
+                                    setFormData(prev => ({ ...prev, slipUrl: file.url }));
+                                    setShowUpload(false);
+                                    toast.success("Slip uploaded successfully. Click Save to persist changes.");
+                                }}
+                            />
+                        ) : formData.slipUrl ? (
+                            <div className="p-6 rounded-3xl border-2 border-dashed border-orange-500/20 bg-orange-500/5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <IconPaperclip className="h-5 w-5 text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-orange-600">Payment Slip Uploaded</p>
+                                        <p className="text-[10px] font-bold text-neutral-400">Click to view or replace the document</p>
+                                    </div>
+                                </div>
+                                <Button variant="outline" size="icon" className="rounded-xl" asChild>
+                                    <a href={formData.slipUrl} target="_blank" rel="noopener noreferrer">
+                                        <IconDownload className="h-4 w-4" />
+                                    </a>
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="p-8 rounded-3xl border-2 border-dashed border-neutral-100 bg-neutral-50/50 flex flex-col items-center justify-center text-center gap-2">
+                                <p className="text-xs font-bold text-neutral-400 italic">No payment slip attached to this submission.</p>
+                                <Button variant="link" className="text-orange-500 font-black uppercase text-[10px]" onClick={() => setShowUpload(true)}>
+                                    Attach Document
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-8 space-y-2 text-left">
+                        <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Remarks</Label>
+                        <textarea 
+                            value={formData.remarks} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
+                            placeholder="Add any internal notes..."
+                            className="w-full h-24 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold p-4 text-sm focus:ring-orange-500/20 outline-none transition-all"
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter className="p-8 bg-neutral-50/50 border-t border-neutral-100 flex-row justify-between sm:justify-between items-center">
+                    <Button
+                        variant="ghost"
+                        onClick={() => onDelete?.(record.id)}
+                        className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-6 text-red-500 hover:bg-red-50"
+                    >
+                        <IconTrash className="mr-2 h-4 w-4" />
+                        Delete Record
+                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="ghost"
+                            onClick={() => onOpenChange(false)}
+                            className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-8"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={updateEtfMutation.isPending}
+                            className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-8 shadow-lg shadow-orange-500/20 bg-orange-500 hover:bg-orange-600 text-white hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            {updateEtfMutation.isPending ? "Saving..." : "Save Changes"}
+                            <IconDeviceFloppy className="ml-2 h-4 w-4" />
+                        </Button>
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+function cn(...classes: any[]) {
+    return classes.filter(Boolean).join(" ");
+}

@@ -308,7 +308,8 @@ export function SalariesTab({
                                         </TableHead>
                                         <TableHead>Employee</TableHead>
                                         <TableHead>Period</TableHead>
-                                        <TableHead className="text-right">Earnings</TableHead>
+                                        <TableHead className="text-right">Basic</TableHead>
+                                        <TableHead className="text-right">Gross</TableHead>
                                         <TableHead className="text-right">Deductions</TableHead>
                                         <TableHead className="text-right">Advance</TableHead>
                                         <TableHead className="text-right whitespace-nowrap">Net Pay</TableHead>
@@ -354,11 +355,27 @@ export function SalariesTab({
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="font-bold text-sm text-foreground">
-                                                        {(salary.basicSalary + salary.otAmount + (salary.components || []).filter(c => c.category === 'ADDITION').reduce((acc, c) => acc + c.amount, 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    <span className="font-medium text-sm">
+                                                        {salary.basicSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground font-medium">Gross</span>
+                                                    <div className="flex items-center gap-1 mt-0.5">
+                                                        <span className="text-[9px] font-black text-primary uppercase">Tot. Earn.:</span>
+                                                        <span className="text-[9px] font-bold text-primary">
+                                                            {(() => {
+                                                                const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
+                                                                if (epfComp && epfComp.value > 0) {
+                                                                    // Back-calculate from EPF component to get the exact base used by backend
+                                                                    return (epfComp.amount / (epfComp.value / 100)).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                                }
+                                                                // Fallback: If no EPF component, show Basic as the likely base
+                                                                return salary.basicSalary.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                            })()}
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                            </TableCell>
+                                            <TableCell className="text-right text-foreground font-bold">
+                                                {(salary.basicSalary + salary.otAmount + (salary.components || []).filter(c => c.category === 'ADDITION').reduce((acc, c) => acc + c.amount, 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">

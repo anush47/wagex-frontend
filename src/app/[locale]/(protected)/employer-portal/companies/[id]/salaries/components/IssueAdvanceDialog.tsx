@@ -173,7 +173,6 @@ export function IssueAdvanceDialog({
             date: new Date(date).toISOString(),
             reason,
             remarks,
-            status: AdvanceStatus.APPROVED,
             deductionSchedule: deductionSchedule.map(item => ({
                 ...item,
                 amount: Number(item.amount)
@@ -206,7 +205,7 @@ export function IssueAdvanceDialog({
                                 <div>
                                     <DialogTitle className="text-xl font-bold tracking-tight text-foreground">Issue Advance</DialogTitle>
                                     <DialogDescription className="text-xs font-medium text-muted-foreground">
-                                        Disburse a salary advance and set up a recovery schedule.
+                                        Disburse a salary advance. This will be auto-approved and paid immediately.
                                     </DialogDescription>
                                 </div>
                             </div>

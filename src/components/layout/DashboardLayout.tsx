@@ -25,7 +25,8 @@ import {
     IconCalendarCheck,
     IconLogout,
     IconWallet,
-    IconClipboardList
+    IconClipboardList,
+    IconReceiptTax
 } from "@tabler/icons-react";
 import {
     DropdownMenu,
@@ -172,6 +173,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             href: `/employer-portal/companies/${companyId}/salaries`,
             icon: (
                 <IconWallet className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            ),
+        },
+        {
+            label: "Statutory",
+            href: `/employer-portal/companies/${companyId}/statutory`,
+            icon: (
+                <IconReceiptTax className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
         {

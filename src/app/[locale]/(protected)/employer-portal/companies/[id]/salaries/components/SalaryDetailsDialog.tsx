@@ -33,6 +33,7 @@ import {
     IconClock,
     IconArrowRight,
     IconCheck,
+    IconAlertCircle,
 } from "@tabler/icons-react";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
@@ -75,7 +76,10 @@ export function SalaryDetailsDialog({
     const [editableOtAdjustmentReason, setEditableOtAdjustmentReason] = React.useState<string>(salary?.otAdjustmentReason || "");
     const [editableRecoveryAdjustment, setEditableRecoveryAdjustment] = React.useState<number>(salary?.recoveryAdjustment || 0);
     const [editableRecoveryAdjustmentReason, setEditableRecoveryAdjustmentReason] = React.useState<string>(salary?.recoveryAdjustmentReason || "");
+    const [editableHolidayPayAdjustment, setEditableHolidayPayAdjustment] = React.useState<number>(salary?.holidayPayAdjustment || 0);
+    const [editableHolidayPayAdjustmentReason, setEditableHolidayPayAdjustmentReason] = React.useState<string>(salary?.holidayPayAdjustmentReason || "");
     const [editableAdvanceDeduction, setEditableAdvanceDeduction] = React.useState<number>(salary?.advanceDeduction || 0);
+    const [editableAdvanceAdjustments, setEditableAdvanceAdjustments] = React.useState<any[]>(salary?.advanceAdjustments || []);
     const [editableSessions, setEditableSessions] = React.useState<any[]>(salary?.sessions || []);
     const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
     const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = React.useState(false);
@@ -89,7 +93,10 @@ export function SalaryDetailsDialog({
             setEditableOtAdjustmentReason(salary.otAdjustmentReason || "");
             setEditableRecoveryAdjustment(salary.recoveryAdjustment || 0);
             setEditableRecoveryAdjustmentReason(salary.recoveryAdjustmentReason || "");
+            setEditableHolidayPayAdjustment(salary.holidayPayAdjustment || 0);
+            setEditableHolidayPayAdjustmentReason(salary.holidayPayAdjustmentReason || "");
             setEditableAdvanceDeduction(salary.advanceDeduction || 0);
+            setEditableAdvanceAdjustments(salary.advanceAdjustments || []);
             setEditableSessions(salary.sessions || []);
         }
     }, [salary]);
@@ -124,7 +131,7 @@ export function SalaryDetailsDialog({
 
     const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
     const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
-    const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + totalAdditions;
+    const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + (editableHolidayPayAdjustment || 0) + totalAdditions;
     const totalRecoveries = salary.noPayAmount + editableAdvanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
     const currentNetSalary = grossEarnings - totalRecoveries;
 
@@ -133,8 +140,11 @@ export function SalaryDetailsDialog({
         (editableRemarks || "") !== (salary.remarks || "") ||
         editableOtAdjustment !== (salary.otAdjustment || 0) ||
         (editableOtAdjustmentReason || "") !== (salary.otAdjustmentReason || "") ||
+        editableHolidayPayAdjustment !== (salary.holidayPayAdjustment || 0) ||
+        (editableHolidayPayAdjustmentReason || "") !== (salary.holidayPayAdjustmentReason || "") ||
         editableRecoveryAdjustment !== (salary.recoveryAdjustment || 0) ||
         (editableRecoveryAdjustmentReason || "") !== (salary.recoveryAdjustmentReason || "") ||
+        editableAdvanceDeduction !== (salary.advanceDeduction || 0) ||
         JSON.stringify(editableComponents) !== JSON.stringify(salary.components || []) ||
         JSON.stringify(editableSessions.map(s => s.id)) !== JSON.stringify((salary.sessions || []).map((s: any) => s.id))
     );
@@ -246,6 +256,21 @@ export function SalaryDetailsDialog({
                                     </div>
                                 </div>
 
+                                <div className="p-2 px-4 bg-primary/5 flex justify-between items-center text-[10px] border-y border-primary/10">
+                                    <span className="font-black uppercase tracking-widest text-primary/60 flex items-center gap-1.5 px-2">
+                                        <IconTable className="h-3 w-3" /> Tot. Earn. (EPF/ETF)
+                                    </span>
+                                    <span className="font-black text-primary tabular-nums px-3 py-1 bg-white rounded-lg border border-primary/20 shadow-sm">
+                                        {(() => {
+                                            const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
+                                            const baseBeforeAdj = (epfComp && epfComp.value > 0)
+                                                ? (epfComp.amount / (epfComp.value / 100))
+                                                : (editableBasicSalary || 0);
+                                            return (baseBeforeAdj + (editableHolidayPayAdjustment || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                        })()}
+                                    </span>
+                                </div>
+
                                 {salary.otAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground flex items-center gap-2">
@@ -254,6 +279,37 @@ export function SalaryDetailsDialog({
                                         <span className="font-bold text-blue-600">+{salary.otAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
+
+                                {/* Holiday Pay Adjustment Row */}
+                                <div className="p-3 px-4 space-y-3 bg-amber-50/10 border-l-2 border-l-amber-400">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-black uppercase tracking-tight text-amber-600 flex items-center gap-1.5">
+                                            <IconTrendingUp className="h-3 w-3" /> Holiday Pay Adjustment
+                                        </span>
+                                        <div className="relative">
+                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-600 font-bold text-xs">±</span>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                value={editableHolidayPayAdjustment === 0 ? "" : editableHolidayPayAdjustment.toFixed(2)}
+                                                onChange={(e) => setEditableHolidayPayAdjustment(parseFloat(e.target.value) || 0)}
+                                                className="h-7 w-32 pl-5 text-right font-bold text-amber-600 border-dashed border-amber-200 focus:border-amber-400 bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    {(editableHolidayPayAdjustment !== 0) && (
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] font-bold text-amber-500 uppercase tracking-widest pl-1">Adjustment Reason</Label>
+                                            <Input
+                                                value={editableHolidayPayAdjustmentReason}
+                                                onChange={(e) => setEditableHolidayPayAdjustmentReason(e.target.value)}
+                                                placeholder="Reason for holiday pay adjustment..."
+                                                className="h-7 text-xs border-dashed border-amber-500/30 focus:border-amber-500 bg-muted/30 italic"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* OT Adjustment Row */}
                                 <div className="p-3 px-4 space-y-3 bg-blue-50/10 border-l-2 border-l-blue-400">
@@ -355,9 +411,20 @@ export function SalaryDetailsDialog({
                                     </div>
                                 )}
                                     <div className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
-                                        <span className="font-medium text-muted-foreground flex items-center gap-2">
-                                            <IconCash className="h-3.5 w-3.5" /> Advance Recovery
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-muted-foreground flex items-center gap-2">
+                                                <IconCash className="h-3.5 w-3.5" /> Advance Recovery
+                                            </span>
+                                            {editableAdvanceAdjustments.length > 0 && (
+                                                <Badge 
+                                                    variant="outline" 
+                                                    className="h-4 px-1 text-[8px] font-black border-orange-200 bg-orange-50 text-orange-600 cursor-help"
+                                                    title="Click 'Calculation Factors' below for breakdown"
+                                                >
+                                                    {editableAdvanceAdjustments.length} LINKED
+                                                </Badge>
+                                            )}
+                                        </div>
                                         <div className="flex items-center gap-2">
                                             <div className="relative">
                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-orange-600 font-bold text-xs">-</span>
@@ -468,7 +535,7 @@ export function SalaryDetailsDialog({
                     </div>
 
                     {/* Breakdown Tables (Mini) */}
-                    {(salary.otBreakdown?.length > 0 || salary.noPayBreakdown?.length > 0) && (
+                    {(salary.otBreakdown?.length > 0 || salary.noPayBreakdown?.length > 0 || (salary as any).advanceAdjustments?.length > 0) && (
                         <div className="bg-background p-4 rounded-xl border shadow-sm space-y-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <IconTable className="w-4 h-4" />
@@ -496,6 +563,26 @@ export function SalaryDetailsDialog({
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
                                                 <span className="text-muted-foreground">{np.type} ({np.count})</span>
                                                 <span className="font-medium text-red-600">-{np.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {(editableAdvanceAdjustments as any[])?.length > 0 && (
+                                    <div className="space-y-2 md:col-span-2 border-t pt-4">
+                                        <div className="flex justify-between border-b pb-1">
+                                            <span className="text-[10px] font-bold uppercase text-muted-foreground">Advance Recovery Breakdown</span>
+                                            <span className="text-[10px] font-black text-orange-600 uppercase">Linked Advance</span>
+                                        </div>
+                                        {(editableAdvanceAdjustments as any[]).map((adj, idx) => (
+                                            <div key={idx} className="flex justify-between text-xs py-2 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors rounded-lg px-2 -mx-2">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-neutral-800">{adj.reason || 'Salary Advance'}</span>
+                                                    <span className="text-[9px] text-muted-foreground font-mono flex items-center gap-1">
+                                                        ID: {adj.advanceId.slice(0, 8)}...
+                                                        <IconAlertCircle className="h-2.5 w-2.5 text-orange-400" />
+                                                    </span>
+                                                </div>
+                                                <span className="font-black text-red-600">-{adj.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -592,8 +679,8 @@ export function SalaryDetailsDialog({
                                     </thead>
                                     <tbody className="divide-y divide-border/20">
                                         {salary.payments.map((payment, pIdx) => (
-                                            <tr 
-                                                key={pIdx} 
+                                            <tr
+                                                key={pIdx}
                                                 className="hover:bg-muted/30 transition-colors cursor-pointer group"
                                                 onClick={() => {
                                                     setSelectedPayment(payment);
@@ -635,21 +722,23 @@ export function SalaryDetailsDialog({
                 <DialogFooter className="p-4 md:p-6 border-t bg-background shrink-0">
                     <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
                         <div className="flex items-center gap-4 self-start md:self-auto">
-                            <Button
-                                variant="ghost"
-                                className="h-10 w-10 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl shrink-0"
-                                disabled={isSaving || isApproving || isDeleting}
-                                onClick={() => onDelete?.()}
-                                title="Delete Salary"
-                            >
-                                <IconTrash className="h-5 w-5" />
-                            </Button>
+                            {onDelete && (
+                                <Button
+                                    variant="ghost"
+                                    className="h-10 w-10 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl shrink-0"
+                                    disabled={isSaving || isApproving || isDeleting}
+                                    onClick={() => onDelete?.()}
+                                    title="Delete Salary"
+                                >
+                                    <IconTrash className="h-5 w-5" />
+                                </Button>
+                            )}
 
                             {salary.status === SalaryStatus.APPROVED ? (
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold uppercase text-green-600">Approved By</span>
                                     <span className="font-bold text-sm text-foreground">
-                                        {salary.approvedBy?.fullName || "Verified User"} 
+                                        {salary.approvedBy?.fullName || "Verified User"}
                                         {salary.approvedAt && (
                                             <span className="text-muted-foreground font-normal ml-1">
                                                 • {format(new Date(salary.approvedAt), "MMM d, HH:mm")}
@@ -667,7 +756,7 @@ export function SalaryDetailsDialog({
                             )}
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto">
-                            {salary.status === "DRAFT" && (
+                            {onApprove && salary.status === "DRAFT" && (
                                 <Button
                                     className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 font-bold flex-1 md:flex-none shadow-md shadow-green-200"
                                     disabled={isSaving || isApproving}
@@ -677,7 +766,7 @@ export function SalaryDetailsDialog({
                                     {isApproving ? "Approving..." : "Approve Salary"}
                                 </Button>
                             )}
-                             {(salary.status === "APPROVED" || salary.status === "PARTIALLY_PAID") && (
+                            {onPay && (salary.status === "APPROVED" || salary.status === "PARTIALLY_PAID") && (
                                 <Button
                                     className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 font-bold flex-1 md:flex-none shadow-md shadow-green-200"
                                     onClick={() => onPay?.()}
@@ -696,9 +785,12 @@ export function SalaryDetailsDialog({
                                         components: editableComponents,
                                         otAdjustment: editableOtAdjustment,
                                         otAdjustmentReason: editableOtAdjustmentReason,
+                                        holidayPayAdjustment: editableHolidayPayAdjustment,
+                                        holidayPayAdjustmentReason: editableHolidayPayAdjustmentReason,
                                         recoveryAdjustment: editableRecoveryAdjustment,
                                         recoveryAdjustmentReason: editableRecoveryAdjustmentReason,
                                         advanceDeduction: editableAdvanceDeduction,
+                                        advanceAdjustments: editableAdvanceAdjustments,
                                         remarks: editableRemarks,
                                         sessions: editableSessions,
                                         sessionIds: editableSessions.map(s => s.id),
@@ -706,7 +798,7 @@ export function SalaryDetailsDialog({
                                     });
                                 }}
                             >
-                                <IconDeviceFloppy className="h-4 w-4 mr-2" /> 
+                                <IconDeviceFloppy className="h-4 w-4 mr-2" />
                                 {isSaving ? "Saving..." : "Save Changes"}
                             </Button>
                         </div>

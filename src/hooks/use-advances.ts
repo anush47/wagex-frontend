@@ -56,10 +56,28 @@ export function useAdvances(params: AdvanceQueryParams) {
         }
     });
 
+    const deleteAdvanceMutation = useMutation({
+        mutationFn: async (idOrIds: string | string[]) => {
+            const response = Array.isArray(idOrIds)
+                ? await AdvanceService.deleteAdvances(idOrIds)
+                : await AdvanceService.deleteAdvance(idOrIds);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['advances'] });
+            toast.success('Advance(s) deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to delete advance(s)');
+        }
+    });
+
     return {
         advancesQuery,
         advanceQuery,
         createAdvanceMutation,
         approveAdvanceMutation,
+        deleteAdvanceMutation,
     };
 }

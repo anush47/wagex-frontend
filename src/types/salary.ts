@@ -50,6 +50,12 @@ export interface NoPayBreakdownItem {
     amount: number;
 }
 
+export interface AdvanceRecoveryAdjustment {
+    advanceId: string;
+    amount: number;
+    reason?: string;
+}
+
 export interface Salary {
     id: string;
     employeeId: string;
@@ -70,6 +76,8 @@ export interface Salary {
     remarks?: string;
     otAdjustment?: number;
     otAdjustmentReason?: string;
+    holidayPayAdjustment?: number;
+    holidayPayAdjustmentReason?: string;
     recoveryAdjustment?: number;
     recoveryAdjustmentReason?: string;
     approvedById?: string;
@@ -77,8 +85,10 @@ export interface Salary {
     approvedBy?: {
         fullName: string;
     };
+    advanceAdjustments?: AdvanceRecoveryAdjustment[];
     sessions?: AttendanceSession[];
     employee?: {
+        id: string;
         fullName: string;
         employeeNo: number;
     };
@@ -106,6 +116,7 @@ export interface SalaryAdvance {
     status: AdvanceStatus;
     remarks?: string;
     employee?: {
+        id: string;
         fullName: string;
         employeeNo: number;
     };

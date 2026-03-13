@@ -5,23 +5,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { IconCash, IconCalendar, IconUser, IconReceipt, IconClock, IconCheck, IconAlertCircle, IconArrowRight, IconMessageCircle2 } from "@tabler/icons-react";
+import { IconCash, IconCalendar, IconUser, IconReceipt, IconClock, IconCheck, IconAlertCircle, IconArrowRight, IconMessageCircle2, IconTrash } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface AdvanceDetailsDialogProps {
     advance: any;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onPay?: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
 export function AdvanceDetailsDialog({
     advance,
     open,
     onOpenChange,
-    onPay
+    onPay,
+    onDelete
 }: AdvanceDetailsDialogProps) {
     if (!advance) return null;
 
@@ -47,8 +50,8 @@ export function AdvanceDetailsDialog({
                                             className={cn(
                                                 "rounded-lg px-2 py-0.5 font-black uppercase text-[8px] tracking-wider",
                                                 advance.status === 'RECOVERED' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
-                                                advance.status === 'PAID' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
-                                                'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                                    advance.status === 'PAID' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                                                        'bg-amber-500/10 text-amber-600 border-amber-500/20'
                                             )}
                                         >
                                             {advance.status?.replace('_', ' ') || 'PENDING'}
@@ -118,10 +121,10 @@ export function AdvanceDetailsDialog({
                                             {isSettled ? <IconCheck className="h-5 w-5" /> : <IconClock className="h-5 w-5" />}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="pt-2">
                                         <div className="h-4 w-full bg-muted/50 rounded-full border border-border/80 shadow-inner overflow-hidden p-[3px] relative">
-                                            <div 
+                                            <div
                                                 className={cn(
                                                     "h-full rounded-full transition-all duration-1000 ease-out",
                                                     isSettled ? "bg-green-500 shadow-sm" : "bg-primary shadow-sm"
@@ -191,12 +194,12 @@ export function AdvanceDetailsDialog({
                                     </div>
                                 ) : (
                                     advance.deductionSchedule.map((item: any, idx: number) => (
-                                        <div 
-                                            key={idx} 
+                                        <div
+                                            key={idx}
                                             className={cn(
                                                 "p-4 rounded-3xl border shadow-sm flex items-center justify-between transition-all animate-in slide-in-from-right-2 duration-300",
-                                                item.isDeducted 
-                                                    ? "bg-green-500/5 border-green-500/10 opacity-70" 
+                                                item.isDeducted
+                                                    ? "bg-green-500/5 border-green-500/10 opacity-70"
                                                     : "bg-background border-border/30 hover:border-primary/20 shadow-sm"
                                             )}
                                             style={{ animationDelay: `${idx * 50}ms` }}
@@ -204,8 +207,8 @@ export function AdvanceDetailsDialog({
                                             <div className="flex items-center gap-4">
                                                 <div className={cn(
                                                     "h-10 w-10 rounded-2xl flex items-center justify-center font-black text-[10px] transition-colors",
-                                                    item.isDeducted 
-                                                        ? "bg-green-500 text-white shadow-lg shadow-green-500/20" 
+                                                    item.isDeducted
+                                                        ? "bg-green-500 text-white shadow-lg shadow-green-500/20"
                                                         : "bg-muted/50 text-muted-foreground"
                                                 )}>
                                                     {item.isDeducted ? <IconCheck className="h-5 w-5" /> : idx + 1}
@@ -254,8 +257,18 @@ export function AdvanceDetailsDialog({
                             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">LKR</span>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
+                        {onDelete && (advance.status === 'PENDING' || (advance.status === 'APPROVED' && (!advance.payments || advance.payments.length === 0) && advance.deductionSchedule?.every((s: any) => !s.isDeducted))) && (
+                            <Button
+                                variant="ghost"
+                                className="h-12 w-12 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl shrink-0 border border-transparent hover:border-red-100"
+                                onClick={() => onDelete(advance.id)}
+                                title="Delete Advance"
+                            >
+                                <IconTrash className="h-5 w-5" />
+                            </Button>
+                        )}
                         <Button
                             variant="outline"
                             className="h-12 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-muted/10 border-muted-foreground/10"

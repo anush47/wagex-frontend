@@ -8,7 +8,7 @@ import { useAdvances } from "@/hooks/use-advances";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { IconCash, IconCalendarRepeat, IconAlertCircle, IconPlus, IconWallet, IconHistory, IconChevronRight, IconTrendingUp, IconCheck } from "@tabler/icons-react";
+import { IconCash, IconCalendarRepeat, IconAlertCircle, IconPlus, IconWallet, IconHistory, IconChevronRight, IconTrendingUp, IconCheck, IconTrash } from "@tabler/icons-react";
 import { IssueAdvanceDialog } from "./IssueAdvanceDialog";
 import { AdvanceDetailsDialog } from "./AdvanceDetailsDialog";
 import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
@@ -16,10 +16,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 export function AdvancesTab({ companyId }: { companyId: string }) {
     const queryClient = useQueryClient();
-    const { advancesQuery, createAdvanceMutation, approveAdvanceMutation } = useAdvances({ companyId });
+    const { advancesQuery, createAdvanceMutation, approveAdvanceMutation, deleteAdvanceMutation } = useAdvances({ companyId });
     const data = advancesQuery.data as any;
     const advances = Array.isArray(data) ? data : (data?.items || []);
     const [isIssueOpen, setIsIssueOpen] = React.useState(false);
@@ -28,6 +29,9 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
     const [isPaymentsOpen, setIsPaymentsOpen] = React.useState(false);
     const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
     const [initialPayIds, setInitialPayIds] = React.useState<string[]>([]);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+    const [isSingleDeleteDialogOpen, setIsSingleDeleteDialogOpen] = React.useState(false);
+    const [advanceToDelete, setAdvanceToDelete] = React.useState<string | null>(null);
 
     const totalOutstanding = advances.reduce((sum: number, adv: any) => sum + (adv.remainingAmount || 0), 0);
     const totalDisbursed = advances.reduce((sum: number, adv: any) => sum + (adv.totalAmount || 0), 0);
@@ -43,16 +47,26 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                 </div>
                 <div className="flex items-center gap-3">
                     {selectedIds.length > 0 && (
-                        <Button
-                            onClick={() => {
-                                setInitialPayIds(selectedIds);
-                                setIsPaymentsOpen(true);
-                            }}
-                            className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                        >
-                            <IconCash className="mr-2 h-5 w-5" />
-                            Pay Selected ({selectedIds.length})
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                onClick={() => setIsDeleteDialogOpen(true)}
+                                variant="outline"
+                                className="rounded-2xl h-12 px-6 font-black text-xs uppercase tracking-wider text-red-500 border-red-200 hover:bg-red-50 shadow-xl shadow-red-500/10 transition-all"
+                            >
+                                <IconTrash className="mr-2 h-5 w-5" />
+                                Delete ({selectedIds.length})
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    setInitialPayIds(selectedIds);
+                                    setIsPaymentsOpen(true);
+                                }}
+                                className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                <IconCash className="mr-2 h-5 w-5" />
+                                Pay Selected ({selectedIds.length})
+                            </Button>
+                        </div>
                     )}
                     <Button
                         onClick={() => setIsIssueOpen(true)}
@@ -148,10 +162,10 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                                 <TableRow>
                                     <TableHead className="w-[50px]">
                                         <Checkbox 
-                                            checked={selectedIds.length === advances.filter((a:any) => a.status === 'APPROVED').length && advances.filter((a:any) => a.status === 'APPROVED').length > 0}
+                                            checked={selectedIds.length === advances.length && advances.length > 0}
                                             onCheckedChange={(checked) => {
                                                 if (checked) {
-                                                    setSelectedIds(advances.filter((a:any) => a.status === 'APPROVED').map((a:any) => a.id));
+                                                    setSelectedIds(advances.map((a:any) => a.id));
                                                 } else {
                                                     setSelectedIds([]);
                                                 }
@@ -201,7 +215,6 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                                     <Checkbox 
                                                         checked={selectedIds.includes(advance.id)}
-                                                        disabled={advance.status !== 'APPROVED'}
                                                         onCheckedChange={(checked) => {
                                                             if (checked) {
                                                                 setSelectedIds([...selectedIds, advance.id]);
@@ -263,20 +276,22 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {advance.status === 'APPROVED' && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="h-8 rounded-xl font-bold text-[10px] uppercase bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20 border-none"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setInitialPayIds([advance.id]);
-                                                                setIsPaymentsOpen(true);
-                                                            }}
-                                                        >
-                                                            Pay
-                                                        </Button>
-                                                    )}
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {advance.status === 'APPROVED' && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="h-8 rounded-xl font-bold text-[10px] uppercase bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20 border-none"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setInitialPayIds([advance.id]);
+                                                                    setIsPaymentsOpen(true);
+                                                                }}
+                                                            >
+                                                                Pay
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -307,6 +322,10 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                     setInitialPayIds([id]);
                     setIsPaymentsOpen(true);
                 }}
+                onDelete={(id: string) => {
+                    setAdvanceToDelete(id);
+                    setIsSingleDeleteDialogOpen(true);
+                }}
             />
 
             <SettlePaymentsDialog
@@ -314,6 +333,43 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                 onOpenChange={setIsPaymentsOpen}
                 companyId={companyId}
                 initialAdvanceIds={initialPayIds}
+            />
+
+            <ConfirmationDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title={`Delete ${selectedIds.length} Advance Record${selectedIds.length > 1 ? 's' : ''}`}
+                description="This action cannot be undone. Only advances that have not been paid or partially recovered will be deleted."
+                icon={<IconTrash className="h-8 w-8" />}
+                actionLabel="Delete"
+                cancelLabel="Cancel"
+                onAction={async () => {
+                    await deleteAdvanceMutation.mutateAsync(selectedIds);
+                    setIsDeleteDialogOpen(false);
+                    setSelectedIds([]);
+                }}
+                variant="destructive"
+                loading={deleteAdvanceMutation.isPending}
+            />
+
+            <ConfirmationDialog
+                open={isSingleDeleteDialogOpen}
+                onOpenChange={setIsSingleDeleteDialogOpen}
+                title="Delete Advance Record"
+                description="This action cannot be undone. Only advances that have not been paid or partially recovered will be deleted."
+                icon={<IconTrash className="h-8 w-8" />}
+                actionLabel="Delete"
+                cancelLabel="Cancel"
+                onAction={async () => {
+                    if (advanceToDelete) {
+                        await deleteAdvanceMutation.mutateAsync(advanceToDelete);
+                        setIsSingleDeleteDialogOpen(false);
+                        setIsDetailsOpen(false);
+                        setAdvanceToDelete(null);
+                    }
+                }}
+                variant="destructive"
+                loading={deleteAdvanceMutation.isPending}
             />
         </div>
     );
