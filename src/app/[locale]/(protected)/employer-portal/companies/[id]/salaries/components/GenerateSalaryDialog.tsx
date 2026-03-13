@@ -142,6 +142,21 @@ export function GenerateSalaryDialog({
         }
     }, [payrollGroups, selectedGroupKey]);
 
+    const handleExcludeConflicts = () => {
+        const conflictingIds = existingSalaries.map((s: any) => s.employeeId);
+        setSelectedEmployees(prev => prev.filter(id => !conflictingIds.includes(id)));
+        setPreviewData([]);
+    };
+
+    const handleExcludeEmployee = (id: string) => {
+        setSelectedEmployees(prev => prev.filter(i => i !== id));
+        // We need to re-generate previews after exclusion if we are in VALIDATION or PREVIEW step
+        if (step === "VALIDATION" || step === "PREVIEW") {
+             // In a real scenario, we might want to just filter previewData, but re-generating is safer
+             setTimeout(() => handleGeneratePreview(), 0);
+        }
+    };
+
     const handleGeneratePreview = async () => {
         if (!period) return;
         try {
@@ -448,6 +463,14 @@ export function GenerateSalaryDialog({
                                                 Salaries have already been generated for {existingSalaries.length} employees in this period ({format(new Date(period.start), "MMM d")} - {format(new Date(period.end), "MMM d, yyyy")}). 
                                                 You cannot generate duplicate payroll records.
                                             </div>
+                                            <Button 
+                                                variant="destructive" 
+                                                size="xs" 
+                                                onClick={handleExcludeConflicts}
+                                                className="mt-2 w-fit font-bold uppercase tracking-wider text-[10px]"
+                                            >
+                                                Exclude Conflicting Staff ({existingSalaries.length})
+                                            </Button>
                                         </div>
                                     )}
 
@@ -464,6 +487,17 @@ export function GenerateSalaryDialog({
                                                 >
                                                     {employee.problems.some((p: any) => p.severity === 'ERROR') ? 'FIX REQUIRED' : 'REVIEW NEEDED'}
                                                 </Badge>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleExcludeEmployee(employee.employeeId);
+                                                    }}
+                                                    className="h-6 px-2 text-[9px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                >
+                                                    EXCLUDE
+                                                </Button>
                                             </div>
                                             <div className="space-y-2">
                                                 {employee.problems.map((prob: any, pIdx: number) => (
