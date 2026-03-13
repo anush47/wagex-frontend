@@ -10,8 +10,21 @@ import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/ui/sidebar"
 
 export function ThemeToggle() {
-    const { open, setOpen, animate } = useSidebar()
+    // Optional sidebar context for standalone usage
+    let sidebarContext;
+    try {
+        sidebarContext = useSidebar();
+    } catch (e) {
+        // Not in sidebar context
+        sidebarContext = { open: true, setOpen: () => {}, animate: false };
+    }
+    const { open, setOpen, animate } = sidebarContext;
     const { setTheme, theme } = useTheme()
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleToggle = () => {
         setTheme(theme === "light" ? "dark" : "light")
@@ -35,7 +48,7 @@ export function ThemeToggle() {
                     animate && !open ? "opacity-0 hidden" : "opacity-100"
                 )}
             >
-                {theme === "light" ? "Light Mode" : "Dark Mode"}
+                {mounted ? (theme === "light" ? "Light Mode" : "Dark Mode") : "Theme"}
             </span>
         </Button>
     )

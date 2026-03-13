@@ -308,10 +308,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 import { useSidebar } from "@/components/ui/sidebar";
 
 export const Logo = () => {
-    const { setOpen } = useSidebar();
+    let sidebarContext;
+    try {
+        sidebarContext = useSidebar();
+    } catch (e) {
+        sidebarContext = null;
+    }
+    
     const handleClick = () => {
-        if (typeof window !== "undefined" && window.innerWidth < 768) {
-            setOpen(false);
+        if (sidebarContext && typeof window !== "undefined" && window.innerWidth < 768) {
+            sidebarContext.setOpen(false);
         }
     };
 
@@ -334,10 +340,16 @@ export const Logo = () => {
 };
 
 export const LogoIcon = () => {
-    const { setOpen } = useSidebar();
+    let sidebarContext;
+    try {
+        sidebarContext = useSidebar();
+    } catch (e) {
+        sidebarContext = null;
+    }
+
     const handleClick = () => {
-        if (typeof window !== "undefined" && window.innerWidth < 768) {
-            setOpen(false);
+        if (sidebarContext && typeof window !== "undefined" && window.innerWidth < 768) {
+            sidebarContext.setOpen(false);
         }
     };
 

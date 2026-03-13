@@ -15,5 +15,31 @@
     "search": "Search",
     "searching": "Searching...",
     "loading": "Loading...",
-    "since": "Since"
+    "since": "Since",
+    "landing": {
+        "hero": {
+            "title": "Elevate Your Workforce Management",
+            "subtitle": "The all-in-one payroll and employee management platform designed for modern businesses. Simplify your operations and focus on growth.",
+            "cta_portal": "Go to Portal",
+            "cta_login": "Sign In"
+        },
+        "features": {
+            "title": "Everything you need to scale",
+            "payroll": {
+                "title": "Automated Payroll",
+                "desc": "Calculate salaries, taxes, and deductions automatically with precision."
+            },
+            "employees": {
+                "title": "Employee Self-Service",
+                "desc": "Empower your team with a portal for payslips, leaves, and profile management."
+            },
+            "attendance": {
+                "title": "Real-time Attendance",
+                "desc": "Track attendance and leaves seamlessly with integrated workflows."
+            }
+        },
+        "footer": {
+            "rights": "All rights reserved."
+        }
+    }
 }

@@ -20,7 +20,16 @@ export function LanguageSwitcher() {
     const router = useRouter();
     const pathname = usePathname();
     const params = useParams();
-    const { open, setOpen, animate } = useSidebar();
+    
+    // Optional sidebar context for standalone usage
+    let sidebarContext;
+    try {
+        sidebarContext = useSidebar();
+    } catch (e) {
+        // Not in sidebar context
+        sidebarContext = { open: true, setOpen: () => {}, animate: false };
+    }
+    const { open, setOpen, animate } = sidebarContext;
 
     const switchLocale = (nextLocale: string) => {
         router.replace(
