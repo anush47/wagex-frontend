@@ -26,12 +26,12 @@ export default function RestrictedPage() {
                 </div>
 
                 <h1 className="text-3xl font-black uppercase tracking-tight mb-4 text-neutral-900 dark:text-white">
-                    Access Denied
+                    Registration Pending
                 </h1>
 
                 <p className="text-neutral-500 dark:text-neutral-400 font-medium text-lg leading-relaxed mb-10">
-                    Your account is currently <span className="text-red-600 dark:text-red-400 font-bold">inactive</span>.
-                    Please contact your organization administrator to reactivate your portal access.
+                    Thank you for signing up! Your account is currently <span className="text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wide">under review</span>.
+                    An administrator will review and activate your account shortly.
                 </p>
 
                 <div className="space-y-4">

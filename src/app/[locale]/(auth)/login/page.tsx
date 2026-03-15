@@ -82,7 +82,7 @@ export default function LoginPage() {
             const user = useAuthStore.getState().user;
 
             if (user?.active === false) {
-                router.push("/restricted");
+                router.push("/pending-review");
             } else {
                 router.push(user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
             }

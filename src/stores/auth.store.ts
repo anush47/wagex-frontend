@@ -79,6 +79,16 @@ export const useAuthStore = create<AuthStore>()(
                                 // The backend now allows /users/me for inactive users
                                 const freshProfile = await authService.getProfile();
                                 userProfile = freshProfile.data;
+
+                                // Fallback: if freshProfile failed but we know user is inactive
+                                if (!userProfile) {
+                                    userProfile = {
+                                        id: session.user.id,
+                                        email: session.user.email!,
+                                        active: false,
+                                        role: 'EMPLOYEE' as any // Default role, will be corrected on next fetch if possible
+                                    };
+                                }
                             } else {
                                 logger.error('Failed to fetch profile during store initialization', profileResult.error);
                             }
@@ -111,6 +121,9 @@ export const useAuthStore = create<AuthStore>()(
                     const { user: sbUser, profile, session, error } = await authService.signIn(credentials);
 
                     if (error) {
+                        // Check if this is an inactive user who actually got signed in but profile fetch failed with 401
+                        // This case is actually handled inside authService.signIn now, returning error: null and profile.
+                        // But we should double check here.
                         set({
                             error: error.message,
                             isLoading: false,
@@ -119,8 +132,20 @@ export const useAuthStore = create<AuthStore>()(
                         throw error;
                     }
 
+                    // Extra check: if we have a session but profile is still null, it might be an inactive user
+                    let finalProfile = profile;
+                    if (session && !finalProfile) {
+                         // This shouldn't happen with the new authService but as a failsafe:
+                         finalProfile = {
+                             id: session.user.id,
+                             email: session.user.email!,
+                             active: false,
+                             role: 'EMPLOYEE' as any
+                         };
+                    }
+
                     set({
-                        user: profile,
+                        user: finalProfile,
                         session,
                         isAuthenticated: !!session,
                         isLoading: false,

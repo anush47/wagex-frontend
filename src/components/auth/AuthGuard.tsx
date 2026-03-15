@@ -25,7 +25,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // Strict Access Control for protected routes
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            const isRestrictedPage = pathname.startsWith('/restricted');
+            const isPendingReviewPage = pathname.startsWith('/pending-review');
 
             // 1. Check for missing profile
             if (!user) {
@@ -35,14 +35,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
             }
 
             // 2. Check for inactive account
-            if (user.active === false && !isRestrictedPage) {
-                logger.warn("Inactive user attempted to access portal, redirecting to restricted page");
-                router.replace("/restricted");
+            if (user.active === false && !isPendingReviewPage) {
+                logger.warn("Inactive user attempted to access portal, redirecting to pending review page");
+                router.replace("/pending-review");
                 return;
             }
 
-            // 3. Prevent active users from seeing the restricted page
-            if (user.active !== false && isRestrictedPage) {
+            // 3. Prevent active users from seeing the pending review page
+            if (user.active !== false && isPendingReviewPage) {
                 router.replace(user.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
                 return;
             }
@@ -76,12 +76,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (isAuthenticated) {
         if (!user) return null;
 
-        const isRestrictedPage = pathname.startsWith('/restricted');
+        const isPendingReviewPage = pathname.startsWith('/pending-review');
         const isEmployerPortal = pathname.startsWith('/employer-portal');
         const isEmployeePortal = pathname.startsWith('/employee-portal');
 
-        if (user.active === false && !isRestrictedPage) return null;
-        if (user.active !== false && isRestrictedPage) return null;
+        if (user.active === false && !isPendingReviewPage) return null;
+        if (user.active !== false && isPendingReviewPage) return null;
         if (user.role === 'EMPLOYEE' && isEmployerPortal) return null;
         if ((user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) return null;
     }
