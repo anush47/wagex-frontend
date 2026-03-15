@@ -93,9 +93,16 @@ export function PayrollSection({ value, onChange }: PayrollSectionProps) {
                         "text-right mr-2 font-mono tracking-tight",
                         isAddition ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                     )}>
-                        <span className="block text-lg md:text-xl font-black">
-                            {isAddition ? '+' : '-'}{formattedValue}{isPercentage ? '%' : ''}
-                        </span>
+                        <div className="flex flex-col items-end">
+                            <span className="block text-lg md:text-xl font-black">
+                                {isAddition ? '+' : '-'}{formattedValue}{isPercentage ? '%' : ''}
+                            </span>
+                            {comp.employerValue !== undefined && comp.employerValue > 0 && (
+                                <span className="text-[10px] font-bold opacity-70">
+                                    Employer: {comp.employerValue}%
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <div className="flex gap-1">
                         <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-background" onClick={() => openEditDialog(comp)}>

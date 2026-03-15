@@ -23,6 +23,7 @@ const DEFAULT_COMPONENT: Partial<PayrollComponent> = {
     name: "",
     type: PayrollComponentType.FLAT_AMOUNT,
     value: 0,
+    employerValue: 0,
     isStatutory: false,
     affectsTotalEarnings: false,
 };
@@ -50,11 +51,22 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
             if (value === 'TEMPLATE_EPF_8') {
                 setFormData(prev => ({
                     ...prev,
-                    name: "EPF (Employee Share)",
+                    name: "EPF",
                     type: PayrollComponentType.PERCENTAGE_TOTAL_EARNINGS,
                     value: 8,
+                    employerValue: 12,
                     isStatutory: true,
                     systemType: PayrollComponentSystemType.EPF_EMPLOYEE
+                }));
+            } else if (value === 'TEMPLATE_ETF_3') {
+                setFormData(prev => ({
+                    ...prev,
+                    name: "ETF",
+                    type: PayrollComponentType.PERCENTAGE_TOTAL_EARNINGS,
+                    value: 0,
+                    employerValue: 3,
+                    isStatutory: true,
+                    systemType: PayrollComponentSystemType.ETF_EMPLOYER
                 }));
             } else if (value === 'TEMPLATE_HOLIDAY_PAY') {
                 setFormData(prev => ({
@@ -96,6 +108,8 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
     let selectValue = formData.type as string;
     if (formData.systemType === PayrollComponentSystemType.EPF_EMPLOYEE) {
         selectValue = 'TEMPLATE_EPF_8';
+    } else if (formData.systemType === PayrollComponentSystemType.ETF_EMPLOYER) {
+        selectValue = 'TEMPLATE_ETF_3';
     } else if (formData.systemType === PayrollComponentSystemType.HOLIDAY_PAY) {
         selectValue = 'TEMPLATE_HOLIDAY_PAY';
     } else if (formData.systemType === PayrollComponentSystemType.NO_PAY_DEDUCTION) {
@@ -168,8 +182,9 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                                 <SelectLabel className="text-[10px] font-black uppercase text-muted-foreground pl-3 py-1">System Templates</SelectLabel>
                                                 {category === PayrollComponentCategory.DEDUCTION && (
                                                     <>
-                                                        <SelectItem value="TEMPLATE_EPF_8">EPF 8% (Employee Share)</SelectItem>
-                                                        <SelectItem value="TEMPLATE_NO_PAY">No-Pay Deduction (System Calculated)</SelectItem>
+                                                        <SelectItem value="TEMPLATE_EPF_8">EPF (8% / 12%)</SelectItem>
+                                                        <SelectItem value="TEMPLATE_ETF_3">ETF (3%)</SelectItem>
+                                                        <SelectItem value="TEMPLATE_NO_PAY">No-Pay Deduction</SelectItem>
                                                     </>
                                                 )}
                                                 {category === PayrollComponentCategory.ADDITION && (
@@ -205,6 +220,23 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                         </p>
                                     )}
                                 </div>
+
+                                {isSystemCalculated && (formData.systemType === PayrollComponentSystemType.EPF_EMPLOYEE || formData.systemType === PayrollComponentSystemType.ETF_EMPLOYER) && (
+                                    <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                                        <Label className="text-xs font-bold text-neutral-600 ml-1">Employer Share (%)</Label>
+                                        <div className="relative">
+                                            <Input
+                                                type="number"
+                                                value={formData.employerValue || 0}
+                                                onChange={(e) => handleChange("employerValue", parseFloat(e.target.value) || 0)}
+                                                className="h-11 bg-background border-none rounded-xl font-black px-4 shadow-sm"
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">
+                                                %
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {formData.type !== PayrollComponentType.FLAT_AMOUNT && (

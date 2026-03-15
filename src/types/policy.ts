@@ -105,6 +105,7 @@ export interface PayrollComponent {
     minCap?: number;
     maxCap?: number;
     systemType?: PayrollComponentSystemType;
+    employerValue?: number;
 }
 
 export interface SalaryComponentsConfig {
