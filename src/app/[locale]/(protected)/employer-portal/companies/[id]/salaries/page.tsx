@@ -42,7 +42,7 @@ export default function SalariesPage() {
     };
 
     return (
-        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10">
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 pb-24">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">

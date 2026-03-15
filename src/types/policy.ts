@@ -133,6 +133,30 @@ export enum UnpaidLeaveAction {
     ADD_AS_DEDUCTION = 'ADD_AS_DEDUCTION'
 }
 
+export enum OvertimeDayType {
+    WORKING_DAY = 'WORKING_DAY',
+    HALF_DAY = 'HALF_DAY',
+    OFF_DAY = 'OFF_DAY',
+    HOLIDAY = 'HOLIDAY',
+    ANY = 'ANY'
+}
+
+export interface OvertimeTier {
+    thresholdMinutes: number;
+    multiplier: number;
+}
+
+export interface OvertimeRule {
+    id: string;
+    name: string;
+    dayStatus: OvertimeDayType;
+    isHoliday?: boolean | null;
+    holidayTypes?: string[];
+    otEnabled: boolean;
+    startAfterMinutes: number;
+    tiers: OvertimeTier[];
+}
+
 export interface PayrollSettingsConfig {
     frequency: PayCycleFrequency;
     runDay: string;
@@ -160,6 +184,8 @@ export interface PayrollSettingsConfig {
     otNormalRate?: number;
     otDoubleRate?: number;
     otTripleRate?: number;
+
+    otRules?: OvertimeRule[];
 }
 
 export enum LateDeductionType {

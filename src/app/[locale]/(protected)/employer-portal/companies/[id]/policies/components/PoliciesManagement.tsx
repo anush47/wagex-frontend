@@ -309,7 +309,7 @@ export function PoliciesManagement({ companyId }: PoliciesManagementProps) {
                         </TabsList>
 
                         {editingSettings && (
-                            <div className="min-h-[400px]">
+                            <div className="min-h-[400px] pb-32">
                                 {overriddenTabs.has(currentTab) && (
                                     <div className="mb-8 bg-orange-500/5 border border-orange-500/10 p-4 rounded-[1.5rem] flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
                                         <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400">

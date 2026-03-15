@@ -56,7 +56,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
     };
 
     return (
-        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">

@@ -6,8 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { IconCalendarTime, IconCalculator, IconCheck, IconInfoCircle, IconAlertCircle } from "@tabler/icons-react";
+import { IconCalendarTime, IconCalculator, IconCheck, IconInfoCircle, IconAlertCircle, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconClock, IconLayersIntersect } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { OvertimeDayType, OvertimeRule, OvertimeTier } from "@/types/policy";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 interface PayrollSettingsTabProps {
     value?: PayrollSettingsConfig;
@@ -26,7 +30,8 @@ const DEFAULT_CONFIG: PayrollSettingsConfig = {
     lateDeductionValue: 8,
     enableAutoDraft: false,
     draftCreationDaysBeforePayDay: 3,
-    autoAcknowledgePayments: false
+    autoAcknowledgePayments: false,
+    otRules: []
 };
 
 export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps) {
@@ -427,8 +432,415 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
 
                         </CardContent>
                     </Card>
-                </div>
+                    
+                    {/* 6. Overtime Policies Card */}
+                    {config.calculationMethod.includes('_WITH_OT') ? (
+                        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/50 rounded-3xl">
+                            <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-neutral-500">
+                                        <IconClock className="w-5 h-5" />
+                                        <span className="text-xs font-bold uppercase tracking-widest">Overtime Policies</span>
+                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => {
+                                            const newRule: OvertimeRule = {
+                                                id: uuidv4(),
+                                                name: "Holiday Override",
+                                                dayStatus: OvertimeDayType.ANY,
+                                                isHoliday: true,
+                                                holidayTypes: ['PUBLIC'],
+                                                otEnabled: true,
+                                                startAfterMinutes: 0,
+                                                tiers: [{ thresholdMinutes: 0, multiplier: 2.0 }]
+                                            };
+                                            handleChange("otRules", [...(config.otRules || []), newRule]);
+                                        }}
+                                        className="h-8 rounded-xl text-xs font-bold gap-1 bg-background"
+                                    >
+                                        <IconPlus className="w-3 h-3" /> Add Holiday Override
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-8">
+                                
+                                {/* A. Daily Defaults (Non-Holiday) */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 px-1">
+                                        <div className="w-1 h-4 bg-primary rounded-full" />
+                                        <h3 className="text-sm font-bold">Workday Defaults</h3>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {[
+                                            { status: OvertimeDayType.WORKING_DAY, label: "Full Day", defaultStart: 480 },
+                                            { status: OvertimeDayType.HALF_DAY, label: "Half Day", defaultStart: 360 },
+                                            { status: OvertimeDayType.OFF_DAY, label: "Off Day", defaultStart: 0 }
+                                        ].map((defaultType) => {
+                                            const ruleIdx = (config.otRules || []).findIndex(r => r.dayStatus === defaultType.status && !r.isHoliday);
+                                            let rule = ruleIdx !== -1 ? config.otRules![ruleIdx] : null;
 
+                                            const updateRule = (updated: Partial<OvertimeRule>) => {
+                                                const newRules = [...(config.otRules || [])];
+                                                if (ruleIdx !== -1) {
+                                                    newRules[ruleIdx] = { ...rule!, ...updated };
+                                                } else {
+                                                    newRules.push({
+                                                        id: uuidv4(),
+                                                        name: defaultType.label,
+                                                        dayStatus: defaultType.status,
+                                                        isHoliday: false,
+                                                        otEnabled: true,
+                                                        startAfterMinutes: defaultType.defaultStart,
+                                                        tiers: [{ thresholdMinutes: 0, multiplier: 1.5 }],
+                                                        ...updated
+                                                    });
+                                                }
+                                                handleChange("otRules", newRules);
+                                            };
+
+                                            return (
+                                                <div key={defaultType.status} className="bg-background rounded-2xl border border-border p-4 space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-bold text-foreground">{defaultType.label}</span>
+                                                        <Switch 
+                                                            checked={rule ? rule.otEnabled : true}
+                                                            onCheckedChange={(v) => updateRule({ otEnabled: v })}
+                                                        />
+                                                    </div>
+                                                    
+                                                    {(rule ? rule.otEnabled : true) && (
+                                                        <div className="space-y-3 pt-2 border-t border-neutral-50 dark:border-neutral-900">
+                                                            <div className="flex items-center justify-between">
+                                                                <Label className="text-[10px] text-muted-foreground uppercase">OT Starts After</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Input 
+                                                                        type="number"
+                                                                        value={rule ? rule.startAfterMinutes : defaultType.defaultStart}
+                                                                        onChange={(e) => updateRule({ startAfterMinutes: parseInt(e.target.value) || 0 })}
+                                                                        className="h-8 w-20 text-xs font-bold rounded-lg text-right"
+                                                                    />
+                                                                    <span className="text-[10px] text-muted-foreground">min</span>
+                                                                </div>
+                                                            </div>
+                                                            {/* Tiers List */}
+                                                            <div className="space-y-3 pt-2 mt-2 border-t border-dashed border-neutral-100 dark:border-neutral-800">
+                                                                <div className="flex items-center justify-between">
+                                                                    <Label className="text-[9px] text-muted-foreground uppercase font-bold">Rate Tiers</Label>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="sm" 
+                                                                        onClick={() => {
+                                                                            const newTiers = rule ? [...rule.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
+                                                                            // Add a new tier with a sensible default (e.g., +4 hours from last tier)
+                                                                            const lastThreshold = newTiers[newTiers.length - 1].thresholdMinutes;
+                                                                            newTiers.push({ thresholdMinutes: lastThreshold + 240, multiplier: newTiers[newTiers.length - 1].multiplier + 0.5 });
+                                                                            updateRule({ tiers: newTiers });
+                                                                        }}
+                                                                        className="h-5 text-[8px] px-1.5 font-bold gap-1 bg-muted/50 hover:bg-muted"
+                                                                    >
+                                                                        <IconPlus className="w-2.5 h-2.5" /> Add Tier
+                                                                    </Button>
+                                                                </div>
+
+                                                                <div className="space-y-2">
+                                                                    {(rule ? rule.tiers : [{ thresholdMinutes: 0, multiplier: 1.5 }]).map((tier, tIdx) => (
+                                                                        <div key={tIdx} className="group relative flex items-center gap-2 bg-muted/20 p-2 rounded-xl border border-transparent hover:border-border transition-all">
+                                                                            {tIdx === 0 ? (
+                                                                                <div className="flex-1 flex items-center justify-between">
+                                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">Base</span>
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <Input 
+                                                                                            type="number"
+                                                                                            step="0.1"
+                                                                                            value={tier.multiplier}
+                                                                                            onChange={(e) => {
+                                                                                                const newTiers = rule ? [...rule.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
+                                                                                                newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
+                                                                                                updateRule({ tiers: newTiers });
+                                                                                            }}
+                                                                                            className="h-7 w-12 text-[10px] font-bold rounded-lg p-1 text-right text-primary"
+                                                                                        />
+                                                                                        <span className="text-[9px] text-primary font-bold">x</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <div className="flex-1 space-y-1">
+                                                                                        <Label className="text-[7px] text-muted-foreground uppercase font-bold">After (Min)</Label>
+                                                                                        <Input 
+                                                                                            type="number"
+                                                                                            value={tier.thresholdMinutes}
+                                                                                            onChange={(e) => {
+                                                                                                const newTiers = [...rule.tiers];
+                                                                                                newTiers[tIdx] = { ...newTiers[tIdx], thresholdMinutes: parseInt(e.target.value) || 0 };
+                                                                                                updateRule({ tiers: newTiers });
+                                                                                            }}
+                                                                                            className="h-7 text-[10px] font-bold rounded-lg p-1"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div className="flex-1 space-y-1">
+                                                                                        <Label className="text-[7px] text-muted-foreground uppercase font-bold">Rate</Label>
+                                                                                        <div className="flex items-center gap-1">
+                                                                                            <Input 
+                                                                                                type="number"
+                                                                                                step="0.1"
+                                                                                                value={tier.multiplier}
+                                                                                                onChange={(e) => {
+                                                                                                    const newTiers = [...rule.tiers];
+                                                                                                    newTiers[tIdx] = { ...newTiers[tIdx], multiplier: parseFloat(e.target.value) || 0 };
+                                                                                                    updateRule({ tiers: newTiers });
+                                                                                                }}
+                                                                                                className="h-7 w-10 text-[10px] font-bold rounded-lg p-1 text-right text-primary"
+                                                                                            />
+                                                                                            <span className="text-[9px] text-primary font-bold">x</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <Button 
+                                                                                        variant="ghost" 
+                                                                                        size="icon" 
+                                                                                        className="h-6 w-6 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                        onClick={() => {
+                                                                                            const newTiers = rule!.tiers.filter((_, i) => i !== tIdx);
+                                                                                            updateRule({ tiers: newTiers });
+                                                                                        }}
+                                                                                    >
+                                                                                        <IconTrash className="w-3 h-3" />
+                                                                                    </Button>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* B. Holiday Overrides */}
+                                <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                                    <div className="flex items-center gap-2 px-1">
+                                        <div className="w-1 h-4 bg-orange-500 rounded-full" />
+                                        <h3 className="text-sm font-bold">Holiday Overrides</h3>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {(config.otRules || []).filter(r => r.isHoliday).length === 0 ? (
+                                            <div className="text-center py-6 bg-background/30 rounded-2xl border border-dashed border-border">
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-tight font-medium">No special holiday overrides defined.</p>
+                                            </div>
+                                        ) : (
+                                            (config.otRules || []).filter(r => r.isHoliday).map((rule, idx) => (
+                                                <div key={rule.id} className="bg-background rounded-2xl border border-border p-4 space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex gap-2">
+                                                            {['PUBLIC', 'MERCANTILE', 'BANK'].map(type => {
+                                                                const active = rule.holidayTypes?.includes(type);
+                                                                return (
+                                                                    <Badge 
+                                                                        key={type}
+                                                                        onClick={() => {
+                                                                            const current = rule.holidayTypes || [];
+                                                                            const next = current.includes(type) ? current.filter(t => t !== type) : [...current, type];
+                                                                            const newRules = [...(config.otRules || [])];
+                                                                            const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                            newRules[globalIdx] = { ...rule, holidayTypes: next };
+                                                                            handleChange("otRules", newRules);
+                                                                        }}
+                                                                        className={cn(
+                                                                            "cursor-pointer text-[9px] h-5 transition-all",
+                                                                            active ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground hover:bg-neutral-200 dark:bg-neutral-800"
+                                                                        )}
+                                                                    >
+                                                                        {type}
+                                                                    </Badge>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-6 w-6 text-muted-foreground hover:text-red-500"
+                                                            onClick={() => {
+                                                                const newRules = (config.otRules || []).filter(r => r.id !== rule.id);
+                                                                handleChange("otRules", newRules);
+                                                            }}
+                                                        >
+                                                            <IconTrash className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-3">
+                                                            <div className="space-y-1.5">
+                                                                <Label className="text-[10px] text-muted-foreground uppercase font-bold">Start OT At</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Input 
+                                                                        type="number"
+                                                                        value={rule.startAfterMinutes}
+                                                                        onChange={(e) => {
+                                                                            const newRules = [...(config.otRules || [])];
+                                                                            const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                            newRules[globalIdx] = { ...rule, startAfterMinutes: parseInt(e.target.value) || 0 };
+                                                                            handleChange("otRules", newRules);
+                                                                        }}
+                                                                        className="h-8 text-xs font-bold rounded-lg text-right"
+                                                                    />
+                                                                    <span className="text-[10px] text-muted-foreground font-bold">min</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                <Label className="text-[10px] text-muted-foreground uppercase font-bold">Base Rate</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Input 
+                                                                        type="number"
+                                                                        step="0.1"
+                                                                        value={rule.tiers[0].multiplier}
+                                                                        onChange={(e) => {
+                                                                            const newRules = [...(config.otRules || [])];
+                                                                            const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                            const newTiers = [...rule.tiers];
+                                                                            newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
+                                                                            newRules[globalIdx] = { ...rule, tiers: newTiers };
+                                                                            handleChange("otRules", newRules);
+                                                                        }}
+                                                                        className="h-8 text-xs font-bold rounded-lg text-right text-primary"
+                                                                    />
+                                                                    <span className="text-[10px] text-primary font-bold">x</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex-1 space-y-4 pl-4 border-l border-neutral-100 dark:border-neutral-800">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <Label className="text-[9px] text-muted-foreground uppercase font-bold">Rate Tiers</Label>
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="sm" 
+                                                                    onClick={() => {
+                                                                        const newRules = [...(config.otRules || [])];
+                                                                        const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                        const newTiers = [...rule.tiers];
+                                                                        const lastThreshold = newTiers[newTiers.length - 1].thresholdMinutes;
+                                                                        newTiers.push({ thresholdMinutes: lastThreshold + 240, multiplier: newTiers[newTiers.length - 1].multiplier + 0.5 });
+                                                                        newRules[globalIdx] = { ...rule, tiers: newTiers };
+                                                                        handleChange("otRules", newRules);
+                                                                    }}
+                                                                    className="h-5 text-[8px] px-1.5 font-bold gap-1 bg-muted/50 hover:bg-muted"
+                                                                >
+                                                                    <IconPlus className="w-2.5 h-2.5" /> Add Tier
+                                                                </Button>
+                                                            </div>
+                                                            
+                                                            <div className="space-y-2">
+                                                                {rule.tiers.map((tier, tIdx) => (
+                                                                    <div key={tIdx} className="group relative bg-muted/20 p-2 rounded-xl border border-transparent hover:border-border transition-all">
+                                                                        {tIdx === 0 ? (
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span className="text-[8px] uppercase text-muted-foreground font-bold">Base Rate</span>
+                                                                                <div className="flex items-center gap-1">
+                                                                                    <Input 
+                                                                                        type="number"
+                                                                                        step="0.1"
+                                                                                        value={tier.multiplier}
+                                                                                        onChange={(e) => {
+                                                                                            const newRules = [...(config.otRules || [])];
+                                                                                            const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                                            const newTiers = [...rule.tiers];
+                                                                                            newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
+                                                                                            newRules[globalIdx] = { ...rule, tiers: newTiers };
+                                                                                            handleChange("otRules", newRules);
+                                                                                        }}
+                                                                                        className="h-6 w-10 text-[10px] font-bold rounded-lg p-1 text-right text-primary"
+                                                                                    />
+                                                                                    <span className="text-[8px] text-primary font-bold">x</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="space-y-2">
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <span className="text-[8px] uppercase text-muted-foreground">After</span>
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <Input 
+                                                                                            type="number"
+                                                                                            value={tier.thresholdMinutes}
+                                                                                            onChange={(e) => {
+                                                                                                const newRules = [...(config.otRules || [])];
+                                                                                                const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                                                const newTiers = [...rule.tiers];
+                                                                                                newTiers[tIdx] = { ...newTiers[tIdx], thresholdMinutes: parseInt(e.target.value) || 0 };
+                                                                                                newRules[globalIdx] = { ...rule, tiers: newTiers };
+                                                                                                handleChange("otRules", newRules);
+                                                                                            }}
+                                                                                            className="h-6 w-12 text-[10px] font-bold rounded-lg p-1 text-right"
+                                                                                        />
+                                                                                        <span className="text-[8px] text-muted-foreground">m</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <span className="text-[8px] uppercase text-muted-foreground">Rate</span>
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        <Input 
+                                                                                            type="number"
+                                                                                            step="0.1"
+                                                                                            value={tier.multiplier}
+                                                                                            onChange={(e) => {
+                                                                                                const newRules = [...(config.otRules || [])];
+                                                                                                const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                                                const newTiers = [...rule.tiers];
+                                                                                                newTiers[tIdx] = { ...newTiers[tIdx], multiplier: parseFloat(e.target.value) || 0 };
+                                                                                                newRules[globalIdx] = { ...rule, tiers: newTiers };
+                                                                                                handleChange("otRules", newRules);
+                                                                                            }}
+                                                                                            className="h-6 w-12 text-[10px] font-bold rounded-lg p-1 text-right text-primary"
+                                                                                        />
+                                                                                        <span className="text-[8px] text-primary font-bold">x</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <Button 
+                                                                                    variant="ghost" 
+                                                                                    size="icon" 
+                                                                                    className="absolute -top-1 -right-1 h-5 w-5 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 bg-background shadow-sm border rounded-full transition-all"
+                                                                                    onClick={() => {
+                                                                                        const newRules = [...(config.otRules || [])];
+                                                                                        const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                                        const newTiers = rule.tiers.filter((_, i) => i !== tIdx);
+                                                                                        newRules[globalIdx] = { ...rule, tiers: newTiers };
+                                                                                        handleChange("otRules", newRules);
+                                                                                    }}
+                                                                                >
+                                                                                    <IconTrash className="w-2.5 h-2.5" />
+                                                                                </Button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-muted/30 rounded-3xl opacity-60">
+                            <CardContent className="flex flex-col items-center justify-center py-10 gap-2">
+                                <IconInfoCircle className="w-6 h-6 text-muted-foreground" />
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">OT Settings Locked</p>
+                                <p className="text-[10px] text-muted-foreground">Select an Attendance-with-OT method to enable policies.</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
             </div>
         </div>
     );

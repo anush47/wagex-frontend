@@ -8,7 +8,7 @@ export default function PoliciesPage({ params }: { params: Promise<{ id: string 
     const { id } = use(params);
 
     return (
-        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 relative pb-24 h-full flex flex-col">
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10 relative pb-40 h-full flex flex-col">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
