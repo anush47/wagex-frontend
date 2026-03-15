@@ -85,7 +85,7 @@ export function FilesTab({ formData, handleChange }: FilesTabProps) {
                         }
 
                         // The ApiClient now unwraps the response, so response.data is { url: "..." }
-                        return (response.data as any).url as string;
+                        return (response.data as any)?.url as string || "";
                     },
                 });
 

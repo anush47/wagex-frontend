@@ -64,8 +64,8 @@ export function FileUpload({ onUpload, companyId, employeeId, folder = "general"
                 customFilename: nameToUse
             });
 
-            if (response.error) {
-                toast.error(response.error.message || "Upload failed");
+            if (response.error || !response.data) {
+                toast.error(response.error?.message || "Upload failed");
                 return;
             }
 

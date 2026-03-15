@@ -23,7 +23,7 @@ export const useStorageUrl = (storageKey?: string | null) => {
             }
 
             // The ApiClient now unwraps the response, so response.data is { url: "..." }
-            return (response.data as any).url as string;
+            return (response.data as any)?.url || null;
         },
         enabled: !!storageKey && !storageKey.startsWith('http') && !storageKey.startsWith('blob:'),
         staleTime: 30 * 60 * 1000, // 30 minutes

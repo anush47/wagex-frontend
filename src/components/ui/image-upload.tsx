@@ -76,8 +76,8 @@ export function ImageUpload({
                     folder: 'logos'
                 });
 
-                if (response.error) {
-                    toast.error(response.error.message || "Upload failed");
+                if (response.error || !response.data) {
+                    toast.error(response.error?.message || "Upload failed");
                     return;
                 }
 
