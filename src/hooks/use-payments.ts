@@ -11,7 +11,7 @@ export function usePayments(params: PaymentQueryParams) {
         queryFn: async () => {
             const response = await PaymentService.getPayments(params);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || { items: [], meta: {} };
+            return response.data || { items: [], meta: {} };
         },
         enabled: !!params.companyId,
     });
@@ -20,7 +20,7 @@ export function usePayments(params: PaymentQueryParams) {
         mutationFn: async (dto: any) => {
             const response = await PaymentService.createPayment(dto);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['payments'] });

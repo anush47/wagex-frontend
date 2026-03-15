@@ -11,7 +11,7 @@ export function useAdvances(params: AdvanceQueryParams) {
         queryFn: async () => {
             const response = await AdvanceService.getAdvances(params);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || { items: [], meta: {} };
+            return response.data || { items: [], meta: {} };
         },
         enabled: !!params.companyId,
     });
@@ -21,7 +21,7 @@ export function useAdvances(params: AdvanceQueryParams) {
         queryFn: async () => {
             const response = await AdvanceService.getAdvanceById(id);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         enabled: !!id,
     });
@@ -30,7 +30,7 @@ export function useAdvances(params: AdvanceQueryParams) {
         mutationFn: async (dto: any) => {
             const response = await AdvanceService.createAdvance(dto);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['advances'] });
@@ -45,7 +45,7 @@ export function useAdvances(params: AdvanceQueryParams) {
         mutationFn: async (id: string) => {
             const response = await AdvanceService.approveAdvance(id);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['advances'] });

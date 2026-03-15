@@ -21,8 +21,7 @@ export const useAttendanceSessions = (params: SessionQueryParams, options: any =
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            // Handle nested response structure from backend
-            return data?.data || data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
+            return data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
         },
         enabled: !!params.companyId,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -41,8 +40,7 @@ export const useAttendanceSession = (id?: string) => {
             if (!id) return null;
             const response = await AttendanceService.getSessionById(id);
             if (response.error) throw new Error(response.error.message);
-            const data = response.data as any;
-            return data?.data || data;
+            return response.data;
         },
         enabled: !!id,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -62,8 +60,7 @@ export const useAttendanceEvents = (params: EventQueryParams) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            // Handle nested response structure from backend
-            return data?.data || data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
+            return data || { items: [], meta: { total: 0, page: 1, lastPage: 1 } };
         },
         enabled: !!params.companyId,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -251,7 +248,7 @@ export const useAttendance = create<AttendanceStore>((set, get) => ({
                 }
 
                 const result = response.data as any;
-                const events = (result?.data || result || []) as AttendanceEvent[];
+                const events = (result || []) as AttendanceEvent[];
 
                 set(state => ({
                     events: { ...state.events, [sessionId]: events },

@@ -14,7 +14,7 @@ export const useCalendars = () => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            return (response.data as any)?.data || response.data || [];
+            return response.data || [];
         },
         staleTime: 30 * 60 * 1000, // 30 minutes
         gcTime: 45 * 60 * 1000,    // 45 minutes
@@ -33,7 +33,7 @@ export const useHolidays = (filters: HolidayFilters = {}) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            return data?.data || data || { items: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
+            return data || { items: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
         },
         placeholderData: (previousData) => previousData,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -53,7 +53,7 @@ export const useCalendar = (id: string | null) => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         enabled: !!id,
         staleTime: 30 * 60 * 1000, // 30 minutes

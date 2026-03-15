@@ -16,7 +16,7 @@ export const useCompanyPolicies = (companyId: string) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            return data?.data || data || [];
+            return data || [];
         },
         enabled: !!companyId,
     });
@@ -35,7 +35,7 @@ export const useCompanyPolicy = (companyId: string) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            return data?.data || data || null;
+            return data || null;
         },
         enabled: !!companyId,
     });
@@ -58,7 +58,7 @@ export const useEffectivePolicy = (employeeId: string | null) => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            const data = (response.data as any)?.data || response.data;
+            const data = response.data;
             return data || null;
         },
         enabled: !!employeeId,

@@ -11,38 +11,46 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
     const router = useRouter();
-    const { isAuthenticated, isLoading, user, signOut } = useAuthStore();
+    const { isAuthenticated, isLoading, isProfileLoading, user, signOut } = useAuthStore();
 
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
+        if (!isLoading && !isProfileLoading && !isAuthenticated) {
             logger.warn("Unauthenticated access attempt, redirecting to login");
             router.push("/");
         }
-    }, [isAuthenticated, isLoading, router]);
+    }, [isAuthenticated, isLoading, isProfileLoading, router]);
 
     const pathname = usePathname();
 
     // Strict Access Control for protected routes
     useEffect(() => {
-        if (!isLoading && isAuthenticated) {
-            const isPendingReviewPage = pathname.startsWith('/pending-review');
+        // Wait for all loading states to finish before making routing decisions
+        if (isLoading || isProfileLoading) return;
+
+        if (isAuthenticated) {
+            const isPendingReviewPage = pathname === '/pending-review' || pathname.startsWith('/pending-review/');
+            const isSignOutPage = pathname === '/signout' || pathname.startsWith('/signout/');
 
             // 1. Check for missing profile
             if (!user) {
-                logger.warn("Authenticated user missing profile, redirecting to registration");
+                logger.warn("Authenticated user missing profile, redirecting to registration profile step");
                 router.replace("/register?step=profile");
                 return;
             }
 
             // 2. Check for inactive account
-            if (user.active === false && !isPendingReviewPage) {
-                logger.warn("Inactive user attempted to access portal, redirecting to pending review page");
-                router.replace("/pending-review");
+            if (user.active === false) {
+                if (!isPendingReviewPage && !isSignOutPage) {
+                    logger.warn("Inactive user attempted to access restricted route, redirecting to pending review", { path: pathname });
+                    router.replace("/pending-review");
+                }
                 return;
             }
 
             // 3. Prevent active users from seeing the pending review page
-            if (user.active !== false && isPendingReviewPage) {
+            // Logic narrowing: we know user.active is NOT false here
+            if (isPendingReviewPage) {
+                logger.info("Active user attempted to access pending review page, redirecting to dashboard");
                 router.replace(user.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
                 return;
             }
@@ -59,10 +67,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 router.replace("/employer-portal/dashboard");
             }
         }
-    }, [user, isAuthenticated, isLoading, router, pathname]);
+    }, [user, isAuthenticated, isLoading, isProfileLoading, router, pathname]);
 
     // BLOCKING: Don't render children until we're sure the state is settled and correct
-    if (isLoading) {
+    if (isLoading || (isProfileLoading && !user)) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-white dark:bg-neutral-950">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -76,12 +84,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (isAuthenticated) {
         if (!user) return null;
 
-        const isPendingReviewPage = pathname.startsWith('/pending-review');
+        const isPendingReviewPage = pathname === '/pending-review' || pathname.startsWith('/pending-review/');
+        const isSignOutPage = pathname === '/signout' || pathname.startsWith('/signout/');
         const isEmployerPortal = pathname.startsWith('/employer-portal');
         const isEmployeePortal = pathname.startsWith('/employee-portal');
 
-        if (user.active === false && !isPendingReviewPage) return null;
+        // Inactive users can only see pending-review and signout
+        if (user.active === false && !isPendingReviewPage && !isSignOutPage) return null;
+        
+        // Active users cannot see pending-review
         if (user.active !== false && isPendingReviewPage) return null;
+        
+        // Portal enforcement
         if (user.role === 'EMPLOYEE' && isEmployerPortal) return null;
         if ((user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) return null;
     }

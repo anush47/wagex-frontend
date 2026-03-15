@@ -12,7 +12,10 @@ export default function Home() {
     const t = useTranslations("Common");
     const { isAuthenticated, user } = useAuthStore();
 
-    const portalHref = user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard";
+    const isInactive = isAuthenticated && user?.active === false;
+    const portalHref = isInactive 
+        ? "/pending-review" 
+        : (user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
 
     const features = [
         {

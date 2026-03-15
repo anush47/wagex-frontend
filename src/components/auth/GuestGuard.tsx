@@ -18,13 +18,15 @@ export function GuestGuard({ children }: GuestGuardProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const { isAuthenticated, isLoading, user } = useAuthStore();
+    const { isAuthenticated, isLoading, isProfileLoading, user } = useAuthStore();
 
     useEffect(() => {
-        if (!isLoading && isAuthenticated) {
+        if (isLoading || isProfileLoading) return;
+
+        if (isAuthenticated) {
             // Half-registered: Logged in via Supabase but no backend profile
             if (!user) {
-                const isRegisterPage = pathname.includes("/register");
+                const isRegisterPage = pathname === '/register' || pathname.startsWith('/register/');
                 const isProfileStep = searchParams.get("step") === "profile";
 
                 if (!(isRegisterPage && isProfileStep)) {
@@ -34,9 +36,14 @@ export function GuestGuard({ children }: GuestGuardProps) {
                 return;
             }
 
+            // Inactive account: Pending Review
+            if (user.active === false) {
+                logger.info("Inactive user attempting to access guest route, redirecting to pending review");
+                router.replace("/pending-review");
+                return;
+            }
+
             // Fully registered: Dashboard
-            // If inactive, AuthGuard on the protected route will show Access Denied.
-            // We redirect them to their respective portal dashboard
             logger.info("Registered user attempting to access guest route, redirecting to appropriate portal", { role: user.role });
 
             if (user.role === 'EMPLOYEE') {
@@ -45,9 +52,9 @@ export function GuestGuard({ children }: GuestGuardProps) {
                 router.replace("/employer-portal/dashboard");
             }
         }
-    }, [isAuthenticated, isLoading, user, router, pathname, searchParams]);
+    }, [isAuthenticated, isLoading, isProfileLoading, user, router, pathname, searchParams]);
 
-    if (isLoading) {
+    if (isLoading || (isProfileLoading && isAuthenticated)) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>

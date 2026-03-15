@@ -12,7 +12,7 @@ export function useEpf(params: EpfQuery) {
         queryFn: async () => {
             const response = await EpfService.getRecords(params);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || { items: [], total: 0 };
+            return response.data || { items: [], total: 0 };
         },
         enabled: !!params.companyId,
     });
@@ -71,7 +71,7 @@ export function useEtf(params: EtfQuery) {
         queryFn: async () => {
             const response = await EtfService.getRecords(params);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || { items: [], total: 0 };
+            return response.data || { items: [], total: 0 };
         },
         enabled: !!params.companyId,
     });

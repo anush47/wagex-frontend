@@ -12,7 +12,8 @@ import type { LoginCredentials, UserProfile } from '@/types/user';
 interface AuthState {
     user: UserProfile | null;
     session: Session | null;
-    isLoading: boolean;
+    isLoading: boolean; // Main initialization/auth loading
+    isProfileLoading: boolean; // Just for background profile fetching
     isAuthenticated: boolean;
     error: string | null;
 }
@@ -41,6 +42,7 @@ const initialState: AuthState = {
     user: null,
     session: null,
     isLoading: true,
+    isProfileLoading: false,
     isAuthenticated: false,
     error: null,
 };
@@ -57,6 +59,32 @@ export const useAuthStore = create<AuthStore>()(
              * Initialize auth state from existing session
              */
             initialize: async () => {
+                // Register global API error interceptor once
+                backendApiClient.addErrorInterceptor(async (error) => {
+                    if (error.statusCode === 401) {
+                        if (error.message === 'User inactive') {
+                            logger.warn('API returned 401 User Inactive, updating store state');
+                            const { session, user } = get();
+                            if (session && user?.active !== false) {
+                                set({
+                                    user: {
+                                        ...(user || {}),
+                                        id: session.user.id,
+                                        email: session.user.email || user?.email || '',
+                                        active: false,
+                                        role: user?.role || 'EMPLOYEE' as any
+                                    } as UserProfile
+                                });
+                            }
+                        } else {
+                            // Only sign out if we are not already in the middle of a sign-in or initialized
+                            // and the error is a genuine session expiration
+                            logger.error('API returned 401 Unauthorized, signing out');
+                            get().signOut();
+                        }
+                    }
+                });
+
                 try {
                     set({ isLoading: true, error: null });
                     const session = await authService.getSession();
@@ -70,7 +98,10 @@ export const useAuthStore = create<AuthStore>()(
                         let userProfile: UserProfile | null = null;
 
                         if (profileResult.data) {
-                            userProfile = profileResult.data;
+                            userProfile = {
+                                ...profileResult.data,
+                                email: profileResult.data.email || session.user.email || ''
+                            };
                             logger.info('Auth initialized with existing session and profile');
                         } else if (profileResult.error) {
                             // Handle inactive user error (401)
@@ -99,15 +130,16 @@ export const useAuthStore = create<AuthStore>()(
                             user: userProfile,
                             isAuthenticated: !!session,
                             isLoading: false,
+                            isProfileLoading: false,
                         });
                     } else {
-                        set({ ...initialState, isLoading: false });
+                        set({ ...initialState, isLoading: false, isProfileLoading: false });
                         backendApiClient.setAuthToken(null);
                         logger.info('No existing session found');
                     }
                 } catch (error) {
                     logger.error('Auth initialization failed', error);
-                    set({ ...initialState, isLoading: false });
+                    set({ ...initialState, isLoading: false, isProfileLoading: false });
                 }
             },
 
@@ -189,11 +221,18 @@ export const useAuthStore = create<AuthStore>()(
              * Set session manually (for auth state changes)
              */
             setSession: (session: Session | null, user: UserProfile | null) => {
-                set({
+                const currentSession = get().session;
+                
+                // If the user changed, we should probably set isProfileLoading if we don't have a profile yet
+                const userChanged = session?.user.id !== currentSession?.user.id;
+                
+                set((state) => ({
                     session,
-                    user,
+                    user: user || (userChanged ? null : state.user),
                     isAuthenticated: !!session,
-                });
+                    // If we have a session but no profile and user changed, it's effectively profile-loading
+                    isProfileLoading: !!session && !user && userChanged ? true : state.isProfileLoading,
+                }));
 
                 backendApiClient.setAuthToken(session?.access_token || null);
             },
@@ -214,13 +253,22 @@ export const useAuthStore = create<AuthStore>()(
                 if (!session) return;
 
                 try {
+                    set({ isProfileLoading: true });
                     const profileResult = await authService.getProfile();
                     if (profileResult.data) {
-                        set({ user: profileResult.data });
+                        set({ 
+                            user: {
+                                ...profileResult.data,
+                                // Fallback to session email if backend doesn't have it (though it should)
+                                email: profileResult.data.email || session.user.email || ''
+                            }, 
+                            isProfileLoading: false 
+                        });
                     } else if (profileResult.error) {
                         // Handle inactive user error (401)
                         if (profileResult.error.statusCode === 401 && profileResult.error.message === 'User inactive') {
                             set({
+                                isProfileLoading: false,
                                 user: {
                                     id: session.user.id,
                                     email: session.user.email!,
@@ -228,10 +276,15 @@ export const useAuthStore = create<AuthStore>()(
                                     role: 'EMPLOYEE' as any
                                 }
                             });
+                        } else {
+                            set({ isProfileLoading: false });
                         }
+                    } else {
+                        set({ isProfileLoading: false });
                     }
                 } catch (error) {
                     logger.error('Failed to fetch profile', error);
+                    set({ isProfileLoading: false });
                 }
             },
         }),

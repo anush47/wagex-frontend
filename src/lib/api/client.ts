@@ -9,12 +9,17 @@ interface RequestConfig extends RequestInit {
     params?: Record<string, string>;
 }
 
+type ErrorInterceptor = (error: ApiError) => void | Promise<void>;
+type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
+
 /**
  * Base API client class with interceptors and error handling
  */
 class ApiClient {
     private baseURL: string;
     private defaultHeaders: HeadersInit;
+    private errorInterceptors: ErrorInterceptor[] = [];
+    private requestInterceptors: RequestInterceptor[] = [];
 
     constructor(baseURL: string) {
         this.baseURL = baseURL;
@@ -37,6 +42,20 @@ class ApiClient {
             const { Authorization, ...rest } = this.defaultHeaders as Record<string, string>;
             this.defaultHeaders = rest;
         }
+    }
+
+    /**
+     * Add an error interceptor
+     */
+    addErrorInterceptor(interceptor: ErrorInterceptor): void {
+        this.errorInterceptors.push(interceptor);
+    }
+
+    /**
+     * Add a request interceptor
+     */
+    addRequestInterceptor(interceptor: RequestInterceptor): void {
+        this.requestInterceptors.push(interceptor);
     }
 
     /**
@@ -82,22 +101,33 @@ class ApiClient {
         try {
             logger.debug('API Request', { url, method: config.method || 'GET' });
 
+            let finalConfig = { ...restConfig };
+            for (const interceptor of this.requestInterceptors) {
+                const result = await interceptor({ ...finalConfig, headers: finalHeaders } as any);
+                finalConfig = { ...result };
+            }
+
             const response = await fetch(url, {
-                ...restConfig,
+                ...finalConfig,
                 headers: finalHeaders as HeadersInit,
             });
 
-            const data = await response.json();
+            const jsonData = await response.json();
 
             if (!response.ok) {
                 const error: ApiError = {
-                    message: data.message || 'An error occurred',
+                    message: jsonData.message || 'An error occurred',
                     statusCode: response.status,
-                    error: data.error,
+                    error: jsonData.error,
                 };
 
+                // Run error interceptors
+                for (const interceptor of this.errorInterceptors) {
+                    await interceptor(error);
+                }
+
                 // Don't log expected registration-required flow as an error
-                if (!(response.status === 403 && data.message === 'User registration required')) {
+                if (!(response.status === 403 && jsonData.message === 'User registration required')) {
                     logger.error('API Error', error);
                 }
 
@@ -105,7 +135,13 @@ class ApiClient {
             }
 
             logger.debug('API Response', { url, status: response.status });
-            return { data };
+
+            // Unwrap backend's { statusCode, data } response if present
+            const finalData = (jsonData && typeof jsonData === 'object' && 'data' in jsonData && 'statusCode' in jsonData)
+                ? jsonData.data
+                : jsonData;
+
+            return { data: finalData };
         } catch (error) {
             logger.error('Network Error', error);
             return {

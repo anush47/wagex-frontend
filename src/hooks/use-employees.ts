@@ -15,8 +15,7 @@ export const useEmployees = (query: EmployeeQuery, enabled = true) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            // Handle NestJS wrapper: data.data is the paginated object { data: [], meta: {} }
-            return data?.data || data || { data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
+            return data || { data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
         },
         enabled: enabled && !!query.companyId,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -36,7 +35,7 @@ export const useEmployee = (id: string | null) => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         enabled: !!id,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -55,7 +54,7 @@ export const useMe = () => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         staleTime: 30 * 60 * 1000, // 30 minutes
         gcTime: 45 * 60 * 1000,    // 45 minutes

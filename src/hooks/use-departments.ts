@@ -16,7 +16,7 @@ export const useDepartments = (companyId: string) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            return data?.data || data || [];
+            return data || [];
         },
         enabled: !!companyId,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -36,7 +36,7 @@ export const useDepartment = (id: string | null) => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         enabled: !!id,
         staleTime: 30 * 60 * 1000, // 30 minutes

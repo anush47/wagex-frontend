@@ -70,8 +70,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     const response = await CompanyService.getCompany(companyId);
                     // Handle double-wrapped response: response.data (from ApiClient) -> .data (from Backend)
                     if (response.data) {
-                        const companyData = (response.data as any).data || response.data;
-                        setCompany(companyData);
+                        setCompany(response.data);
                     }
                 } catch (error) {
                     console.error("Failed to fetch company for sidebar", error);
@@ -262,17 +261,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                                 <Button variant="ghost" size="sm" className="w-full flex justify-start gap-2 h-10 px-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors">
                                     <div className="shrink-0 flex items-center justify-center w-5 h-5">
                                         <div className="h-6 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-[10px] font-bold text-neutral-500 dark:text-neutral-300">
-                                            {user?.email?.[0]?.toUpperCase() || "U"}
+                                            {(user?.fullName?.[0] || user?.nameWithInitials?.[0] || user?.email?.[0] || "U").toUpperCase()}
                                         </div>
                                     </div>
-                                    <span
+                                    <div
                                         className={cn(
-                                            "text-sm font-medium transition-opacity duration-200 text-neutral-700 dark:text-neutral-200",
+                                            "flex flex-col items-start text-left transition-opacity duration-200",
                                             !open ? "opacity-0 hidden" : "opacity-100"
                                         )}
                                     >
-                                        {user?.email || "User"}
-                                    </span>
+                                        <span className="text-sm font-bold text-neutral-700 dark:text-neutral-200 truncate max-w-[140px]">
+                                            {user?.fullName || user?.nameWithInitials || user?.email?.split('@')[0] || "User"}
+                                        </span>
+                                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate max-w-[140px]">
+                                            {user?.email}
+                                        </span>
+                                    </div>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 rounded-xl">

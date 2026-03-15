@@ -12,7 +12,7 @@ export function useSalaries(params: SalaryQueryParams) {
         queryFn: async () => {
             const response = await SalaryService.getSalaries(params);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || { items: [], meta: {} };
+            return response.data || { items: [], meta: {} };
         },
         enabled: !!params.companyId,
     });
@@ -22,7 +22,7 @@ export function useSalaries(params: SalaryQueryParams) {
         queryFn: async () => {
             const response = await SalaryService.getSalaryById(id);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || null;
+            return response.data || null;
         },
         enabled: !!id,
     });
@@ -31,7 +31,7 @@ export function useSalaries(params: SalaryQueryParams) {
         mutationFn: async (dto: SalaryPreviewDto) => {
             const response = await SalaryService.generatePreviews(dto);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || [];
+            return response.data || [];
         },
     });
 
@@ -39,7 +39,7 @@ export function useSalaries(params: SalaryQueryParams) {
         mutationFn: async ({ companyId, previews }: { companyId: string, previews: any[] }) => {
             const response = await SalaryService.saveDrafts(companyId, previews);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data || [];
+            return response.data || [];
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['salaries'] });
@@ -54,7 +54,7 @@ export function useSalaries(params: SalaryQueryParams) {
         mutationFn: async ({ id, data }: { id: string, data: any }) => {
             const response = await SalaryService.updateSalary(id, data);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data;
+            return response.data;
         },
         onMutate: () => {
             return { toastId: toast.loading('Saving salary changes...') };
@@ -74,7 +74,7 @@ export function useSalaries(params: SalaryQueryParams) {
         mutationFn: async (id: string) => {
             const response = await SalaryService.approveSalary(id);
             if (response.error) throw new Error(response.error.message);
-            return (response.data as any)?.data || response.data;
+            return response.data;
         },
         onMutate: () => {
             return { toastId: toast.loading('Approving salary...') };

@@ -16,8 +16,7 @@ export const useLeaveRequests = (companyId: string, filters?: { status?: LeaveSt
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            // Handle double/triple nesting from NestJS
-            const unwrapped = data?.data?.data || data?.data || data || [];
+            const unwrapped = data || [];
             return Array.isArray(unwrapped) ? unwrapped : (unwrapped?.data || []);
         },
         enabled: !!companyId,
@@ -39,7 +38,7 @@ export const useLeaveBalances = (employeeId: string | null) => {
                 throw new Error(response.error.message);
             }
             const data = response.data as any;
-            return data?.data || data || [];
+            return data || [];
         },
         enabled: !!employeeId,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -58,8 +57,8 @@ export const useEmployees = (query: EmployeeQuery, enabled = true) => {
             if (response.error) {
                 throw new Error(response.error.message);
             }
-            const data = response.data?.data || [];
-            return Array.isArray(data) ? data : (data as any)?.data || [];
+            const data = response.data || [];
+            return Array.isArray(data) ? data : [];
         },
         enabled: enabled && !!query.companyId,
         staleTime: 30 * 60 * 1000, // 30 minutes
