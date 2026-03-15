@@ -223,7 +223,7 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
 
                                 {isSystemCalculated && (formData.systemType === PayrollComponentSystemType.EPF_EMPLOYEE || formData.systemType === PayrollComponentSystemType.ETF_EMPLOYER) && (
                                     <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
-                                        <Label className="text-xs font-bold text-neutral-600 ml-1">Employer Share (%)</Label>
+                                        <Label className="text-xs font-bold text-neutral-600 ml-1">Employer (%)</Label>
                                         <div className="relative">
                                             <Input
                                                 type="number"

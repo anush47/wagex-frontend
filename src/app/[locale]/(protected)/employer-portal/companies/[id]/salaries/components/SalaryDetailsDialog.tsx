@@ -103,8 +103,13 @@ export function SalaryDetailsDialog({
 
     if (!salary) return null;
 
-    const handleComponentChange = (id: string, name: string, amount: number) => {
-        setEditableComponents(prev => prev.map(c => c.id === id ? { ...c, name, amount } : c));
+    const handleComponentChange = (id: string, name: string, amount: number, employerAmount?: number) => {
+        setEditableComponents(prev => prev.map(c => c.id === id ? { 
+            ...c, 
+            name, 
+            amount,
+            employerAmount: employerAmount !== undefined ? employerAmount : c.employerAmount
+        } : c));
     };
 
     const removeComponent = (id: string) => {
@@ -145,7 +150,8 @@ export function SalaryDetailsDialog({
         editableRecoveryAdjustment !== (salary.recoveryAdjustment || 0) ||
         (editableRecoveryAdjustmentReason || "") !== (salary.recoveryAdjustmentReason || "") ||
         editableAdvanceDeduction !== (salary.advanceDeduction || 0) ||
-        JSON.stringify(editableComponents) !== JSON.stringify(salary.components || []) ||
+        JSON.stringify(editableComponents.map(c => ({ id: c.id, name: c.name, amount: c.amount, employerAmount: c.employerAmount }))) !== 
+        JSON.stringify((salary.components || []).map((c: any) => ({ id: c.id, name: c.name, amount: c.amount, employerAmount: c.employerAmount }))) ||
         JSON.stringify(editableSessions.map(s => s.id)) !== JSON.stringify((salary.sessions || []).map((s: any) => s.id))
     );
 
@@ -352,29 +358,43 @@ export function SalaryDetailsDialog({
                                     <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                         <Input
                                             value={comp.name}
-                                            onChange={(e) => handleComponentChange(comp.id, e.target.value, comp.amount)}
+                                            onChange={(e) => handleComponentChange(comp.id, e.target.value, comp.amount, comp.employerAmount)}
                                             className="h-7 border-transparent hover:border-input focus:border-primary bg-transparent w-full max-w-[180px] px-2 text-sm font-medium"
                                         />
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-col items-end gap-1">
                                             <div className="relative">
                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-green-600 font-bold text-xs">+</span>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
                                                     value={comp.amount.toFixed(2)}
-                                                    onChange={(e) => handleComponentChange(comp.id, comp.name, parseFloat(e.target.value) || 0)}
+                                                    onChange={(e) => handleComponentChange(comp.id, comp.name, parseFloat(e.target.value) || 0, comp.employerAmount)}
                                                     className="h-7 w-32 pl-5 text-right font-bold text-green-600 border-transparent hover:border-input focus:border-primary bg-transparent"
                                                 />
                                             </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50"
-                                                onClick={() => removeComponent(comp.id)}
-                                            >
-                                                <IconTrash className="h-3.5 w-3.5" />
-                                            </Button>
+                                            {comp.employerAmount > 0 && (
+                                                <div className="flex flex-col items-end gap-1 mt-1">
+                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-70 pr-2">Employer:</span>
+                                                    <div className="relative">
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={comp.employerAmount.toFixed(2)}
+                                                            onChange={(e) => handleComponentChange(comp.id, comp.name, comp.amount, parseFloat(e.target.value) || 0)}
+                                                            className="h-6 w-32 pr-2 text-right font-bold text-muted-foreground border-transparent hover:border-input focus:border-primary bg-transparent text-[11px]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50"
+                                            onClick={() => removeComponent(comp.id)}
+                                        >
+                                            <IconTrash className="h-3.5 w-3.5" />
+                                        </Button>
                                     </div>
                                 ))}
                                 <div className="p-3 px-4 bg-muted/50 flex justify-between items-center border-t border-border/50">
@@ -443,29 +463,43 @@ export function SalaryDetailsDialog({
                                     <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                         <Input
                                             value={comp.name}
-                                            onChange={(e) => handleComponentChange(comp.id, e.target.value, comp.amount)}
+                                            onChange={(e) => handleComponentChange(comp.id, e.target.value, comp.amount, comp.employerAmount)}
                                             className="h-7 border-transparent hover:border-input focus:border-primary bg-transparent w-full max-w-[180px] px-2 text-sm font-medium"
                                         />
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-col items-end gap-1">
                                             <div className="relative">
                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-600 font-bold text-xs">-</span>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
                                                     value={comp.amount.toFixed(2)}
-                                                    onChange={(e) => handleComponentChange(comp.id, comp.name, parseFloat(e.target.value) || 0)}
+                                                    onChange={(e) => handleComponentChange(comp.id, comp.name, parseFloat(e.target.value) || 0, comp.employerAmount)}
                                                     className="h-7 w-32 pl-5 text-right font-bold text-red-600 border-transparent hover:border-input focus:border-primary bg-transparent"
                                                 />
                                             </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50"
-                                                onClick={() => removeComponent(comp.id)}
-                                            >
-                                                <IconTrash className="h-3.5 w-3.5" />
-                                            </Button>
+                                            {comp.employerAmount > 0 && (
+                                                <div className="flex flex-col items-end gap-1 mt-1">
+                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-70 pr-2">Employer:</span>
+                                                    <div className="relative">
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={comp.employerAmount.toFixed(2)}
+                                                            onChange={(e) => handleComponentChange(comp.id, comp.name, comp.amount, parseFloat(e.target.value) || 0)}
+                                                            className="h-6 w-32 pr-2 text-right font-bold text-muted-foreground border-transparent hover:border-input focus:border-primary bg-transparent text-[11px]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50"
+                                            onClick={() => removeComponent(comp.id)}
+                                        >
+                                            <IconTrash className="h-3.5 w-3.5" />
+                                        </Button>
                                     </div>
                                 ))}
 

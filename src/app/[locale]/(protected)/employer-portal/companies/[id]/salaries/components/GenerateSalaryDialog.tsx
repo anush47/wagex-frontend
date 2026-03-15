@@ -195,6 +195,9 @@ export function GenerateSalaryDialog({
                 row.employeeId === updatedRow.employeeId ? updatedRow : row
             )
         })));
+        if (selectedPreview?.employeeId === updatedRow.employeeId) {
+            setSelectedPreview(updatedRow);
+        }
     };
 
     const toggleEmployee = (id: string) => {
@@ -613,7 +616,16 @@ export function GenerateSalaryDialog({
                                                         <TableCell className="text-green-600">+{adds.toLocaleString()}</TableCell>
                                                         <TableCell className="text-blue-600">+{(row.otAmount + (row.otAdjustment || 0)).toLocaleString()}</TableCell>
                                                         <TableCell className="text-red-500">-{row.noPayAmount.toLocaleString()}</TableCell>
-                                                        <TableCell className="text-red-500">-{deds.toLocaleString()}</TableCell>
+                                                        <TableCell className="text-red-500">
+                                                            <div className="flex flex-col">
+                                                                <span>-{deds.toLocaleString()}</span>
+                                                                {(row.components as any[]).reduce((s, c) => s + (c.employerAmount || 0), 0) > 0 && (
+                                                                    <span className="text-[9px] text-muted-foreground font-bold italic">
+                                                                        (Employer: {(row.components as any[]).reduce((s, c) => s + (c.employerAmount || 0), 0).toLocaleString()})
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
                                                         <TableCell className="text-orange-500">-{row.advanceDeduction.toLocaleString()}</TableCell>
                                                         <TableCell className="text-right font-bold">
                                                             {row.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
