@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { LabelInputContainer } from "@/components/ui/form-elements";
 import { Separator } from "@/components/ui/separator";
+import { PaymentMethod } from "@/types/salary";
+import { IconCreditCard } from "@tabler/icons-react";
+
 interface GeneralTabProps {
     formData: Company;
     handleChange: (field: keyof Company, value: any) => void;
@@ -157,6 +160,83 @@ export function GeneralTab({ formData, handleChange, onDelete }: GeneralTabProps
                                             Affects how attendance shifts and daily reports are calculated.
                                         </p>
                                     </LabelInputContainer>
+                                </div>
+                            </div>
+
+                            <Separator className="bg-neutral-100 dark:bg-neutral-800/50" />
+
+                            {/* Section: Statutory Defaults */}
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-3xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                                        <IconCreditCard className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-black tracking-tight">Statutory Defaults</h3>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <LabelInputContainer>
+                                        <Label htmlFor="defaultStatutoryPaymentMethod" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Default Payment Method</Label>
+                                        <Select
+                                            value={formData.defaultStatutoryPaymentMethod || PaymentMethod.BANK_TRANSFER}
+                                            onValueChange={(val) => handleChange("defaultStatutoryPaymentMethod", val)}
+                                        >
+                                            <SelectTrigger id="defaultStatutoryPaymentMethod" className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent rounded-2xl px-4 md:px-6 text-base font-medium shadow-inner">
+                                                <SelectValue placeholder="Select Method" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-2xl border-neutral-100 dark:border-neutral-800">
+                                                <SelectItem value={PaymentMethod.CASH}>Cash</SelectItem>
+                                                <SelectItem value={PaymentMethod.BANK_TRANSFER}>Bank Transfer</SelectItem>
+                                                <SelectItem value={PaymentMethod.CHEQUE}>Cheque</SelectItem>
+                                                <SelectItem value={PaymentMethod.OTHER}>Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </LabelInputContainer>
+
+                                    <LabelInputContainer>
+                                        <Label htmlFor="statutoryBankName" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Bank Name</Label>
+                                        <Input
+                                            id="statutoryBankName"
+                                            value={formData.statutoryBankName || ""}
+                                            onChange={(e) => handleChange("statutoryBankName", e.target.value)}
+                                            className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner"
+                                            placeholder="Enter bank name"
+                                        />
+                                    </LabelInputContainer>
+
+                                    <LabelInputContainer>
+                                        <Label htmlFor="statutoryBankBranch" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Bank Branch</Label>
+                                        <Input
+                                            id="statutoryBankBranch"
+                                            value={formData.statutoryBankBranch || ""}
+                                            onChange={(e) => handleChange("statutoryBankBranch", e.target.value)}
+                                            className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner"
+                                            placeholder="Enter bank branch"
+                                        />
+                                    </LabelInputContainer>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <LabelInputContainer>
+                                            <Label htmlFor="statutoryBankCode" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Bank Code</Label>
+                                            <Input
+                                                id="statutoryBankCode"
+                                                value={formData.statutoryBankCode || ""}
+                                                onChange={(e) => handleChange("statutoryBankCode", e.target.value)}
+                                                className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner"
+                                                placeholder="0000"
+                                            />
+                                        </LabelInputContainer>
+                                        <LabelInputContainer>
+                                            <Label htmlFor="statutoryBranchCode" className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">Branch Code</Label>
+                                            <Input
+                                                id="statutoryBranchCode"
+                                                value={formData.statutoryBranchCode || ""}
+                                                onChange={(e) => handleChange("statutoryBranchCode", e.target.value)}
+                                                className="h-12 md:h-14 bg-neutral-50 dark:bg-neutral-800/50 border-transparent focus:border-primary/20 rounded-2xl px-4 md:px-6 text-base md:text-lg font-medium shadow-inner"
+                                                placeholder="000"
+                                            />
+                                        </LabelInputContainer>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>

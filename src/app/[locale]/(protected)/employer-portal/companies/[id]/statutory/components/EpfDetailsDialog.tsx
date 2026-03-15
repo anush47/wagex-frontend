@@ -37,6 +37,7 @@ import { PaymentMethod } from "@/types/salary";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Badge } from "@/components/ui/badge";
 import { useEpf } from "@/hooks/use-statutory";
+import { useStorageUrl } from "@/hooks/use-storage";
 import { toast } from "sonner";
 
 export const EpfDetailsDialog = ({ 
@@ -54,6 +55,16 @@ export const EpfDetailsDialog = ({
     const [formData, setFormData] = useState<Partial<EpfRecord>>({});
     const [showUpload, setShowUpload] = useState(false);
 
+    const { data: resolvedSlipUrl } = useStorageUrl(
+        formData.slipUrl && !formData.slipUrl.startsWith('http') && !formData.slipUrl.startsWith('blob:') 
+            ? formData.slipUrl 
+            : null
+    );
+
+    const slipUrl = formData.slipUrl && (formData.slipUrl.startsWith('http') || formData.slipUrl.startsWith('blob:'))
+        ? formData.slipUrl
+        : resolvedSlipUrl;
+
     useEffect(() => {
         if (record) {
             setFormData({
@@ -62,6 +73,8 @@ export const EpfDetailsDialog = ({
                 paymentMethod: record.paymentMethod || PaymentMethod.CASH,
                 bankName: record.bankName || "",
                 bankBranch: record.bankBranch || "",
+                bankCode: record.bankCode || "",
+                branchCode: record.branchCode || "",
                 chequeNo: record.chequeNo || "",
                 surcharge: record.surcharge || 0,
                 remarks: record.remarks || "",
@@ -190,23 +203,60 @@ export const EpfDetailsDialog = ({
                                 </div>
 
                                 {(formData.paymentMethod === PaymentMethod.BANK_TRANSFER || formData.paymentMethod === PaymentMethod.CHEQUE) && (
-                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                                        <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Name</Label>
-                                            <Input 
-                                                value={formData.bankName} 
-                                                onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
-                                                className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
-                                            />
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2 text-left">
+                                                <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Name</Label>
+                                                <Input 
+                                                    value={formData.bankName} 
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                                                    className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                    placeholder="e.g. BOC"
+                                                />
+                                            </div>
+                                            <div className="space-y-2 text-left">
+                                                <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Code</Label>
+                                                <Input 
+                                                    value={formData.bankCode} 
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, bankCode: e.target.value }))}
+                                                    className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                    placeholder="0000"
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">{formData.paymentMethod === PaymentMethod.CHEQUE ? "Cheque No" : "Branch"}</Label>
-                                            <Input 
-                                                value={formData.paymentMethod === PaymentMethod.CHEQUE ? formData.chequeNo : formData.bankBranch} 
-                                                onChange={(e) => setFormData(prev => ({ ...prev, [formData.paymentMethod === PaymentMethod.CHEQUE ? 'chequeNo' : 'bankBranch']: e.target.value }))}
-                                                className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
-                                            />
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2 text-left">
+                                                <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Branch</Label>
+                                                <Input 
+                                                    value={formData.bankBranch} 
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, bankBranch: e.target.value }))}
+                                                    className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                    placeholder="e.g. Colombo 01"
+                                                />
+                                            </div>
+                                            <div className="space-y-2 text-left">
+                                                <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Branch Code</Label>
+                                                <Input 
+                                                    value={formData.branchCode} 
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, branchCode: e.target.value }))}
+                                                    className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                    placeholder="000"
+                                                />
+                                            </div>
                                         </div>
+
+                                        {formData.paymentMethod === PaymentMethod.CHEQUE && (
+                                            <div className="space-y-2 text-left">
+                                                <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Cheque No</Label>
+                                                <Input 
+                                                    value={formData.chequeNo} 
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, chequeNo: e.target.value }))}
+                                                    className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                    placeholder="Enter cheque number"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -249,7 +299,7 @@ export const EpfDetailsDialog = ({
                                     </div>
                                 </div>
                                 <Button variant="outline" size="icon" className="rounded-xl" asChild>
-                                    <a href={formData.slipUrl} target="_blank" rel="noopener noreferrer">
+                                    <a href={slipUrl || "#"} target="_blank" rel="noopener noreferrer">
                                         <IconDownload className="h-4 w-4" />
                                     </a>
                                 </Button>

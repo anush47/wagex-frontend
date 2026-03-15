@@ -41,6 +41,7 @@ import { startOfDay, endOfDay, format, differenceInMinutes } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
+import { StorageImage } from "@/components/ui/storage-image";
 
 export default function CompanyOverviewPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -138,8 +139,8 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
                     
                     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-10 relative z-10">
                         <div className="flex items-start md:items-center gap-10">
-                            <div className="h-24 w-24 md:h-32 md:w-32 rounded-[2rem] bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 p-4 flex items-center justify-center shrink-0 shadow-2xl shadow-neutral-200/50 dark:shadow-none">
-                                {company?.logo ? <img src={company.logo} className="h-full w-full object-contain" /> : <IconBuildingSkyscraper className="h-12 w-12 text-neutral-200" />}
+                            <div className="h-24 w-24 md:h-32 md:w-32 rounded-[2rem] bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 p-4 flex items-center justify-center shrink-0 shadow-2xl shadow-neutral-200/50 dark:shadow-none overflow-hidden">
+                                <StorageImage storageKey={company?.logo} alt={company?.name} className="h-full w-full object-contain" fallback={<IconBuildingSkyscraper className="h-12 w-12 text-neutral-200" />} />
                             </div>
                             
                             <div className="space-y-4">

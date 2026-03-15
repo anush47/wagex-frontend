@@ -17,6 +17,8 @@ export class SalaryService {
         if (params.status) searchParams.append('status', params.status);
         if (params.page) searchParams.append('page', params.page.toString());
         if (params.limit) searchParams.append('limit', params.limit.toString());
+        if (params.excludeEpf) searchParams.append('excludeEpf', 'true');
+        if (params.excludeEtf) searchParams.append('excludeEtf', 'true');
 
         return backendApiClient.get<PaginatedResponse<Salary>>(`/salaries?${searchParams.toString()}`);
     }

@@ -169,6 +169,8 @@ export interface SalaryQueryParams {
     status?: SalaryStatus;
     page?: number;
     limit?: number;
+    excludeEpf?: boolean;
+    excludeEtf?: boolean;
 }
 
 export interface AdvanceQueryParams {

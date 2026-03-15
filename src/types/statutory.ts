@@ -13,6 +13,8 @@ export interface EpfRecord {
   paymentMethod?: PaymentMethod;
   bankName?: string;
   bankBranch?: string;
+  bankCode?: string;
+  branchCode?: string;
   chequeNo?: string;
   remarks?: string;
   createdAt: string;
@@ -31,6 +33,8 @@ export interface EtfRecord {
   paymentMethod?: PaymentMethod;
   bankName?: string;
   bankBranch?: string;
+  bankCode?: string;
+  branchCode?: string;
   chequeNo?: string;
   remarks?: string;
   createdAt: string;

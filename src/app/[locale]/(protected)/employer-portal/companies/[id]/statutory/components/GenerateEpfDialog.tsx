@@ -11,15 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
-    IconArrowRight, 
-    IconArrowLeft, 
-    IconCheck, 
-    IconInfoCircle,
-    IconCurrencyDollar,
-    IconCalendarStats,
-    IconRefresh
-} from "@tabler/icons-react";
-import { 
     Select, 
     SelectContent, 
     SelectItem, 
@@ -34,6 +25,19 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useEpf } from "@/hooks/use-statutory";
+import { useCompany } from "@/hooks/use-companies";
+import { PaymentMethod } from "@/types/salary";
+import { 
+    IconArrowRight, 
+    IconArrowLeft, 
+    IconCheck, 
+    IconInfoCircle,
+    IconCurrencyDollar,
+    IconCalendarStats,
+    IconRefresh,
+    IconBuildingBank
+} from "@tabler/icons-react";
+import { Label } from "@/components/ui/label";
 import { PayrollComponentSystemType } from "@/types/policy";
 import { formatCurrency } from "@/lib/utils";
 
@@ -69,7 +73,26 @@ export const GenerateEpfDialog = ({
     const [remarks, setRemarks] = useState("");
     const [referenceNo, setReferenceNo] = useState("");
     const [surcharge, setSurcharge] = useState<number>(0);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.BANK_TRANSFER);
+    const [bankName, setBankName] = useState("");
+    const [bankBranch, setBankBranch] = useState("");
+    const [bankCode, setBankCode] = useState("");
+    const [branchCode, setBranchCode] = useState("");
+    const [chequeNo, setChequeNo] = useState("");
+
     const { createEpfMutation } = useEpf({ companyId });
+    const { data: company } = useCompany(companyId);
+
+    // Sync from company defaults
+    React.useEffect(() => {
+        if (company) {
+            if (company.defaultStatutoryPaymentMethod) setPaymentMethod(company.defaultStatutoryPaymentMethod);
+            if (company.statutoryBankName) setBankName(company.statutoryBankName);
+            if (company.statutoryBankBranch) setBankBranch(company.statutoryBankBranch);
+            if (company.statutoryBankCode) setBankCode(company.statutoryBankCode);
+            if (company.statutoryBranchCode) setBranchCode(company.statutoryBranchCode);
+        }
+    }, [company, open]);
 
     // Fetch PAID salaries for the selected month
     const salariesQuery = useQuery({
@@ -80,7 +103,8 @@ export const GenerateEpfDialog = ({
             const response = await SalaryService.getSalaries({ 
                 companyId, 
                 startDate, 
-                endDate
+                endDate,
+                excludeEpf: true
             });
             if (response.error) throw new Error(response.error.message);
             return (response.data as any)?.data?.items || response.data?.items || [];
@@ -122,6 +146,10 @@ export const GenerateEpfDialog = ({
 
     const preview = previewQuery.data;
 
+    // Check if record already exists for this month/year
+    const { data: existingRecords } = useEpf({ companyId, month, year }).epfRecordsQuery;
+    const isDuplicate = (existingRecords?.items?.length || 0) > 0;
+
     // Sync referenceNo with preview
     React.useEffect(() => {
         if (preview?.referenceNo && !referenceNo) {
@@ -149,6 +177,12 @@ export const GenerateEpfDialog = ({
             surcharge: surcharge || 0,
             referenceNo: referenceNo || undefined,
             remarks: remarks || undefined,
+            paymentMethod,
+            bankName: bankName || undefined,
+            bankBranch: bankBranch || undefined,
+            bankCode: bankCode || undefined,
+            branchCode: branchCode || undefined,
+            chequeNo: chequeNo || undefined,
         }, {
             onSuccess: () => {
                 onOpenChange(false);
@@ -157,6 +191,7 @@ export const GenerateEpfDialog = ({
                 setRemarks("");
                 setReferenceNo("");
                 setSurcharge(0);
+                setChequeNo("");
             }
         });
     };
@@ -223,6 +258,21 @@ export const GenerateEpfDialog = ({
                                     </Select>
                                 </div>
                             </div>
+
+                            {isDuplicate && (
+                                <div className="mt-8 p-6 rounded-[2rem] bg-orange-50 border border-orange-100 dark:bg-orange-900/10 dark:border-orange-800/30 flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    <div className="h-10 w-10 rounded-2xl bg-orange-100 dark:bg-orange-800 text-orange-600 flex items-center justify-center shrink-0 shadow-sm">
+                                        <IconInfoCircle className="h-5 w-5" />
+                                    </div>
+                                    <div className="space-y-1 pt-1">
+                                        <h4 className="text-sm font-black text-orange-800 dark:text-orange-400 uppercase tracking-tight">Record Already Generated</h4>
+                                        <p className="text-xs font-bold text-orange-700/70 dark:text-orange-500/70 leading-relaxed">
+                                            An EPF submission for {months.find(m => m.value === month)?.label} {year} already exists for this company. 
+                                            You must delete the existing record if you wish to re-generate it.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -308,7 +358,7 @@ export const GenerateEpfDialog = ({
                                                     </div>
                                                     <Input 
                                                         value={referenceNo}
-                                                        onChange={(e) => setReferenceNo(e.target.value)}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReferenceNo(e.target.value)}
                                                         className="h-12 rounded-xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus-visible:ring-primary/20 font-bold text-sm"
                                                         placeholder="Enter Reference No"
                                                     />
@@ -326,12 +376,94 @@ export const GenerateEpfDialog = ({
                                                     <Input 
                                                         type="number"
                                                         value={surcharge || ""}
-                                                        onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSurcharge(parseFloat(e.target.value) || 0)}
                                                         className="h-12 rounded-xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus-visible:ring-primary/20 font-bold text-sm"
                                                         placeholder="0.00"
                                                     />
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl p-6 border border-neutral-100 dark:border-neutral-800 space-y-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                                                    <IconBuildingBank className="h-5 w-5" />
+                                                </div>
+                                                <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic leading-tight">Payment Details</p>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Payment Method</Label>
+                                                    <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
+                                                        <SelectTrigger className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-2xl border-neutral-100 dark:border-neutral-800 shadow-xl bg-white dark:bg-neutral-900">
+                                                            <SelectItem value={PaymentMethod.CASH} className="font-bold py-3">Cash</SelectItem>
+                                                            <SelectItem value={PaymentMethod.BANK_TRANSFER} className="font-bold py-3">Bank Transfer</SelectItem>
+                                                            <SelectItem value={PaymentMethod.CHEQUE} className="font-bold py-3">Cheque</SelectItem>
+                                                            <SelectItem value={PaymentMethod.OTHER} className="font-bold py-3">Other</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {(paymentMethod === PaymentMethod.BANK_TRANSFER || paymentMethod === PaymentMethod.CHEQUE) && (
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Name</Label>
+                                                        <Input 
+                                                            value={bankName}
+                                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBankName(e.target.value)}
+                                                            className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                            placeholder="e.g. BOC"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {(paymentMethod === PaymentMethod.BANK_TRANSFER || paymentMethod === PaymentMethod.CHEQUE) && (
+                                                <div className="grid grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Bank Code</Label>
+                                                        <Input 
+                                                            value={bankCode}
+                                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBankCode(e.target.value)}
+                                                            className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                            placeholder="0000"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Branch Name</Label>
+                                                        <Input 
+                                                            value={bankBranch}
+                                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBankBranch(e.target.value)}
+                                                            className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                            placeholder="e.g. Colombo"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Branch Code</Label>
+                                                        <Input 
+                                                            value={branchCode}
+                                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBranchCode(e.target.value)}
+                                                            className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                            placeholder="000"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {paymentMethod === PaymentMethod.CHEQUE && (
+                                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                                    <Label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest pl-1">Cheque No</Label>
+                                                    <Input 
+                                                        value={chequeNo}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setChequeNo(e.target.value)}
+                                                        className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
+                                                        placeholder="Enter cheque number"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -413,7 +545,7 @@ export const GenerateEpfDialog = ({
                     </Button>
                     <Button
                         onClick={handleNext}
-                        disabled={(step === 1 && selectedSalaryIds.length === 0) || previewQuery.isLoading || createEpfMutation.isPending}
+                        disabled={(step === 1 && selectedSalaryIds.length === 0) || previewQuery.isLoading || createEpfMutation.isPending || (step === 0 && isDuplicate)}
                         className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-8 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         {step === steps.length - 1 ? (

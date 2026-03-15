@@ -1,3 +1,5 @@
+import { PaymentMethod } from './salary';
+
 export interface CompanyFile {
     key: string;
     name: string;
@@ -17,6 +19,11 @@ export interface Company {
     timezone?: string;
     active?: boolean;
     files?: CompanyFile[];
+    defaultStatutoryPaymentMethod?: PaymentMethod;
+    statutoryBankName?: string;
+    statutoryBankBranch?: string;
+    statutoryBankCode?: string;
+    statutoryBranchCode?: string;
     createdAt: string;
     updatedAt: string;
 }
