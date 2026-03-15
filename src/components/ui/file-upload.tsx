@@ -69,7 +69,7 @@ export function FileUpload({ onUpload, companyId, employeeId, folder = "general"
                 return;
             }
 
-            const uploadData = (response.data as any)?.data || response.data;
+            const uploadData = response.data;
 
             const formatSize = (bytes: number) => {
                 if (bytes === 0) return '0 Bytes';

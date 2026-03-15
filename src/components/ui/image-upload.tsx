@@ -81,7 +81,7 @@ export function ImageUpload({
                     return;
                 }
 
-                const uploadData = (response.data as any)?.data || response.data;
+                const uploadData = response.data;
 
                 // Show immediate preview (optimistic/local)
                 setPreview(objectUrl);

@@ -46,8 +46,8 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
     } = useEmployees(query);
 
     // Handle paginated response structure
-    const employees = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
-    const meta = (resp as any)?.meta;
+    const employees = resp?.data || [];
+    const meta = resp?.meta;
 
     const displayEmployees = employees;
 

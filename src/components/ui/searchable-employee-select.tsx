@@ -59,7 +59,7 @@ export function SearchableEmployeeSelect({
     const searching = isFetching && !isLoading;
 
     // Handle paginated or raw array response
-    let employees = (resp as any)?.data || (Array.isArray(resp) ? resp : []);
+    let employees = resp?.data || (Array.isArray(resp) ? resp : []);
 
     // Filter out excluded IDs if provided
     if (excludeIds.length > 0 && Array.isArray(employees)) {

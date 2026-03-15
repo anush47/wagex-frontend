@@ -155,9 +155,8 @@ export function LeaveRequestDetailsDialog({
                             throw new Error(response.error.message || 'Failed to get storage URL');
                         }
 
-                        // The API response structure is deterministic: { statusCode, message, data: { url }, timestamp, path }
-                        // So the URL is always at response.data.data.url
-                        return (response.data as any).data.url as string;
+                        // The ApiClient now unwraps the response, so response.data is { url: "..." }
+                        return (response.data as any).url as string;
                     },
                 });
 

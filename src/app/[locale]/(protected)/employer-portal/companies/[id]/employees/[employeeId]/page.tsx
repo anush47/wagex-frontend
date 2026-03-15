@@ -48,7 +48,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     const { data: deptsResp, isLoading: deptsLoading } = useDepartments(companyId);
     const { data: empsResp, isLoading: empsLoading } = useEmployees({ companyId });
 
-    const departments = (deptsResp as any)?.data || (Array.isArray(deptsResp) ? deptsResp : []);
+    const departments = deptsResp || [];
     const { updateEmployee } = useEmployeeMutations();
     const { savePolicy, deletePolicy } = usePolicyMutations();
 
