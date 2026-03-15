@@ -34,6 +34,7 @@ import {
     IconArrowRight,
     IconCheck,
     IconAlertCircle,
+    IconClockStop,
 } from "@tabler/icons-react";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
@@ -80,6 +81,8 @@ export function SalaryDetailsDialog({
     const [editableHolidayPayAdjustmentReason, setEditableHolidayPayAdjustmentReason] = React.useState<string>(salary?.holidayPayAdjustmentReason || "");
     const [editableAdvanceDeduction, setEditableAdvanceDeduction] = React.useState<number>(salary?.advanceDeduction || 0);
     const [editableAdvanceAdjustments, setEditableAdvanceAdjustments] = React.useState<any[]>(salary?.advanceAdjustments || []);
+    const [editableLateAdjustment, setEditableLateAdjustment] = React.useState<number>(salary?.lateAdjustment || 0);
+    const [editableLateAdjustmentReason, setEditableLateAdjustmentReason] = React.useState<string>(salary?.lateAdjustmentReason || "");
     const [editableSessions, setEditableSessions] = React.useState<any[]>(salary?.sessions || []);
     const [selectedPayment, setSelectedPayment] = React.useState<any>(null);
     const [isPaymentDetailsOpen, setIsPaymentDetailsOpen] = React.useState(false);
@@ -97,6 +100,8 @@ export function SalaryDetailsDialog({
             setEditableHolidayPayAdjustmentReason(salary.holidayPayAdjustmentReason || "");
             setEditableAdvanceDeduction(salary.advanceDeduction || 0);
             setEditableAdvanceAdjustments(salary.advanceAdjustments || []);
+            setEditableLateAdjustment(salary.lateAdjustment || 0);
+            setEditableLateAdjustmentReason(salary.lateAdjustmentReason || "");
             setEditableSessions(salary.sessions || []);
         }
     }, [salary]);
@@ -137,7 +142,7 @@ export function SalaryDetailsDialog({
     const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
     const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
     const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + (editableHolidayPayAdjustment || 0) + totalAdditions;
-    const totalRecoveries = salary.noPayAmount + editableAdvanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
+    const totalRecoveries = (salary.noPayAmount || 0) + (salary.lateDeduction || 0) + (editableLateAdjustment || 0) + editableAdvanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
     const currentNetSalary = grossEarnings - totalRecoveries;
 
     const isDirty = (
@@ -149,6 +154,8 @@ export function SalaryDetailsDialog({
         (editableHolidayPayAdjustmentReason || "") !== (salary.holidayPayAdjustmentReason || "") ||
         editableRecoveryAdjustment !== (salary.recoveryAdjustment || 0) ||
         (editableRecoveryAdjustmentReason || "") !== (salary.recoveryAdjustmentReason || "") ||
+        editableLateAdjustment !== (salary.lateAdjustment || 0) ||
+        (editableLateAdjustmentReason || "") !== (salary.lateAdjustmentReason || "") ||
         editableAdvanceDeduction !== (salary.advanceDeduction || 0) ||
         JSON.stringify(editableComponents.map(c => ({ id: c.id, name: c.name, amount: c.amount, employerAmount: c.employerAmount }))) !== 
         JSON.stringify((salary.components || []).map((c: any) => ({ id: c.id, name: c.name, amount: c.amount, employerAmount: c.employerAmount }))) ||
@@ -424,6 +431,41 @@ export function SalaryDetailsDialog({
                             </div>
 
                             <div className="bg-background rounded-xl border shadow-sm overflow-hidden divide-y">
+                                {((salary.lateDeduction || 0) !== 0 || (editableLateAdjustment || 0) !== 0) && (
+                                    <div className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
+                                        <div className="flex flex-col gap-0.5">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-muted-foreground flex items-center gap-2">
+                                                    <IconClockStop className="h-3.5 w-3.5" /> Late/Early Deduction
+                                                </span>
+                                                {(salary.lateDeduction || 0) > 0 && (
+                                                    <Badge variant="outline" className="h-4 px-1 text-[8px] font-black border-red-200 bg-red-50 text-red-600">
+                                                        CALCULATED: {(salary.lateDeduction || 0).toFixed(2)}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <Input
+                                                placeholder="Reason for adjustment..."
+                                                value={editableLateAdjustmentReason}
+                                                onChange={(e) => setEditableLateAdjustmentReason(e.target.value)}
+                                                className="h-6 w-full text-[10px] border-none bg-transparent p-0 text-muted-foreground italic focus:ring-0"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative">
+                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-red-600 font-bold text-xs">{((salary.lateDeduction || 0) + (editableLateAdjustment || 0)) >= 0 ? '-' : '+'}</span>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={((salary.lateDeduction || 0) + editableLateAdjustment).toFixed(2)}
+                                                    onChange={(e) => setEditableLateAdjustment((parseFloat(e.target.value) || 0) - (salary.lateDeduction || 0))}
+                                                    className="h-8 w-32 pl-5 text-right font-bold text-red-600 border-transparent hover:border-input focus:border-primary bg-transparent"
+                                                />
+                                            </div>
+                                            <IconEdit className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                        </div>
+                                    </div>
+                                )}
                                 {salary.noPayAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">No Pay Deduction</span>
@@ -823,6 +865,8 @@ export function SalaryDetailsDialog({
                                         holidayPayAdjustmentReason: editableHolidayPayAdjustmentReason,
                                         recoveryAdjustment: editableRecoveryAdjustment,
                                         recoveryAdjustmentReason: editableRecoveryAdjustmentReason,
+                                        lateAdjustment: editableLateAdjustment,
+                                        lateAdjustmentReason: editableLateAdjustmentReason,
                                         advanceDeduction: editableAdvanceDeduction,
                                         advanceAdjustments: editableAdvanceAdjustments,
                                         remarks: editableRemarks,

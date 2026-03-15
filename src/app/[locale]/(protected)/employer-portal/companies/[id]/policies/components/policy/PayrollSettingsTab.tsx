@@ -195,32 +195,46 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
 
                             {/* Unpaid Leave Action */}
                             {config.autoDeductUnpaidLeaves && (
-                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                                    <Label className="text-sm font-bold">Unpaid Leave Treatment</Label>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {[
-                                            { value: UnpaidLeaveAction.DEDUCT_FROM_TOTAL, label: "Reduce from Earnings", desc: "Subtracts directly" },
-                                            { value: UnpaidLeaveAction.ADD_AS_DEDUCTION, label: "Show as Deduction", desc: "Adds line item" },
-                                        ].map((opt) => (
-                                            <div
-                                                key={opt.value}
-                                                onClick={() => handleChange("unpaidLeaveAction", opt.value)}
-                                                className={cn(
-                                                    "cursor-pointer p-3 rounded-xl border-2 transition-all",
-                                                    config.unpaidLeaveAction === opt.value
-                                                        ? "border-primary bg-background shadow-md relative z-10"
-                                                        : "border-transparent bg-background text-muted-foreground"
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center", config.unpaidLeaveAction === opt.value ? "border-primary" : "border-border")}>
-                                                        {config.unpaidLeaveAction === opt.value && <div className="w-2 h-2 rounded-full bg-primary" />}
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-bold">Unpaid Leave Treatment</Label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {[
+                                                { value: UnpaidLeaveAction.DEDUCT_FROM_TOTAL, label: "Reduce from Earnings", desc: "Subtracts directly" },
+                                                { value: UnpaidLeaveAction.ADD_AS_DEDUCTION, label: "Show as Deduction", desc: "Adds line item" },
+                                            ].map((opt) => (
+                                                <div
+                                                    key={opt.value}
+                                                    onClick={() => handleChange("unpaidLeaveAction", opt.value)}
+                                                    className={cn(
+                                                        "cursor-pointer p-3 rounded-xl border-2 transition-all",
+                                                        config.unpaidLeaveAction === opt.value
+                                                            ? "border-primary bg-background shadow-md relative z-10"
+                                                            : "border-transparent bg-background text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center", config.unpaidLeaveAction === opt.value ? "border-primary" : "border-border")}>
+                                                            {config.unpaidLeaveAction === opt.value && <div className="w-2 h-2 rounded-full bg-primary" />}
+                                                        </div>
+                                                        <span className="font-bold text-xs">{opt.label}</span>
                                                     </div>
-                                                    <span className="font-bold text-xs">{opt.label}</span>
+                                                    <p className="text-[10px] pl-6 opacity-70">{opt.desc}</p>
                                                 </div>
-                                                <p className="text-[10px] pl-6 opacity-70">{opt.desc}</p>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Statutory Affect Toggle */}
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-[11px] font-black uppercase tracking-wider block">No-Pay affects Total Earnings</Label>
+                                            <p className="text-[10px] text-neutral-500 font-medium">When enabled, no-pay deductions will reduce the base for statutory calculations (EPF/ETF).</p>
+                                        </div>
+                                        <Switch
+                                            checked={config.noPayAffectsTotalEarnings !== false}
+                                            onCheckedChange={(v) => handleChange("noPayAffectsTotalEarnings", v)}
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -533,7 +547,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                         variant="ghost" 
                                                                         size="sm" 
                                                                         onClick={() => {
-                                                                            const newTiers = rule ? [...rule.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
+                                                                            const newTiers = rule ? [...rule!.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
                                                                             // Add a new tier with a sensible default (e.g., +4 hours from last tier)
                                                                             const lastThreshold = newTiers[newTiers.length - 1].thresholdMinutes;
                                                                             newTiers.push({ thresholdMinutes: lastThreshold + 240, multiplier: newTiers[newTiers.length - 1].multiplier + 0.5 });
@@ -557,7 +571,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                             step="0.1"
                                                                                             value={tier.multiplier}
                                                                                             onChange={(e) => {
-                                                                                                const newTiers = rule ? [...rule.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
+                                                                                                const newTiers = rule ? [...rule!.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
                                                                                                 newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
                                                                                                 updateRule({ tiers: newTiers });
                                                                                             }}
@@ -574,7 +588,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                             type="number"
                                                                                             value={tier.thresholdMinutes}
                                                                                             onChange={(e) => {
-                                                                                                const newTiers = [...rule.tiers];
+                                                                                                const newTiers = [...rule!.tiers];
                                                                                                 newTiers[tIdx] = { ...newTiers[tIdx], thresholdMinutes: parseInt(e.target.value) || 0 };
                                                                                                 updateRule({ tiers: newTiers });
                                                                                             }}
@@ -589,7 +603,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                                 step="0.1"
                                                                                                 value={tier.multiplier}
                                                                                                 onChange={(e) => {
-                                                                                                    const newTiers = [...rule.tiers];
+                                                                                                    const newTiers = [...rule!.tiers];
                                                                                                     newTiers[tIdx] = { ...newTiers[tIdx], multiplier: parseFloat(e.target.value) || 0 };
                                                                                                     updateRule({ tiers: newTiers });
                                                                                                 }}
@@ -705,7 +719,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                         onChange={(e) => {
                                                                             const newRules = [...(config.otRules || [])];
                                                                             const globalIdx = newRules.findIndex(r => r.id === rule.id);
-                                                                            const newTiers = [...rule.tiers];
+                                                                            const newTiers = [...rule!.tiers];
                                                                             newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
                                                                             newRules[globalIdx] = { ...rule, tiers: newTiers };
                                                                             handleChange("otRules", newRules);
@@ -726,7 +740,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                     onClick={() => {
                                                                         const newRules = [...(config.otRules || [])];
                                                                         const globalIdx = newRules.findIndex(r => r.id === rule.id);
-                                                                        const newTiers = [...rule.tiers];
+                                                                        const newTiers = [...rule!.tiers];
                                                                         const lastThreshold = newTiers[newTiers.length - 1].thresholdMinutes;
                                                                         newTiers.push({ thresholdMinutes: lastThreshold + 240, multiplier: newTiers[newTiers.length - 1].multiplier + 0.5 });
                                                                         newRules[globalIdx] = { ...rule, tiers: newTiers };
@@ -752,7 +766,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                         onChange={(e) => {
                                                                                             const newRules = [...(config.otRules || [])];
                                                                                             const globalIdx = newRules.findIndex(r => r.id === rule.id);
-                                                                                            const newTiers = [...rule.tiers];
+                                                                                            const newTiers = [...rule!.tiers];
                                                                                             newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
                                                                                             newRules[globalIdx] = { ...rule, tiers: newTiers };
                                                                                             handleChange("otRules", newRules);
@@ -773,7 +787,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                             onChange={(e) => {
                                                                                                 const newRules = [...(config.otRules || [])];
                                                                                                 const globalIdx = newRules.findIndex(r => r.id === rule.id);
-                                                                                                const newTiers = [...rule.tiers];
+                                                                                                const newTiers = [...rule!.tiers];
                                                                                                 newTiers[tIdx] = { ...newTiers[tIdx], thresholdMinutes: parseInt(e.target.value) || 0 };
                                                                                                 newRules[globalIdx] = { ...rule, tiers: newTiers };
                                                                                                 handleChange("otRules", newRules);
@@ -793,7 +807,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                             onChange={(e) => {
                                                                                                 const newRules = [...(config.otRules || [])];
                                                                                                 const globalIdx = newRules.findIndex(r => r.id === rule.id);
-                                                                                                const newTiers = [...rule.tiers];
+                                                                                                const newTiers = [...rule!.tiers];
                                                                                                 newTiers[tIdx] = { ...newTiers[tIdx], multiplier: parseFloat(e.target.value) || 0 };
                                                                                                 newRules[globalIdx] = { ...rule, tiers: newTiers };
                                                                                                 handleChange("otRules", newRules);

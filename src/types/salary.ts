@@ -76,6 +76,9 @@ export interface Salary {
     remarks?: string;
     otAdjustment?: number;
     otAdjustmentReason?: string;
+    lateDeduction?: number;
+    lateAdjustment?: number;
+    lateAdjustmentReason?: string;
     holidayPayAdjustment?: number;
     holidayPayAdjustmentReason?: string;
     recoveryAdjustment?: number;

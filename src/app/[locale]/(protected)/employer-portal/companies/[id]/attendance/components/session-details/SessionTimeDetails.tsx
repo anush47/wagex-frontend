@@ -90,7 +90,14 @@ export function SessionTimeDetails({
                             {session.checkInTime ? (
                                 <div className="flex items-center gap-2 group">
                                     <div className="flex flex-col">
-                                        <span>{format(new Date(session.checkInTime), "h:mm a")}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span>{format(new Date(session.checkInTime), "h:mm a")}</span>
+                                            {session.isLate && session.lateMinutes ? (
+                                                <span className="text-[10px] text-orange-600 font-black bg-orange-500/5 px-1 rounded border border-orange-500/10">
+                                                    +{session.lateMinutes}m LATE
+                                                </span>
+                                            ) : null}
+                                        </div>
                                         {!isSameDay(new Date(session.checkInTime), new Date(session.date)) && (
                                             <span className="text-[10px] text-muted-foreground font-normal">
                                                 {format(new Date(session.checkInTime), "MMM d, yyyy")}
@@ -162,7 +169,14 @@ export function SessionTimeDetails({
                             {session.checkOutTime ? (
                                 <div className="flex items-center gap-2 group">
                                     <div className="flex flex-col">
-                                        <span>{format(new Date(session.checkOutTime), "h:mm a")}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span>{format(new Date(session.checkOutTime), "h:mm a")}</span>
+                                            {session.isEarlyLeave && session.earlyLeaveMinutes ? (
+                                                <span className="text-[10px] text-blue-600 font-black bg-blue-500/5 px-1 rounded border border-blue-500/10">
+                                                    -{session.earlyLeaveMinutes}m EARLY
+                                                </span>
+                                            ) : null}
+                                        </div>
                                         {!isSameDay(new Date(session.checkOutTime), new Date(session.date)) && (
                                             <span className="text-[10px] text-muted-foreground font-normal">
                                                 {format(new Date(session.checkOutTime), "MMM d, yyyy")}

@@ -168,6 +168,7 @@ export interface PayrollSettingsConfig {
     // Deduction Rules
     autoDeductUnpaidLeaves: boolean;
     unpaidLeaveAction: UnpaidLeaveAction;
+    noPayAffectsTotalEarnings?: boolean;
     lateDeductionType: LateDeductionType;
     lateDeductionValue: number;
 

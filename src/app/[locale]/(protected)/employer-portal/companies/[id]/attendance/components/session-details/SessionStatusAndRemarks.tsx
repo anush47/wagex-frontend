@@ -79,12 +79,12 @@ export function SessionStatusAndRemarks({
                     )}
                     {session.isLate && (
                         <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">
-                            Late
+                            Late {session.lateMinutes ? `(${session.lateMinutes}m)` : ""}
                         </Badge>
                     )}
                     {session.isEarlyLeave && (
                         <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
-                            Early Leave
+                            Early Leave {session.earlyLeaveMinutes ? `(${session.earlyLeaveMinutes}m)` : ""}
                         </Badge>
                     )}
                     {session.isOnLeave && (

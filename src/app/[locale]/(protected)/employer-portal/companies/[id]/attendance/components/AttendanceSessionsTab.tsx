@@ -418,12 +418,12 @@ export function AttendanceSessionsTab({
                                                             )}
                                                             {session.isLate && (
                                                                 <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
-                                                                    LATE
+                                                                    LATE {session.lateMinutes ? `(${session.lateMinutes}m)` : ""}
                                                                 </Badge>
                                                             )}
                                                             {session.isEarlyLeave && (
                                                                 <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] py-0 px-1.5 h-4 font-bold">
-                                                                    EARLY
+                                                                    EARLY {session.earlyLeaveMinutes ? `(${session.earlyLeaveMinutes}m)` : ""}
                                                                 </Badge>
                                                             )}
                                                             {session.isOnLeave && (

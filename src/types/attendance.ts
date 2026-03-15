@@ -92,7 +92,9 @@ export interface AttendanceSession {
     overtimeMinutes?: number;
     // Status flags
     isLate: boolean;
+    lateMinutes?: number;
     isEarlyLeave: boolean;
+    earlyLeaveMinutes?: number;
     isOnLeave: boolean;
     isHalfDay: boolean;
     hasShortLeave: boolean;
