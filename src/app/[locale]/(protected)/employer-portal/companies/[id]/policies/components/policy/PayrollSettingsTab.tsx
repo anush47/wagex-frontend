@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { PayCycleFrequency, PayrollCalculationMethod, PayrollSettingsConfig, UnpaidLeaveAction, LateDeductionType } from "@/types/policy";
+import { PayCycleFrequency, PayrollCalculationMethod, PayrollSettingsConfig, LateDeductionType } from "@/types/policy";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -25,9 +25,18 @@ const DEFAULT_CONFIG: PayrollSettingsConfig = {
     calculationMethod: PayrollCalculationMethod.HOURLY_ATTENDANCE_WITH_OT,
     baseRateDivisor: 30,
     autoDeductUnpaidLeaves: false,
-    unpaidLeaveAction: UnpaidLeaveAction.DEDUCT_FROM_TOTAL,
+    unpaidLeaveFullDayType: LateDeductionType.DIVISOR_BASED,
+    unpaidLeaveFullDayValue: 1,
+    unpaidLeaveHalfDayType: LateDeductionType.DIVISOR_BASED,
+    unpaidLeaveHalfDayValue: 0.5,
+    unpaidLeavesAffectTotalEarnings: false,
+    autoDeductLate: false,
+    lateDeductionsAffectTotalEarnings: false,
     lateDeductionType: LateDeductionType.DIVISOR_BASED,
     lateDeductionValue: 8,
+    lateDeductionGraceMinutes: 0,
+    otHourlyType: LateDeductionType.DIVISOR_BASED,
+    otHourlyValue: 8,
     enableAutoDraft: false,
     draftCreationDaysBeforePayDay: 3,
     autoAcknowledgePayments: false,
@@ -38,7 +47,12 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
     const [config, setConfig] = useState<PayrollSettingsConfig>(value || DEFAULT_CONFIG);
 
     useEffect(() => {
-        if (value) setConfig(value);
+        if (value) {
+            setConfig({
+                ...DEFAULT_CONFIG,
+                ...value
+            });
+        }
     }, [value]);
 
     const handleChange = (field: keyof PayrollSettingsConfig, val: any) => {
@@ -151,7 +165,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                             type="number"
                                             min={0}
                                             max={30}
-                                            value={config.cutoffDaysBeforePayDay}
+                                            value={config.cutoffDaysBeforePayDay ?? 0}
                                             onChange={(e) => handleChange("cutoffDaysBeforePayDay", parseInt(e.target.value) || 0)}
                                             className="h-12 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-20"
                                         />
@@ -181,115 +195,209 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                         </CardHeader>
                         <CardContent className="space-y-6">
 
-                            {/* Auto Deduct Unpaid Leaves */}
-                            <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-transparent shadow-sm">
-                                <div className="space-y-0.5">
-                                    <Label className="text-sm font-bold block">Auto-Deduct Unpaid Leaves</Label>
-                                    <p className="text-xs text-neutral-500">Calculate and deduct amount for absent days.</p>
+                            {/* 1. Unpaid Leaves Section */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-transparent shadow-sm">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-sm font-bold block">Auto-Deduct Unpaid Leaves</Label>
+                                        <p className="text-xs text-neutral-500">Calculate and deduct amount for absent days.</p>
+                                    </div>
+                                    <Switch
+                                        checked={config.autoDeductUnpaidLeaves}
+                                        onCheckedChange={(v) => handleChange("autoDeductUnpaidLeaves", v)}
+                                    />
                                 </div>
-                                <Switch
-                                    checked={config.autoDeductUnpaidLeaves}
-                                    onCheckedChange={(v) => handleChange("autoDeductUnpaidLeaves", v)}
-                                />
-                            </div>
 
-                            {/* Unpaid Leave Action */}
-                            {config.autoDeductUnpaidLeaves && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                                    <div className="space-y-3">
-                                        <Label className="text-sm font-bold">Unpaid Leave Treatment</Label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {[
-                                                { value: UnpaidLeaveAction.DEDUCT_FROM_TOTAL, label: "Reduce from Earnings", desc: "Subtracts directly" },
-                                                { value: UnpaidLeaveAction.ADD_AS_DEDUCTION, label: "Show as Deduction", desc: "Adds line item" },
-                                            ].map((opt) => (
-                                                <div
-                                                    key={opt.value}
-                                                    onClick={() => handleChange("unpaidLeaveAction", opt.value)}
-                                                    className={cn(
-                                                        "cursor-pointer p-3 rounded-xl border-2 transition-all",
-                                                        config.unpaidLeaveAction === opt.value
-                                                            ? "border-primary bg-background shadow-md relative z-10"
-                                                            : "border-transparent bg-background text-muted-foreground"
-                                                    )}
-                                                >
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center", config.unpaidLeaveAction === opt.value ? "border-primary" : "border-border")}>
-                                                            {config.unpaidLeaveAction === opt.value && <div className="w-2 h-2 rounded-full bg-primary" />}
-                                                        </div>
-                                                        <span className="font-bold text-xs">{opt.label}</span>
+                                {config.autoDeductUnpaidLeaves && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        {/* Indented Sub-options */}
+                                        <div className="pl-6 space-y-4 border-l-2 border-primary/10 ml-2">
+                                            {/* Full Day Deduction */}
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-xs font-bold text-neutral-600">Full Day Unpaid Leave</Label>
+                                                    <div className="bg-neutral-50 dark:bg-neutral-900/50 p-0.5 rounded-lg flex w-48">
+                                                        {[
+                                                            { value: LateDeductionType.DIVISOR_BASED, label: "Divisor" },
+                                                            { value: LateDeductionType.FIXED_AMOUNT, label: "Fixed" }
+                                                        ].map((type) => (
+                                                            <button
+                                                                key={type.value}
+                                                                onClick={() => handleChange("unpaidLeaveFullDayType", type.value)}
+                                                                className={cn(
+                                                                    "flex-1 py-1 text-[9px] font-bold rounded-md transition-all",
+                                                                    config.unpaidLeaveFullDayType === type.value
+                                                                        ? "bg-background shadow-sm text-foreground"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                {type.label}
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                    <p className="text-[10px] pl-6 opacity-70">{opt.desc}</p>
                                                 </div>
-                                            ))}
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        value={config.unpaidLeaveFullDayValue ?? 0}
+                                                        onChange={(e) => handleChange("unpaidLeaveFullDayValue", parseFloat(e.target.value) || 0)}
+                                                        className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-12 text-sm"
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">
+                                                        {config.unpaidLeaveFullDayType === LateDeductionType.DIVISOR_BASED ? "Days" : "LKR"}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Half Day Deduction */}
+                                            <div className="space-y-3 pt-2">
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-xs font-bold text-neutral-600">Half Day Unpaid Leave</Label>
+                                                    <div className="bg-neutral-50 dark:bg-neutral-900/50 p-0.5 rounded-lg flex w-48">
+                                                        {[
+                                                            { value: LateDeductionType.DIVISOR_BASED, label: "Divisor" },
+                                                            { value: LateDeductionType.FIXED_AMOUNT, label: "Fixed" }
+                                                        ].map((type) => (
+                                                            <button
+                                                                key={type.value}
+                                                                onClick={() => handleChange("unpaidLeaveHalfDayType", type.value)}
+                                                                className={cn(
+                                                                    "flex-1 py-1 text-[9px] font-bold rounded-md transition-all",
+                                                                    config.unpaidLeaveHalfDayType === type.value
+                                                                        ? "bg-background shadow-sm text-foreground"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                {type.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        value={config.unpaidLeaveHalfDayValue ?? 0}
+                                                        onChange={(e) => handleChange("unpaidLeaveHalfDayValue", parseFloat(e.target.value) || 0)}
+                                                        className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-12 text-sm"
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">
+                                                        {config.unpaidLeaveHalfDayType === LateDeductionType.DIVISOR_BASED ? "Days" : "LKR"}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Statutory Toggle (Indented) */}
+                                            <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-[11px] font-bold block text-primary/80">Affects Total Earnings</Label>
+                                                    <p className="text-[9px] text-muted-foreground leading-tight max-w-[200px]">Reduces statutory base (EPF/ETF).</p>
+                                                </div>
+                                                <Switch
+                                                    size="sm"
+                                                    className="scale-90"
+                                                    checked={config.unpaidLeavesAffectTotalEarnings || false}
+                                                    onCheckedChange={(v) => handleChange("unpaidLeavesAffectTotalEarnings", v)}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-
-                                    {/* Statutory Affect Toggle */}
-                                    <div className="flex items-center justify-between p-4 bg-background rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-[11px] font-black uppercase tracking-wider block">No-Pay affects Total Earnings</Label>
-                                            <p className="text-[10px] text-neutral-500 font-medium">When enabled, no-pay deductions will reduce the base for statutory calculations (EPF/ETF).</p>
-                                        </div>
-                                        <Switch
-                                            checked={config.noPayAffectsTotalEarnings !== false}
-                                            onCheckedChange={(v) => handleChange("noPayAffectsTotalEarnings", v)}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Late Deduction Rate */}
-                            <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-700/50">
-                                <Label className="text-sm font-bold">Late Deduction Rules</Label>
-
-                                {/* Toggle Calculation Type */}
-                                <div className="bg-neutral-50 dark:bg-neutral-900/50 p-1 rounded-xl flex">
-                                    {[
-                                        { value: LateDeductionType.DIVISOR_BASED, label: "Divisor Based" },
-                                        { value: LateDeductionType.FIXED_AMOUNT, label: "Fixed Amount" }
-                                    ].map((type) => (
-                                        <button
-                                            key={type.value}
-                                            onClick={() => handleChange("lateDeductionType", type.value)}
-                                            className={cn(
-                                                "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
-                                                config.lateDeductionType === type.value
-                                                    ? "bg-background shadow-sm text-foreground"
-                                                    : "text-muted-foreground hover:text-foreground"
-                                            )}
-                                        >
-                                            {type.label}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Dynamic Input based on Type */}
-                                <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
-                                    <Label className="text-xs font-medium text-neutral-500">
-                                        {config.lateDeductionType === LateDeductionType.DIVISOR_BASED
-                                            ? "Hourly Divisor (Factor)"
-                                            : "Deduction Amount (per Hour)"}
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            value={config.lateDeductionValue}
-                                            onChange={(e) => handleChange("lateDeductionValue", parseFloat(e.target.value) || 0)}
-                                            className="h-12 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-12"
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400 pointer-events-none">
-                                            {config.lateDeductionType === LateDeductionType.DIVISOR_BASED ? "Hrs" : "LKR"}
-                                        </span>
-                                    </div>
-                                    <p className="text-[10px] text-neutral-400 ml-1 leading-relaxed">
-                                        {config.lateDeductionType === LateDeductionType.DIVISOR_BASED
-                                            ? "Hourly Rate = (Basic Salary / Base Divisor) / This Value."
-                                            : "Fixed deduction amount for every hour of late arrival."}
-                                    </p>
-                                </div>
+                                )}
                             </div>
+
+                            {/* 2. Late Arrivals Section */}
+                            <div className="space-y-4 pt-4 border-t border-border/50">
+                                <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-transparent shadow-sm">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-sm font-bold block">Auto-Deduct Late Arrivals</Label>
+                                        <p className="text-xs text-neutral-500">Calculate and deduct for late arrivals / early leaves.</p>
+                                    </div>
+                                    <Switch
+                                        checked={config.autoDeductLate}
+                                        onCheckedChange={(v) => handleChange("autoDeductLate", v)}
+                                    />
+                                </div>
+
+                                {config.autoDeductLate && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="pl-6 space-y-4 border-l-2 border-primary/10 ml-2">
+                                            {/* Grace Period */}
+                                            <div className="space-y-2">
+                                                <Label className="text-xs font-bold text-neutral-600">Late Grace Period (Minutes)</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        min={0}
+                                                        value={config.lateDeductionGraceMinutes ?? 0}
+                                                        onChange={(e) => handleChange("lateDeductionGraceMinutes", parseInt(e.target.value) || 0)}
+                                                        className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-12 text-sm"
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">
+                                                        Min
+                                                    </span>
+                                                </div>
+                                                <p className="text-[9px] text-muted-foreground ml-1">No deduction if lateness is within this limit.</p>
+                                            </div>
+
+                                            {/* Statutory Toggle (Indented) */}
+                                            <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-[11px] font-bold block text-primary/80">Affects Total Earnings</Label>
+                                                    <p className="text-[9px] text-muted-foreground leading-tight max-w-[200px]">Reduces statutory base (EPF/ETF).</p>
+                                                </div>
+                                                <Switch
+                                                    size="sm"
+                                                    className="scale-90"
+                                                    checked={config.lateDeductionsAffectTotalEarnings || false}
+                                                    onCheckedChange={(v) => handleChange("lateDeductionsAffectTotalEarnings", v)}
+                                                />
+                                            </div>
+
+                                            {/* Hourly Rate Rule for Late (Indented) */}
+                                            <div className="space-y-3 pt-2 border-t border-neutral-100 dark:border-neutral-900/50">
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-xs font-bold text-neutral-600">Late Rate Rule</Label>
+                                                    <div className="bg-neutral-50 dark:bg-neutral-900/50 p-0.5 rounded-lg flex w-48">
+                                                        {[
+                                                            { value: LateDeductionType.DIVISOR_BASED, label: "Divisor" },
+                                                            { value: LateDeductionType.FIXED_AMOUNT, label: "Fixed" }
+                                                        ].map((type) => (
+                                                            <button
+                                                                key={type.value}
+                                                                onClick={() => handleChange("lateDeductionType", type.value)}
+                                                                className={cn(
+                                                                    "flex-1 py-1 text-[9px] font-bold rounded-md transition-all",
+                                                                    config.lateDeductionType === type.value
+                                                                        ? "bg-background shadow-sm text-foreground"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                {type.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        value={config.lateDeductionValue ?? 0}
+                                                        onChange={(e) => handleChange("lateDeductionValue", parseFloat(e.target.value) || 0)}
+                                                        className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-12 text-sm"
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">
+                                                        {config.lateDeductionType === LateDeductionType.DIVISOR_BASED ? "Hrs" : "LKR"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[9px] text-muted-foreground ml-1">
+                                                    {config.lateDeductionType === LateDeductionType.DIVISOR_BASED 
+                                                        ? "Hourly Rate = (Basic / Base Divisor) / This Value" 
+                                                        : "Fixed amount deducted per late/early hour."}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
 
                         </CardContent>
                     </Card>
@@ -344,7 +452,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                             type="number"
                                             min={1}
                                             max={30}
-                                            value={config.draftCreationDaysBeforePayDay || 3}
+                                            value={config.draftCreationDaysBeforePayDay ?? 3}
                                             onChange={(e) => handleChange("draftCreationDaysBeforePayDay", parseInt(e.target.value) || 1)}
                                             className="h-12 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-20"
                                         />
@@ -410,37 +518,55 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                             </div>
 
                             {/* Divisor */}
-                            <div className="space-y-2">
+                            <div className="space-y-4">
                                 <Label className="text-sm font-bold">Base Rate Divisor</Label>
-                                <div className="flex gap-3">
-                                    {[30, 26, 22].map(divisor => (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[
+                                        { value: 30, label: "30 Days", sub: "Shop & Office", tip: "(4 Wages Board)" },
+                                        { value: 25, label: "25 Days", sub: "Wages Board Common", tip: null }
+                                    ].map(divisor => (
                                         <div
-                                            key={divisor}
-                                            onClick={() => handleChange("baseRateDivisor", divisor)}
+                                            key={divisor.value}
+                                            onClick={() => handleChange("baseRateDivisor", divisor.value)}
                                             className={cn(
-                                                "flex-1 cursor-pointer h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-all",
-                                                config.baseRateDivisor === divisor
-                                                    ? "bg-primary text-primary-foreground shadow-lg"
-                                                    : "bg-background text-muted-foreground border border-transparent hover:border-border"
+                                                "cursor-pointer group relative p-4 bg-background border rounded-2xl transition-all shadow-sm",
+                                                config.baseRateDivisor === divisor.value ? "ring-2 ring-primary border-primary" : "border-transparent hover:border-border"
                                             )}
                                         >
-                                            / {divisor}
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-foreground leading-tight">/ {divisor.value}</h4>
+                                                    <p className="text-[10px] text-muted-foreground mt-1 font-medium">{divisor.sub}</p>
+                                                    {divisor.tip && (
+                                                        <p className="text-[9px] text-primary/70 font-bold mt-0.5">{divisor.tip}</p>
+                                                    )}
+                                                </div>
+                                                {config.baseRateDivisor === divisor.value && (
+                                                    <div className="bg-primary text-primary-foreground rounded-full p-0.5">
+                                                        <IconCheck className="w-2.5 h-2.5" strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
-                                    <div className="flex-[0.8] relative">
-                                        <Input
-                                            type="number"
-                                            placeholder="Cus"
-                                            value={[30, 26, 22].includes(config.baseRateDivisor) ? '' : config.baseRateDivisor}
-                                            onChange={(e) => handleChange("baseRateDivisor", parseInt(e.target.value) || 30)}
-                                            className={cn(
-                                                "h-12 border-none rounded-xl text-center font-bold shadow-sm placeholder:text-muted-foreground",
-                                                ![30, 26, 22].includes(config.baseRateDivisor)
-                                                    ? "bg-primary text-primary-foreground"
-                                                    : "bg-background text-foreground"
-                                            )}
-                                        />
-                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 h-px bg-border" />
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Or Custom</span>
+                                    <div className="flex-1 h-px bg-border" />
+                                </div>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        placeholder="Enter custom divisor..."
+                                        value={[30, 25].includes(config.baseRateDivisor) ? '' : (config.baseRateDivisor ?? 30)}
+                                        onChange={(e) => handleChange("baseRateDivisor", parseInt(e.target.value) || 30)}
+                                        className={cn(
+                                            "h-12 bg-background border-none rounded-xl text-center font-bold shadow-sm placeholder:text-muted-foreground",
+                                            ![30, 25].includes(config.baseRateDivisor) && "ring-2 ring-primary"
+                                        )}
+                                    />
+                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">/</span>
                                 </div>
                             </div>
 
@@ -478,7 +604,56 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                     </Button>
                                 </div>
                             </CardHeader>
-                            <CardContent className="space-y-8">
+                            <CardContent className="space-y-6">
+                                {/* OT Hourly Rate Calculation (Indented) */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 px-1">
+                                        <div className="w-1 h-4 bg-primary rounded-full" />
+                                        <h3 className="text-sm font-bold">Calculation Rule (OT Hourly)</h3>
+                                    </div>
+                                    <div className="pl-6 space-y-4 border-l-2 border-primary/10 ml-2">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs font-bold text-neutral-600">Hourly Rate Rule</Label>
+                                                <div className="bg-neutral-50 dark:bg-neutral-900/50 p-0.5 rounded-lg flex w-48">
+                                                    {[
+                                                        { value: LateDeductionType.DIVISOR_BASED, label: "Divisor" },
+                                                        { value: LateDeductionType.FIXED_AMOUNT, label: "Fixed" }
+                                                    ].map((type) => (
+                                                        <button
+                                                            key={type.value}
+                                                            onClick={() => handleChange("otHourlyType", type.value)}
+                                                            className={cn(
+                                                                "flex-1 py-1 text-[9px] font-bold rounded-md transition-all",
+                                                                config.otHourlyType === type.value
+                                                                    ? "bg-background shadow-sm text-foreground"
+                                                                    : "text-muted-foreground hover:text-foreground"
+                                                            )}
+                                                        >
+                                                            {type.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="relative">
+                                                <Input
+                                                    type="number"
+                                                    value={config.otHourlyValue ?? 8}
+                                                    onChange={(e) => handleChange("otHourlyValue", parseFloat(e.target.value) || 0)}
+                                                    className="h-10 bg-background border-none rounded-xl font-bold px-4 shadow-sm pr-12 text-sm"
+                                                />
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">
+                                                    {config.otHourlyType === LateDeductionType.DIVISOR_BASED ? "Hrs" : "LKR"}
+                                                </span>
+                                            </div>
+                                            <p className="text-[9px] text-muted-foreground ml-1">
+                                                {config.otHourlyType === LateDeductionType.DIVISOR_BASED 
+                                                    ? "Base OT Hourly Rate = (Basic / Base Divisor) / This Value" 
+                                                    : "Fixed amount used as base hourly rate for OT."}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 {/* A. Daily Defaults (Non-Holiday) */}
                                 <div className="space-y-4">
@@ -487,7 +662,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                         <h3 className="text-sm font-bold">Workday Defaults</h3>
                                     </div>
                                     
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-3">
                                         {[
                                             { status: OvertimeDayType.WORKING_DAY, label: "Full Day", defaultStart: 480 },
                                             { status: OvertimeDayType.HALF_DAY, label: "Half Day", defaultStart: 360 },
@@ -516,29 +691,26 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                             };
 
                                             return (
-                                                <div key={defaultType.status} className="bg-background rounded-2xl border border-border p-4 space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-bold text-foreground">{defaultType.label}</span>
-                                                        <Switch 
-                                                            checked={rule ? rule.otEnabled : true}
-                                                            onCheckedChange={(v) => updateRule({ otEnabled: v })}
-                                                        />
-                                                    </div>
-                                                    
-                                                    {(rule ? rule.otEnabled : true) && (
-                                                        <div className="space-y-3 pt-2 border-t border-neutral-50 dark:border-neutral-900">
-                                                            <div className="flex items-center justify-between">
-                                                                <Label className="text-[10px] text-muted-foreground uppercase">OT Starts After</Label>
-                                                                <div className="flex items-center gap-2">
-                                                                    <Input 
+                                                <div key={defaultType.status} className="bg-background rounded-2xl border border-border p-3 space-y-3">
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <span className="text-xs font-bold text-foreground min-w-[80px]">{defaultType.label}</span>
+                                                        <div className="flex-1 flex items-center justify-end gap-3 px-3 py-1 bg-muted/30 rounded-xl border border-border/50">
+                                                            <div className="flex items-center gap-2">
+                                                                <Label className="text-[10px] text-muted-foreground uppercase whitespace-nowrap">OT Starts After</Label>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Input
                                                                         type="number"
-                                                                        value={rule ? rule.startAfterMinutes : defaultType.defaultStart}
+                                                                        value={(rule ? rule.startAfterMinutes : defaultType.defaultStart) ?? 0}
                                                                         onChange={(e) => updateRule({ startAfterMinutes: parseInt(e.target.value) || 0 })}
-                                                                        className="h-8 w-20 text-xs font-bold rounded-lg text-right"
+                                                                        className="h-7 w-24 text-xs font-bold rounded-lg text-center bg-background"
                                                                     />
-                                                                    <span className="text-[10px] text-muted-foreground">min</span>
+                                                                    <span className="text-[10px] font-bold text-muted-foreground">m</span>
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-3">
                                                             {/* Tiers List */}
                                                             <div className="space-y-3 pt-2 mt-2 border-t border-dashed border-neutral-100 dark:border-neutral-800">
                                                                 <div className="flex items-center justify-between">
@@ -569,13 +741,13 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                         <Input 
                                                                                             type="number"
                                                                                             step="0.1"
-                                                                                            value={tier.multiplier}
+                                                                                            value={tier.multiplier ?? 1.5}
                                                                                             onChange={(e) => {
                                                                                                 const newTiers = rule ? [...rule!.tiers] : [{ thresholdMinutes: 0, multiplier: 1.5 }];
                                                                                                 newTiers[0] = { ...newTiers[0], multiplier: parseFloat(e.target.value) || 0 };
                                                                                                 updateRule({ tiers: newTiers });
                                                                                             }}
-                                                                                            className="h-7 w-12 text-[10px] font-bold rounded-lg p-1 text-right text-primary"
+                                                                                            className="h-7 w-16 text-[10px] font-bold rounded-lg p-1 text-right text-primary bg-background"
                                                                                         />
                                                                                         <span className="text-[9px] text-primary font-bold">x</span>
                                                                                     </div>
@@ -586,7 +758,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                         <Label className="text-[7px] text-muted-foreground uppercase font-bold">After (Min)</Label>
                                                                                         <Input 
                                                                                             type="number"
-                                                                                            value={tier.thresholdMinutes}
+                                                                                            value={tier.thresholdMinutes ?? 0}
                                                                                             onChange={(e) => {
                                                                                                 const newTiers = [...rule!.tiers];
                                                                                                 newTiers[tIdx] = { ...newTiers[tIdx], thresholdMinutes: parseInt(e.target.value) || 0 };
@@ -601,13 +773,13 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                                             <Input 
                                                                                                 type="number"
                                                                                                 step="0.1"
-                                                                                                value={tier.multiplier}
+                                                                                                value={tier.multiplier ?? 1.0}
                                                                                                 onChange={(e) => {
                                                                                                     const newTiers = [...rule!.tiers];
                                                                                                     newTiers[tIdx] = { ...newTiers[tIdx], multiplier: parseFloat(e.target.value) || 0 };
                                                                                                     updateRule({ tiers: newTiers });
                                                                                                 }}
-                                                                                                className="h-7 w-10 text-[10px] font-bold rounded-lg p-1 text-right text-primary"
+                                                                                                className="h-7 w-16 text-[10px] font-bold rounded-lg p-1 text-right text-primary bg-background"
                                                                                             />
                                                                                             <span className="text-[9px] text-primary font-bold">x</span>
                                                                                         </div>
@@ -630,7 +802,6 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    )}
                                                 </div>
                                             );
                                         })}

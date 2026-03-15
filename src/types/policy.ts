@@ -23,7 +23,8 @@ export enum PayrollComponentSystemType {
     EPF_EMPLOYER = 'EPF_EMPLOYER',
     ETF_EMPLOYER = 'ETF_EMPLOYER',
     HOLIDAY_PAY = 'HOLIDAY_PAY',
-    NO_PAY_DEDUCTION = 'NO_PAY_DEDUCTION'
+    NO_PAY_DEDUCTION = 'NO_PAY_DEDUCTION',
+    LATE_DEDUCTION = 'LATE_DEDUCTION'
 }
 
 export enum EmploymentType {
@@ -128,10 +129,7 @@ export enum PayrollCalculationMethod {
     FIXED_MONTHLY_SALARY = 'FIXED_MONTHLY_SALARY'
 }
 
-export enum UnpaidLeaveAction {
-    DEDUCT_FROM_TOTAL = 'DEDUCT_FROM_TOTAL',
-    ADD_AS_DEDUCTION = 'ADD_AS_DEDUCTION'
-}
+
 
 export enum OvertimeDayType {
     WORKING_DAY = 'WORKING_DAY',
@@ -167,10 +165,17 @@ export interface PayrollSettingsConfig {
 
     // Deduction Rules
     autoDeductUnpaidLeaves: boolean;
-    unpaidLeaveAction: UnpaidLeaveAction;
-    noPayAffectsTotalEarnings?: boolean;
+    unpaidLeaveFullDayType?: LateDeductionType;
+    unpaidLeaveFullDayValue?: number;
+    unpaidLeaveHalfDayType?: LateDeductionType;
+    unpaidLeaveHalfDayValue?: number;
+    unpaidLeavesAffectTotalEarnings?: boolean;
+    
+    autoDeductLate?: boolean;
+    lateDeductionsAffectTotalEarnings?: boolean;
     lateDeductionType: LateDeductionType;
     lateDeductionValue: number;
+    lateDeductionGraceMinutes?: number;
 
     // Acknowledge Rules
     autoAcknowledgePayments?: boolean;
@@ -182,6 +187,8 @@ export interface PayrollSettingsConfig {
     // OT Rules
     otCalculationMethod?: string;
     otDivisor?: number;
+    otHourlyType?: LateDeductionType;
+    otHourlyValue?: number;
     otNormalRate?: number;
     otDoubleRate?: number;
     otTripleRate?: number;

@@ -79,16 +79,6 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                     affectsTotalEarnings: true,
                     systemType: PayrollComponentSystemType.HOLIDAY_PAY
                 }));
-            } else if (value === 'TEMPLATE_NO_PAY') {
-                setFormData(prev => ({
-                    ...prev,
-                    name: "No-Pay Deduction",
-                    type: PayrollComponentType.FLAT_AMOUNT, // System calculated
-                    value: 0,
-                    isStatutory: false,
-                    affectsTotalEarnings: true,
-                    systemType: PayrollComponentSystemType.NO_PAY_DEDUCTION
-                }));
             }
         } else {
             setFormData(prev => ({ ...prev, [field]: value }));
@@ -113,8 +103,6 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
         selectValue = 'TEMPLATE_ETF_3';
     } else if (formData.systemType === PayrollComponentSystemType.HOLIDAY_PAY) {
         selectValue = 'TEMPLATE_HOLIDAY_PAY';
-    } else if (formData.systemType === PayrollComponentSystemType.NO_PAY_DEDUCTION) {
-        selectValue = 'TEMPLATE_NO_PAY';
     }
 
     const isSystemCalculated = formData.systemType && formData.systemType !== PayrollComponentSystemType.NONE;
@@ -185,7 +173,6 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                                     <>
                                                         <SelectItem value="TEMPLATE_EPF_8">EPF (8% / 12%)</SelectItem>
                                                         <SelectItem value="TEMPLATE_ETF_3">ETF (3%)</SelectItem>
-                                                        <SelectItem value="TEMPLATE_NO_PAY">No-Pay Deduction</SelectItem>
                                                     </>
                                                 )}
                                                 {category === PayrollComponentCategory.ADDITION && (
@@ -204,18 +191,18 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
                                         <Input
                                             type="number"
                                             value={formData.value}
-                                            disabled={selectValue === 'TEMPLATE_HOLIDAY_PAY' || selectValue === 'TEMPLATE_NO_PAY'}
+                                            disabled={selectValue === 'TEMPLATE_HOLIDAY_PAY'}
                                             onChange={(e) => handleChange("value", parseFloat(e.target.value) || 0)}
                                             className={cn(
                                                 "h-11 bg-background border-none rounded-xl font-black px-4 shadow-sm",
-                                                (selectValue === 'TEMPLATE_HOLIDAY_PAY' || selectValue === 'TEMPLATE_NO_PAY') && "opacity-50"
+                                                (selectValue === 'TEMPLATE_HOLIDAY_PAY') && "opacity-50"
                                             )}
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">
                                             {formData.type === PayrollComponentType.FLAT_AMOUNT ? "LKR" : "%"}
                                         </span>
                                     </div>
-                                    {(selectValue === 'TEMPLATE_HOLIDAY_PAY' || selectValue === 'TEMPLATE_NO_PAY') && (
+                                    {selectValue === 'TEMPLATE_HOLIDAY_PAY' && (
                                         <p className="text-[10px] text-muted-foreground font-medium ml-1">
                                             Calculated automatically based on attendance records.
                                         </p>
