@@ -60,10 +60,10 @@ export default function Home() {
                                 <IconChecks className="h-4 w-4" />
                                 Smart Workforce Management
                             </span>
-                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tight italic">
+                            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tight italic leading-[1.1]">
                                 {t("landing.hero.title")}
                             </h1>
-                            <p className="text-muted-foreground text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
+                            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
                                 {t("landing.hero.subtitle")}
                             </p>
                         </motion.div>
@@ -96,13 +96,13 @@ export default function Home() {
 
                         {/* Visual Preview */}
                         <motion.div
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.8, delay: 0.4 }}
-                            className="relative mt-16 max-w-5xl mx-auto"
+                            className="relative mt-8 md:mt-16 max-w-5xl mx-auto px-2 sm:px-4"
                         >
-                            <div className="rounded-3xl border border-neutral-200/50 dark:border-neutral-800/50 p-2 md:p-4 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm shadow-2xl overflow-hidden group">
-                                <div className="rounded-[1.25rem] overflow-hidden bg-neutral-100 dark:bg-neutral-800 aspect-video relative">
+                            <div className="rounded-2xl md:rounded-[2.5rem] border border-neutral-200/50 dark:border-neutral-800/50 p-1.5 md:p-4 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm shadow-2xl overflow-hidden group">
+                                <div className="rounded-xl md:rounded-[1.5rem] overflow-hidden bg-neutral-100 dark:bg-neutral-800 aspect-[16/10] sm:aspect-video relative">
                                     <img
                                         src="/images/hero-visual.png"
                                         alt="WageX Dashboard"
@@ -125,7 +125,7 @@ export default function Home() {
                             <div className="h-1.5 w-24 bg-primary mx-auto rounded-full" />
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                             {features.map((feature, idx) => (
                                 <motion.div
                                     key={idx}
@@ -133,15 +133,15 @@ export default function Home() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.5, delay: feature.delay }}
-                                    className="p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800/50 hover:shadow-xl hover:shadow-primary/5 transition-all group"
+                                    className="p-6 md:p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800/50 hover:shadow-xl hover:shadow-primary/5 transition-all group"
                                 >
-                                    <div className="h-14 w-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform bg-primary/5">
+                                    <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform bg-primary/5">
                                         {feature.icon}
                                     </div>
-                                    <h3 className="text-xl font-bold mb-3 text-foreground italic">
+                                    <h3 className="text-lg md:text-xl font-bold mb-3 text-foreground italic">
                                         {feature.title}
                                     </h3>
-                                    <p className="text-muted-foreground leading-relaxed">
+                                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
                                         {feature.desc}
                                     </p>
                                 </motion.div>
@@ -152,21 +152,27 @@ export default function Home() {
             </main>
 
             {/* Footer */}
-            <footer className="py-12 px-4 border-t border-neutral-200/50 dark:border-neutral-800/50">
-                <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-2">
-                        <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm" />
-                        <span className="font-black italic tracking-tighter text-xl">WageX</span>
+            <footer className="py-12 md:py-16 px-6 border-t border-neutral-200/50 dark:border-neutral-800/50">
+                <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-10 md:gap-6 text-center md:text-left">
+                    <div className="flex flex-col items-center md:items-start gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm" />
+                            <span className="font-black italic tracking-tighter text-xl text-foreground">WageX</span>
+                        </div>
+                        <p className="text-muted-foreground text-xs font-medium max-w-[240px]">
+                            Simplifying payroll and workforce management for the modern era.
+                        </p>
                     </div>
 
-                    <p className="text-muted-foreground text-sm">
-                        &copy; {new Date().getFullYear()} WageX. {t("landing.footer.rights")}
-                    </p>
-
-                    <nav className="flex items-center gap-6">
-                        <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy</Link>
-                        <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms</Link>
-                    </nav>
+                    <div className="flex flex-col items-center md:items-end gap-6">
+                        <nav className="flex items-center gap-8">
+                            <Link href="/privacy" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Privacy</Link>
+                            <Link href="/terms" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Terms</Link>
+                        </nav>
+                        <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">
+                            &copy; {new Date().getFullYear()} WageX. {t("landing.footer.rights")}
+                        </p>
+                    </div>
                 </div>
             </footer>
         </div>

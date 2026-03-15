@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 import { useSidebar } from "@/components/ui/sidebar"
 
-export function ThemeToggle() {
+export function ThemeToggle({ showLabel = "always" }: { showLabel?: "always" | "never" | "responsive" }) {
     // Optional sidebar context for standalone usage
     let sidebarContext;
     try {
@@ -36,20 +36,28 @@ export function ThemeToggle() {
     return (
         <Button
             variant="ghost"
-            size="sm"
-            className="w-full flex justify-start gap-2 h-10 px-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+            size={showLabel === "always" ? "sm" : showLabel === "never" ? "icon" : "icon"}
+            className={cn(
+                "rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors shadow-none border-none",
+                showLabel === "always" ? "w-full justify-start px-2 h-10 gap-2" : 
+                showLabel === "responsive" ? "md:w-auto md:px-3 md:h-10 md:gap-2 flex items-center justify-center h-9 w-9" : 
+                "flex items-center justify-center"
+            )}
             onClick={handleToggle}
         >
-            <IconSun className="h-5 w-5 dark:hidden text-neutral-500" />
-            <IconMoon className="h-5 w-5 hidden dark:block text-neutral-500" />
-            <span
-                className={cn(
-                    "text-sm font-medium transition-opacity duration-200",
-                    animate && !open ? "opacity-0 hidden" : "opacity-100"
-                )}
-            >
-                {mounted ? (theme === "light" ? "Light Mode" : "Dark Mode") : "Theme"}
-            </span>
+            <IconSun className="h-5 w-5 dark:hidden text-neutral-500 shrink-0" />
+            <IconMoon className="h-5 w-5 hidden dark:block text-neutral-500 shrink-0" />
+            {showLabel !== "never" && (
+                <span
+                    className={cn(
+                        "text-sm font-medium transition-opacity duration-200",
+                        showLabel === "responsive" && "hidden md:block",
+                        animate && !open ? "opacity-0 hidden" : "opacity-100"
+                    )}
+                >
+                    {mounted ? (theme === "light" ? "Light Mode" : "Dark Mode") : "Theme"}
+                </span>
+            )}
         </Button>
     )
 }
