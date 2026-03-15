@@ -30,10 +30,12 @@ import { useQuery } from "@tanstack/react-query";
 import { SalaryService } from "@/services/salary.service";
 import { EpfService } from "@/services/epf.service";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useEpf } from "@/hooks/use-statutory";
 import { PayrollComponentSystemType } from "@/types/policy";
+import { formatCurrency } from "@/lib/utils";
 
 const steps = ["Period", "Selection", "Preview"];
 const months = [
@@ -64,6 +66,9 @@ export const GenerateEpfDialog = ({
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
     const [selectedSalaryIds, setSelectedSalaryIds] = useState<string[]>([]);
+    const [remarks, setRemarks] = useState("");
+    const [referenceNo, setReferenceNo] = useState("");
+    const [surcharge, setSurcharge] = useState<number>(0);
     const { createEpfMutation } = useEpf({ companyId });
 
     // Fetch PAID salaries for the selected month
@@ -117,6 +122,13 @@ export const GenerateEpfDialog = ({
 
     const preview = previewQuery.data;
 
+    // Sync referenceNo with preview
+    React.useEffect(() => {
+        if (preview?.referenceNo && !referenceNo) {
+            setReferenceNo(preview.referenceNo);
+        }
+    }, [preview]);
+
     const handleNext = () => {
         if (step < steps.length - 1) setStep(step + 1);
         else handleSave();
@@ -133,12 +145,18 @@ export const GenerateEpfDialog = ({
             month,
             year,
             salaryIds: selectedSalaryIds,
-            totalContribution: preview.totalContribution,
+            totalContribution: (preview.totalContribution || 0) + (surcharge || 0),
+            surcharge: surcharge || 0,
+            referenceNo: referenceNo || undefined,
+            remarks: remarks || undefined,
         }, {
             onSuccess: () => {
                 onOpenChange(false);
                 setStep(0);
                 setSelectedSalaryIds([]);
+                setRemarks("");
+                setReferenceNo("");
+                setSurcharge(0);
             }
         });
     };
@@ -147,8 +165,8 @@ export const GenerateEpfDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl">
-                <div className="bg-primary/5 p-8 border-b border-primary/10">
+            <DialogContent className="w-[95vw] sm:max-w-2xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl flex flex-col max-h-[90vh]">
+                <div className="bg-primary/5 p-6 sm:p-8 border-b border-primary/10 flex-shrink-0">
                     <DialogHeader>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="h-10 w-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
@@ -164,10 +182,10 @@ export const GenerateEpfDialog = ({
                     </DialogHeader>
                 </div>
 
-                <div className="p-8">
+                <div className="p-6 sm:p-8 overflow-y-auto custom-scrollbar flex-grow">
                     {step === 0 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest pl-1">Month</label>
                                     <Select 
@@ -245,15 +263,15 @@ export const GenerateEpfDialog = ({
                                                 <div>
                                                     <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{salary.employee?.fullName}</p>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="text-[10px] font-bold text-neutral-400">Net: {salary.netSalary.toLocaleString()}</span>
+                                                        <span className="text-[10px] font-bold text-neutral-400">Net: {formatCurrency(salary.netSalary)}</span>
                                                         <span className="h-1 w-1 rounded-full bg-neutral-300" />
                                                         <span className="text-[10px] font-bold text-primary/60">
                                                             Tot. Earn.: {(() => {
                                                                 const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
                                                                 if (epfComp && epfComp.value > 0) {
-                                                                    return (epfComp.amount / (epfComp.value / 100)).toLocaleString();
+                                                                    return formatCurrency(epfComp.amount / (epfComp.value / 100));
                                                                 }
-                                                                return salary.basicSalary.toLocaleString();
+                                                                return formatCurrency(salary.basicSalary);
                                                             })()}
                                                         </span>
                                                     </div>
@@ -278,21 +296,64 @@ export const GenerateEpfDialog = ({
                             {previewQuery.isLoading ? (
                                 <div className="py-20 flex justify-center"><IconRefresh className="h-8 w-8 animate-spin text-primary/20" /></div>
                             ) : preview ? (
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-6 rounded-3xl bg-primary text-white shadow-xl shadow-primary/20 flex flex-col gap-1">
-                                            <span className="text-[10px] font-black uppercase text-white/60 tracking-widest italic">Total Contribution</span>
-                                            <span className="text-3xl font-black italic tracking-tighter">
-                                                {preview.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl p-5 border border-neutral-100 dark:border-neutral-800">
+                                                <div className="flex flex-col gap-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                                                            <IconInfoCircle className="h-5 w-5" />
+                                                        </div>
+                                                        <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic leading-tight">Reference Number</p>
+                                                    </div>
+                                                    <Input 
+                                                        value={referenceNo}
+                                                        onChange={(e) => setReferenceNo(e.target.value)}
+                                                        className="h-12 rounded-xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus-visible:ring-primary/20 font-bold text-sm"
+                                                        placeholder="Enter Reference No"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl p-5 border border-neutral-100 dark:border-neutral-800">
+                                                <div className="flex flex-col gap-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-8 w-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                                                            <IconCurrencyDollar className="h-5 w-5" />
+                                                        </div>
+                                                        <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic leading-tight">Surcharge (Optional)</p>
+                                                    </div>
+                                                    <Input 
+                                                        type="number"
+                                                        value={surcharge || ""}
+                                                        onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
+                                                        className="h-12 rounded-xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus-visible:ring-primary/20 font-bold text-sm"
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
-                                            <span className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic">Employees</span>
-                                            <span className="text-3xl font-black italic tracking-tighter text-foreground">
-                                                {preview.items?.length || 0}
-                                            </span>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div className="p-5 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1">
+                                                <span className="text-[9px] font-black uppercase text-primary-foreground/70 tracking-widest italic">Total Contribution</span>
+                                                <span className="text-2xl font-black italic tracking-tighter">
+                                                    {formatCurrency((preview.totalContribution || 0) + (surcharge || 0))}
+                                                </span>
+                                            </div>
+                                            <div className="p-5 rounded-3xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
+                                                <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest italic">Employee</span>
+                                                <span className="text-2xl font-black italic tracking-tighter text-foreground">
+                                                    {formatCurrency(preview.items?.reduce((sum: number, item: any) => sum + item.employeeContribution, 0) || 0)}
+                                                </span>
+                                            </div>
+                                            <div className="p-5 rounded-3xl bg-primary/10 dark:bg-primary/20 border border-primary/20 flex flex-col gap-1">
+                                                <span className="text-[9px] font-black uppercase text-primary tracking-widest italic">Employer</span>
+                                                <span className="text-2xl font-black italic tracking-tighter text-primary">
+                                                    {formatCurrency(preview.items?.reduce((sum: number, item: any) => sum + item.employerContribution, 0) || 0)}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     <div className="space-y-3">
                                         <h4 className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic px-1">Breakdown</h4>
@@ -301,15 +362,36 @@ export const GenerateEpfDialog = ({
                                                 <div key={idx} className="flex items-center justify-between p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900/50">
                                                     <div>
                                                         <p className="text-xs font-black">{item.employeeName}</p>
-                                                        <p className="text-[9px] font-bold text-neutral-400">Total: {item.totalContribution.toLocaleString()}</p>
+                                                        <p className="text-[9px] font-bold text-neutral-400">Liable: {formatCurrency(item.liableEarnings)}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-[9px] font-bold text-neutral-400">8% (Emp): {item.employeeContribution.toLocaleString()}</p>
-                                                        <p className="text-[9px] font-bold text-neutral-400">12% (Comp): {item.employerContribution.toLocaleString()}</p>
+                                                        <div className="flex items-center justify-end gap-4">
+                                                            <div>
+                                                                <p className="text-[9px] font-bold text-neutral-400">8% (Emp)</p>
+                                                                <p className="text-sm font-bold text-neutral-600 dark:text-neutral-300">{formatCurrency(item.employeeContribution)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[9px] font-bold text-neutral-400">12% (Comp)</p>
+                                                                <p className="text-sm font-bold text-primary">{formatCurrency(item.employerContribution)}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-1 pt-1 border-t border-border/50">
+                                                            <p className="text-[9px] font-black text-neutral-400 uppercase">Total: {formatCurrency(item.totalContribution)}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest pl-1">Remarks (Optional)</label>
+                                        <textarea
+                                            value={remarks}
+                                            onChange={(e) => setRemarks(e.target.value)}
+                                            placeholder="Add any notes or comments for this EPF contribution..."
+                                            className="w-full min-h-[80px] rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                                        />
                                     </div>
                                 </div>
                             ) : (
@@ -319,7 +401,7 @@ export const GenerateEpfDialog = ({
                     )}
                 </div>
 
-                <DialogFooter className="p-8 bg-neutral-50/50 dark:bg-neutral-800/30 border-t border-neutral-100 dark:border-neutral-800 flex-row justify-between sm:justify-between items-center">
+                <DialogFooter className="p-6 sm:p-8 bg-neutral-50/50 dark:bg-neutral-800/30 border-t border-neutral-100 dark:border-neutral-800 flex flex-row justify-between items-center gap-4 flex-shrink-0">
                     <Button
                         variant="ghost"
                         onClick={handleBack}

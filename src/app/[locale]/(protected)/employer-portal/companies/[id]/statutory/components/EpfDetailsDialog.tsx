@@ -91,8 +91,8 @@ export const EpfDetailsDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl">
-                <div className="bg-primary/5 p-8 border-b border-primary/10">
+            <DialogContent className="w-[95vw] sm:max-w-3xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl flex flex-col max-h-[90vh]">
+                <div className="bg-primary/5 p-6 sm:p-8 border-b border-primary/10 flex-shrink-0">
                     <DialogHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -121,13 +121,13 @@ export const EpfDetailsDialog = ({
                     </DialogHeader>
                 </div>
 
-                <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                <div className="p-6 sm:p-8 overflow-y-auto custom-scrollbar flex-grow">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Summary Section */}
                         <div className="space-y-6">
-                            <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
-                                <span className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic">Total Contribution</span>
-                                <span className="text-3xl font-black italic tracking-tighter text-primary">
+                            <div className="p-6 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1">
+                                <span className="text-[10px] font-black uppercase text-primary-foreground/70 tracking-widest italic">Total Contribution</span>
+                                <span className="text-3xl font-black italic tracking-tighter">
                                     LKR {record.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
@@ -141,7 +141,7 @@ export const EpfDetailsDialog = ({
                                             value={formData.referenceNo} 
                                             onChange={(e) => setFormData(prev => ({ ...prev, referenceNo: e.target.value }))}
                                             placeholder="Enter EPF Reference No"
-                                            className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                            className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -150,7 +150,7 @@ export const EpfDetailsDialog = ({
                                             type="number"
                                             value={formData.surcharge} 
                                             onChange={(e) => setFormData(prev => ({ ...prev, surcharge: parseFloat(e.target.value) }))}
-                                            className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                            className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
                                         />
                                     </div>
                                 </div>
@@ -167,7 +167,7 @@ export const EpfDetailsDialog = ({
                                         type="date"
                                         value={formData.paidDate} 
                                         onChange={(e) => setFormData(prev => ({ ...prev, paidDate: e.target.value }))}
-                                        className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                        className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
                                     />
                                 </div>
 
@@ -177,10 +177,10 @@ export const EpfDetailsDialog = ({
                                         value={formData.paymentMethod} 
                                         onValueChange={(v) => setFormData(prev => ({ ...prev, paymentMethod: v as PaymentMethod }))}
                                     >
-                                        <SelectTrigger className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold">
+                                        <SelectTrigger className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold">
                                             <SelectValue placeholder="Method" />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-neutral-100 shadow-xl">
+                                        <SelectContent className="rounded-2xl border-neutral-100 dark:border-neutral-800 shadow-xl bg-white dark:bg-neutral-900">
                                             <SelectItem value={PaymentMethod.CASH} className="font-bold py-3">Cash</SelectItem>
                                             <SelectItem value={PaymentMethod.BANK_TRANSFER} className="font-bold py-3">Bank Transfer</SelectItem>
                                             <SelectItem value={PaymentMethod.CHEQUE} className="font-bold py-3">Cheque</SelectItem>
@@ -196,7 +196,7 @@ export const EpfDetailsDialog = ({
                                             <Input 
                                                 value={formData.bankName} 
                                                 onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
-                                                className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                                className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
                                             />
                                         </div>
                                         <div className="space-y-2 text-left">
@@ -204,7 +204,7 @@ export const EpfDetailsDialog = ({
                                             <Input 
                                                 value={formData.paymentMethod === PaymentMethod.CHEQUE ? formData.chequeNo : formData.bankBranch} 
                                                 onChange={(e) => setFormData(prev => ({ ...prev, [formData.paymentMethod === PaymentMethod.CHEQUE ? 'chequeNo' : 'bankBranch']: e.target.value }))}
-                                                className="h-12 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold"
+                                                className="h-12 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold"
                                             />
                                         </div>
                                     </div>
@@ -240,7 +240,7 @@ export const EpfDetailsDialog = ({
                         ) : formData.slipUrl ? (
                             <div className="p-6 rounded-3xl border-2 border-dashed border-primary/20 bg-primary/5 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                    <div className="h-10 w-10 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm">
                                         <IconPaperclip className="h-5 w-5 text-primary" />
                                     </div>
                                     <div>
@@ -255,7 +255,7 @@ export const EpfDetailsDialog = ({
                                 </Button>
                             </div>
                         ) : (
-                            <div className="p-8 rounded-3xl border-2 border-dashed border-neutral-100 bg-neutral-50/50 flex flex-col items-center justify-center text-center gap-2">
+                            <div className="p-8 rounded-3xl border-2 border-dashed border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 flex flex-col items-center justify-center text-center gap-2">
                                 <p className="text-xs font-bold text-neutral-400 italic">No payment slip attached to this submission.</p>
                                 <Button variant="link" className="text-primary font-black uppercase text-[10px]" onClick={() => setShowUpload(true)}>
                                     Attach Document
@@ -270,12 +270,12 @@ export const EpfDetailsDialog = ({
                             value={formData.remarks} 
                             onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
                             placeholder="Add any internal notes..."
-                            className="w-full h-24 rounded-2xl border-neutral-200 bg-white shadow-sm font-bold p-4 text-sm focus:ring-primary/20 outline-none transition-all"
+                            className="w-full h-24 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold p-4 text-sm focus:ring-primary/20 outline-none transition-all resize-none"
                         />
                     </div>
                 </div>
 
-                <DialogFooter className="p-8 bg-neutral-50/50 border-t border-neutral-100 flex-row justify-between sm:justify-between items-center">
+                <DialogFooter className="p-6 sm:p-8 bg-neutral-50/50 dark:bg-neutral-800/30 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-4 flex-shrink-0">
                     <Button
                         variant="ghost"
                         onClick={() => onDelete?.(record.id)}

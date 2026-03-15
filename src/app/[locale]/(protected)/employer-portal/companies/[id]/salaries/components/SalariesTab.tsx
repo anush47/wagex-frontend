@@ -28,6 +28,7 @@ import { SalaryStatus, Salary } from "@/types/salary";
 import { format } from "date-fns";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { formatCurrency } from "@/lib/utils";
 import { SalaryDetailsDialog } from "./SalaryDetailsDialog";
 import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
 
@@ -356,7 +357,7 @@ export function SalariesTab({
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-medium text-sm">
-                                                        {salary.basicSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        {formatCurrency(salary.basicSalary)}
                                                     </span>
                                                     <div className="flex items-center gap-1 mt-0.5">
                                                         <span className="text-[9px] font-black text-primary uppercase">Tot. Earn.:</span>
@@ -365,17 +366,17 @@ export function SalariesTab({
                                                                 const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
                                                                 if (epfComp && epfComp.value > 0) {
                                                                     // Back-calculate from EPF component to get the exact base used by backend
-                                                                    return (epfComp.amount / (epfComp.value / 100)).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                                    return formatCurrency(epfComp.amount / (epfComp.value / 100));
                                                                 }
                                                                 // Fallback: If no EPF component, show Basic as the likely base
-                                                                return salary.basicSalary.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                                return formatCurrency(salary.basicSalary);
                                                             })()}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right text-foreground font-bold">
-                                                {(salary.basicSalary + salary.otAmount + (salary.components || []).filter(c => c.category === 'ADDITION').reduce((acc, c) => acc + c.amount, 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {formatCurrency(salary.basicSalary + salary.otAmount + (salary.components || []).filter(c => c.category === 'ADDITION').reduce((acc, c) => acc + c.amount, 0))}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
@@ -385,7 +386,7 @@ export function SalariesTab({
                                                                 .filter(c => c.category === 'DEDUCTION')
                                                                 .reduce((acc, c) => acc + c.amount, 0);
                                                             const total = compDeductions + salary.noPayAmount + salary.taxAmount;
-                                                            return total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                            return formatCurrency(total);
                                                         })()}
                                                     </span>
                                                 </div>
@@ -394,7 +395,7 @@ export function SalariesTab({
                                                 {salary.advanceDeduction > 0 ? (
                                                     <div className="flex flex-col items-end">
                                                         <span className="font-bold text-sm text-orange-600">
-                                                            {salary.advanceDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                            {formatCurrency(salary.advanceDeduction)}
                                                         </span>
                                                         <span className="text-[9px] font-black text-orange-600/50 uppercase">Recovery</span>
                                                     </div>
@@ -403,13 +404,13 @@ export function SalariesTab({
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-black text-sm text-foreground">
-                                                        {salary.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        {formatCurrency(salary.netSalary)}
                                                     </span>
                                                     {(salary.status === 'APPROVED' || salary.status === 'PARTIALLY_PAID') && (
                                                         <span className={`text-[10px] font-black mt-0.5 ${new Date(salary.payDate) < new Date() ? 'text-red-500' : 'text-primary'}`}>
                                                             DUE: {(() => {
                                                                 const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
-                                                                return (salary.netSalary - paid).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                                return formatCurrency(salary.netSalary - paid);
                                                             })()}
                                                         </span>
                                                     )}

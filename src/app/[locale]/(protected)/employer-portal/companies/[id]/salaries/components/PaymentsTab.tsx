@@ -11,7 +11,7 @@ import { IconHistory, IconCash, IconCreditCard, IconReceipt, IconWallet, IconCal
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PaymentDetailsDialog } from "./PaymentDetailsDialog";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 export function PaymentsTab({ companyId }: { companyId: string }) {
     const { paymentsQuery, deletePaymentMutation } = usePayments({ companyId });
@@ -74,7 +74,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                     <CardContent>
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-foreground tabular-nums">
-                                {totalDisbursedThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                {formatCurrency(totalDisbursedThisMonth)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">{format(new Date(), "MMMM yyyy")}</span>
                         </div>
@@ -91,7 +91,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                     <CardContent>
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-foreground tabular-nums">
-                                {pendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                {formatCurrency(pendingAmount)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">
                                 {pendingSalaries.length} Salaries Pending
@@ -110,7 +110,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                     <CardContent>
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-red-500 tabular-nums">
-                                {overdueAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                {formatCurrency(overdueAmount)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">
                                 {overdueSalaries.length} Delayed Payments
@@ -216,7 +216,7 @@ export function PaymentsTab({ companyId }: { companyId: string }) {
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-sm text-foreground tabular-nums">
-                                                        {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        {formatCurrency(payment.amount)}
                                                     </span>
                                                     <span className="text-[10px] text-muted-foreground font-medium">LKR</span>
                                                 </div>

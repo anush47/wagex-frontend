@@ -75,6 +75,7 @@ export interface EtfPreviewItem {
 export interface EpfPreview {
   month: number;
   year: number;
+  referenceNo?: string;
   items: EpfPreviewItem[];
   totalContribution: number;
 }

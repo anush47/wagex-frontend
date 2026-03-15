@@ -30,6 +30,7 @@ import { SalaryService } from "@/services/salary.service";
 import { EtfService } from "@/services/etf.service";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEtf } from "@/hooks/use-statutory";
+import { formatCurrency } from "@/lib/utils";
 
 const steps = ["Period", "Selection", "Preview"];
 const months = [
@@ -60,6 +61,8 @@ export const GenerateEtfDialog = ({
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
     const [selectedSalaryIds, setSelectedSalaryIds] = useState<string[]>([]);
+    const [remarks, setRemarks] = useState("");
+    const [surcharge, setSurcharge] = useState<number>(0);
     const { createEtfMutation } = useEtf({ companyId });
 
     // Fetch PAID salaries for the selected month
@@ -127,12 +130,16 @@ export const GenerateEtfDialog = ({
             month,
             year,
             salaryIds: selectedSalaryIds,
-            totalContribution: preview.totalContribution,
+            totalContribution: (preview.totalContribution || 0) + (surcharge || 0),
+            surcharge: surcharge || 0,
+            remarks: remarks || undefined,
         }, {
             onSuccess: () => {
                 onOpenChange(false);
                 setStep(0);
                 setSelectedSalaryIds([]);
+                setRemarks("");
+                setSurcharge(0);
             }
         });
     };
@@ -141,16 +148,16 @@ export const GenerateEtfDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl">
-                <div className="bg-orange-500/5 p-8 border-b border-orange-500/10">
+            <DialogContent className="w-[95vw] sm:max-w-2xl rounded-[2rem] overflow-hidden border-0 p-0 shadow-2xl flex flex-col max-h-[90vh]">
+                <div className="bg-primary/5 p-6 sm:p-8 border-b border-primary/10 flex-shrink-0">
                     <DialogHeader>
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="h-10 w-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/20">
+                            <div className="h-10 w-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
                                 <IconCalendarStats className="h-6 w-6" />
                             </div>
                             <div>
-                                <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic text-orange-600">Generate ETF</DialogTitle>
-                                <DialogDescription className="text-xs font-bold uppercase text-orange-500/60 tracking-wider">
+                                <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic">Generate ETF</DialogTitle>
+                                <DialogDescription className="text-xs font-bold uppercase text-primary/60 tracking-wider">
                                     Step {step + 1}: {steps[step]}
                                 </DialogDescription>
                             </div>
@@ -158,22 +165,22 @@ export const GenerateEtfDialog = ({
                     </DialogHeader>
                 </div>
 
-                <div className="p-8">
+                <div className="p-6 sm:p-8 overflow-y-auto custom-scrollbar flex-grow">
                     {step === 0 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest pl-1">Month</label>
                                     <Select 
                                         value={month.toString()} 
                                         onValueChange={(v) => setMonth(parseInt(v))}
                                     >
-                                        <SelectTrigger className="h-14 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus:ring-orange-500/20 font-bold">
+                                        <SelectTrigger className="h-14 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus:ring-primary/20 font-bold">
                                             <SelectValue placeholder="Month" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-2xl border-neutral-100 dark:border-neutral-800 shadow-xl">
                                             {months.map((m) => (
-                                                <SelectItem key={m.value} value={m.value.toString()} className="font-bold rounded-xl py-3 focus:bg-orange-500/5 focus:text-orange-600">
+                                                <SelectItem key={m.value} value={m.value.toString()} className="font-bold rounded-xl py-3 focus:bg-primary/5 focus:text-primary">
                                                     {m.label}
                                                 </SelectItem>
                                             ))}
@@ -186,12 +193,12 @@ export const GenerateEtfDialog = ({
                                         value={year.toString()} 
                                         onValueChange={(v) => setYear(parseInt(v))}
                                     >
-                                        <SelectTrigger className="h-14 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus:ring-orange-500/20 font-bold">
+                                        <SelectTrigger className="h-14 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus:ring-primary/20 font-bold">
                                             <SelectValue placeholder="Year" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-2xl border-neutral-100 dark:border-neutral-800 shadow-xl">
                                             {years.map((y) => (
-                                                <SelectItem key={y} value={y.toString()} className="font-bold rounded-xl py-3 focus:bg-orange-500/5 focus:text-orange-600">
+                                                <SelectItem key={y} value={y.toString()} className="font-bold rounded-xl py-3 focus:bg-primary/5 focus:text-primary">
                                                     {y}
                                                 </SelectItem>
                                             ))}
@@ -205,7 +212,7 @@ export const GenerateEtfDialog = ({
                     {step === 1 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                             <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl p-4 flex items-center gap-3 border border-neutral-100 dark:border-neutral-800">
-                                <IconInfoCircle className="h-5 w-5 text-orange-500" />
+                                <IconInfoCircle className="h-5 w-5 text-primary" />
                                 <p className="text-xs font-bold text-neutral-600 dark:text-neutral-400">
                                     Selecting {salaries.length} salaries for {months[month-1].label}. 
                                     Defaulting selection to employees with ETF in their policy.
@@ -214,14 +221,14 @@ export const GenerateEtfDialog = ({
 
                             <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                                 {salariesQuery.isLoading ? (
-                                    <div className="py-20 flex justify-center"><IconRefresh className="h-8 w-8 animate-spin text-orange-500/20" /></div>
+                                    <div className="py-20 flex justify-center"><IconRefresh className="h-8 w-8 animate-spin text-primary/20" /></div>
                                 ) : salaries.length === 0 ? (
                                     <p className="text-center py-10 text-sm font-bold text-neutral-400">No salaries found for this period.</p>
                                 ) : (
                                     salaries.map((salary: any) => (
                                         <div 
                                             key={salary.id}
-                                            className="flex items-center justify-between p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 hover:border-orange-500/20 hover:bg-orange-500/5 transition-all cursor-pointer group"
+                                            className="flex items-center justify-between p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer group"
                                             onClick={() => {
                                                 if (selectedSalaryIds.includes(salary.id)) {
                                                     setSelectedSalaryIds(prev => prev.filter(id => id !== salary.id));
@@ -234,20 +241,24 @@ export const GenerateEtfDialog = ({
                                                 <Checkbox 
                                                     checked={selectedSalaryIds.includes(salary.id)}
                                                     onCheckedChange={() => {}} // Handled by div click
-                                                    className="rounded-lg h-5 w-5 border-neutral-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 transition-all"
+                                                    className="rounded-lg h-5 w-5 border-neutral-300 data-[state=checked]:bg-primary transition-all"
                                                 />
                                                 <div>
-                                                    <p className="text-sm font-black text-foreground group-hover:text-orange-600 transition-colors">{salary.employee?.fullName}</p>
+                                                    <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{salary.employee?.fullName}</p>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="text-[10px] font-bold text-neutral-400">Net: {salary.netSalary.toLocaleString()}</span>
+                                                        <span className="text-[10px] font-bold text-neutral-400">Net: {formatCurrency(salary.netSalary)}</span>
                                                         <span className="h-1 w-1 rounded-full bg-neutral-300" />
-                                                        <span className="text-[10px] font-bold text-orange-500/60">
+                                                        <span className="text-[10px] font-bold text-primary/60">
                                                             Tot. Earn.: {(() => {
                                                                 const etfComp = (salary.components || []).find((c: any) => c.systemType === 'ETF_EMPLOYER');
-                                                                if (etfComp && etfComp.value > 0) {
-                                                                    return (etfComp.amount / (etfComp.value / 100)).toLocaleString();
+                                                                if (etfComp && etfComp.employerValue > 0 && etfComp.employerAmount > 0) {
+                                                                    return formatCurrency(etfComp.employerAmount / (etfComp.employerValue / 100));
                                                                 }
-                                                                return salary.basicSalary.toLocaleString();
+                                                                const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
+                                                                if (epfComp && epfComp.value > 0) {
+                                                                    return formatCurrency(epfComp.amount / (epfComp.value / 100));
+                                                                }
+                                                                return formatCurrency(salary.basicSalary);
                                                             })()}
                                                         </span>
                                                     </div>
@@ -255,7 +266,7 @@ export const GenerateEtfDialog = ({
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 {salary.components?.some((c: any) => c.systemType === 'ETF_EMPLOYER') ? (
-                                                    <span className="text-[8px] font-black uppercase bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">ETF Eligible</span>
+                                                    <span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full">ETF Eligible</span>
                                                 ) : (
                                                     <span className="text-[8px] font-black uppercase bg-neutral-100 text-neutral-400 px-2 py-0.5 rounded-full">No ETF</span>
                                                 )}
@@ -270,19 +281,37 @@ export const GenerateEtfDialog = ({
                     {step === 2 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                             {previewQuery.isLoading ? (
-                                <div className="py-20 flex justify-center"><IconRefresh className="h-8 w-8 animate-spin text-orange-500/20" /></div>
+                                <div className="py-20 flex justify-center"><IconRefresh className="h-8 w-8 animate-spin text-primary/20" /></div>
                             ) : preview ? (
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-6 rounded-3xl bg-orange-500 text-white shadow-xl shadow-orange-500/20 flex flex-col gap-1">
-                                            <span className="text-[10px] font-black uppercase text-white/60 tracking-widest italic">Total Contribution</span>
-                                            <span className="text-3xl font-black italic tracking-tighter">
-                                                {preview.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl p-5 border border-neutral-100 dark:border-neutral-800">
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                                                    <IconCurrencyDollar className="h-5 w-5" />
+                                                </div>
+                                                <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic leading-tight">Surcharge (Optional)</p>
+                                            </div>
+                                            <Input 
+                                                type="number"
+                                                value={surcharge || ""}
+                                                onChange={(e) => setSurcharge(parseFloat(e.target.value) || 0)}
+                                                className="h-12 rounded-xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm focus-visible:ring-primary/20 font-bold text-sm"
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="p-5 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1">
+                                            <span className="text-[9px] font-black uppercase text-primary-foreground/70 tracking-widest italic">Total Contribution</span>
+                                            <span className="text-2xl font-black italic tracking-tighter">
+                                                {formatCurrency((preview.totalContribution || 0) + (surcharge || 0))}
                                             </span>
                                         </div>
-                                        <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
-                                            <span className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic">Employees</span>
-                                            <span className="text-3xl font-black italic tracking-tighter text-foreground">
+                                        <div className="p-5 rounded-3xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
+                                            <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest italic">Employees</span>
+                                            <span className="text-2xl font-black italic tracking-tighter text-foreground">
                                                 {preview.items?.length || 0}
                                             </span>
                                         </div>
@@ -295,15 +324,25 @@ export const GenerateEtfDialog = ({
                                                 <div key={idx} className="flex items-center justify-between p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900/50">
                                                     <div>
                                                         <p className="text-xs font-black">{item.employeeName}</p>
-                                                        <p className="text-[9px] font-bold text-neutral-400">Total Contribution</p>
+                                                        <p className="text-[9px] font-bold text-neutral-400">Liable: {formatCurrency(item.liableEarnings)}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-sm font-black text-orange-600">{item.totalContribution.toLocaleString()}</p>
+                                                        <p className="text-sm font-bold text-primary">{formatCurrency(item.totalContribution)}</p>
                                                         <p className="text-[9px] font-bold text-neutral-400">3% (Comp)</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest pl-1">Remarks (Optional)</label>
+                                        <textarea
+                                            value={remarks}
+                                            onChange={(e) => setRemarks(e.target.value)}
+                                            placeholder="Add any notes or comments for this ETF contribution..."
+                                            className="w-full min-h-[80px] rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                                        />
                                     </div>
                                 </div>
                             ) : (
@@ -313,7 +352,7 @@ export const GenerateEtfDialog = ({
                     )}
                 </div>
 
-                <DialogFooter className="p-8 bg-neutral-50/50 dark:bg-neutral-800/30 border-t border-neutral-100 dark:border-neutral-800 flex-row justify-between sm:justify-between items-center">
+                <DialogFooter className="p-6 sm:p-8 bg-neutral-50/50 dark:bg-neutral-800/30 border-t border-neutral-100 dark:border-neutral-800 flex flex-row justify-between items-center gap-4 flex-shrink-0">
                     <Button
                         variant="ghost"
                         onClick={handleBack}
@@ -326,7 +365,7 @@ export const GenerateEtfDialog = ({
                     <Button
                         onClick={handleNext}
                         disabled={(step === 1 && selectedSalaryIds.length === 0) || previewQuery.isLoading || createEtfMutation.isPending}
-                        className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-8 shadow-lg shadow-orange-500/20 bg-orange-500 hover:bg-orange-600 text-white hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-8 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         {step === steps.length - 1 ? (
                             createEtfMutation.isPending ? "Generating..." : "Save Submission"

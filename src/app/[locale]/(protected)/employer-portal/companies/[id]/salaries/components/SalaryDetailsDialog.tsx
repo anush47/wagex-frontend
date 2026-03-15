@@ -42,6 +42,7 @@ import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import { PaymentDetailsDialog } from "./PaymentDetailsDialog";
+import { formatCurrency } from "@/lib/utils";
 
 interface SalaryDetailsDialogProps {
     open: boolean;
@@ -228,7 +229,7 @@ export function SalaryDetailsDialog({
                         <div className="md:w-1/3 bg-background p-4 rounded-2xl border shadow-sm flex flex-col justify-center">
                             <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Net Payable</Label>
                             <div className="text-2xl font-black text-foreground">
-                                LKR {currentNetSalary.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                LKR {formatCurrency(currentNetSalary)}
                             </div>
                         </div>
                     </div>
@@ -281,7 +282,7 @@ export function SalaryDetailsDialog({
                                             const baseBeforeAdj = (epfComp && epfComp.value > 0)
                                                 ? (epfComp.amount / (epfComp.value / 100))
                                                 : (editableBasicSalary || 0);
-                                            return (baseBeforeAdj + (editableHolidayPayAdjustment || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                            return formatCurrency(baseBeforeAdj + (editableHolidayPayAdjustment || 0));
                                         })()}
                                     </span>
                                 </div>
@@ -291,7 +292,7 @@ export function SalaryDetailsDialog({
                                         <span className="font-medium text-muted-foreground flex items-center gap-2">
                                             <IconClock className="h-3.5 w-3.5" /> Calculated Overtime (OT)
                                         </span>
-                                        <span className="font-bold text-blue-600">+{salary.otAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-bold text-blue-600">+{formatCurrency(salary.otAmount)}</span>
                                     </div>
                                 )}
 
@@ -365,38 +366,47 @@ export function SalaryDetailsDialog({
 
                                 {/* Holiday Pay Section */}
                                 {salary.holidayPayAmount > 0 && (
-                                    <div className="space-y-2 pt-2 border-t border-border">
-                                        <div className="flex items-center justify-between">
+                                    <div className="space-y-3 pt-4 border-t border-emerald-200 dark:border-emerald-900/30">
+                                        <div className="flex items-center justify-between p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200/50 dark:border-emerald-900/30">
                                             <div className="flex items-center gap-2">
-                                                <IconGift className="h-3.5 w-3.5 text-emerald-600" />
-                                                <span className="font-medium text-muted-foreground flex items-center gap-2">
-                                                    Holiday Pay
-                                                </span>
+                                                <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                                    <IconGift className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm block">Holiday Pay</span>
+                                                    <span className="text-[9px] text-emerald-600/70 dark:text-emerald-500/60 font-medium">Affects Total Earnings</span>
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-bold text-emerald-600">+{salary.holidayPayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                                <IconChevronDown className="h-3 w-3 text-muted-foreground" />
+                                                <span className="font-black text-emerald-700 dark:text-emerald-400 text-lg">+{formatCurrency(salary.holidayPayAmount)}</span>
                                             </div>
                                         </div>
                                         {salary.holidayPayBreakdown?.map((hp, idx) => (
-                                            <div key={idx} className="flex justify-between items-center text-xs px-2 py-1 bg-muted/30 rounded">
+                                            <div key={idx} className="flex justify-between items-center p-3 bg-emerald-50/30 dark:bg-emerald-950/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20">
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-emerald-600">{hp.holidayName}</span>
-                                                    <span className="text-[9px] text-muted-foreground">{hp.hours.toFixed(2)}h worked</span>
+                                                    <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm">{hp.holidayName}</span>
+                                                    <span className="text-[10px] text-emerald-600/70 dark:text-emerald-500/60">{hp.hours.toFixed(2)}h worked</span>
                                                 </div>
-                                                <span className="font-medium text-emerald-600">+{hp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                <span className="font-bold text-emerald-700 dark:text-emerald-400">+{formatCurrency(hp.amount)}</span>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
                                 {additions.map((comp, idx) => (
-                                    <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
-                                        <Input
-                                            value={comp.name}
-                                            onChange={(e) => handleComponentChange(comp.id, e.target.value, comp.amount, comp.employerAmount)}
-                                            className="h-7 border-transparent hover:border-input focus:border-primary bg-transparent w-full max-w-[180px] px-2 text-sm font-medium"
-                                        />
+                                    <div key={idx} className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors rounded-xl border border-transparent hover:border-border">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <Input
+                                                value={comp.name}
+                                                onChange={(e) => handleComponentChange(comp.id, e.target.value, comp.amount, comp.employerAmount)}
+                                                className="h-7 border-transparent hover:border-input focus:border-primary bg-transparent w-full max-w-[180px] px-2 text-sm font-medium"
+                                            />
+                                            {comp.affectsTotalEarnings && (
+                                                <Badge className="h-5 text-[8px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900">
+                                                    AFFECTS TOTAL
+                                                </Badge>
+                                            )}
+                                        </div>
                                         <div className="flex flex-col items-end gap-1">
                                             <div className="relative">
                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-green-600 font-bold text-xs">+</span>
@@ -435,7 +445,7 @@ export function SalaryDetailsDialog({
                                 ))}
                                 <div className="p-3 px-4 bg-muted/50 flex justify-between items-center border-t border-border/50">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Gross Earnings</span>
-                                    <span className="font-bold text-green-600 tabular-nums">{grossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-bold text-green-600 tabular-nums">{formatCurrency(grossEarnings)}</span>
                                 </div>
                             </div>
                         </div>
@@ -498,7 +508,7 @@ export function SalaryDetailsDialog({
                                 {salary.noPayAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">No Pay Deduction</span>
-                                        <span className="font-bold text-red-600">-{salary.noPayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-bold text-red-600">-{formatCurrency(salary.noPayAmount)}</span>
                                     </div>
                                 )}
                                     <div className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
@@ -590,7 +600,7 @@ export function SalaryDetailsDialog({
                                 {salary.taxAmount > 0 && (
                                     <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
                                         <span className="font-medium text-muted-foreground">Tax Payee</span>
-                                        <span className="font-bold text-red-600">-{salary.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-bold text-red-600">-{formatCurrency(salary.taxAmount)}</span>
                                     </div>
                                 )}
 
@@ -633,7 +643,7 @@ export function SalaryDetailsDialog({
 
                                 <div className="p-3 px-4 bg-muted/50 flex justify-between items-center border-t border-border/50">
                                     <span className="text-xs font-bold uppercase text-muted-foreground">Total Recoveries</span>
-                                    <span className="font-bold text-red-600 tabular-nums">{totalRecoveries.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-bold text-red-600 tabular-nums">{formatCurrency(totalRecoveries)}</span>
                                 </div>
                             </div>
                         </div>
@@ -655,7 +665,7 @@ export function SalaryDetailsDialog({
                                         {salary.otBreakdown.map((ot, idx) => (
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
                                                 <span className="text-muted-foreground">{ot.type} ({ot.hours.toFixed(2)}h)</span>
-                                                <span className="font-medium">+{ot.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                <span className="font-medium">+{formatCurrency(ot.amount)}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -672,7 +682,7 @@ export function SalaryDetailsDialog({
                                                     <span className="font-medium text-emerald-600">{hp.holidayName}</span>
                                                     <span className="text-[9px] text-muted-foreground">{hp.hours.toFixed(2)}h worked</span>
                                                 </div>
-                                                <span className="font-medium text-emerald-600">+{hp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                <span className="font-medium text-emerald-600">+{formatCurrency(hp.amount)}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -683,7 +693,7 @@ export function SalaryDetailsDialog({
                                         {salary.noPayBreakdown.map((np, idx) => (
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
                                                 <span className="text-muted-foreground">{np.type} ({np.count})</span>
-                                                <span className="font-medium text-red-600">-{np.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                <span className="font-medium text-red-600">-{formatCurrency(np.amount)}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -703,7 +713,7 @@ export function SalaryDetailsDialog({
                                                         <IconAlertCircle className="h-2.5 w-2.5 text-orange-400" />
                                                     </span>
                                                 </div>
-                                                <span className="font-black text-red-600">-{adj.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                <span className="font-black text-red-600">-{formatCurrency(adj.amount)}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -821,7 +831,7 @@ export function SalaryDetailsDialog({
                                                     {payment.referenceNo || '-'}
                                                 </td>
                                                 <td className="py-3 pr-4 text-right font-black tabular-nums">
-                                                    {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    {formatCurrency(payment.amount)}
                                                 </td>
                                             </tr>
                                         ))}
@@ -830,7 +840,7 @@ export function SalaryDetailsDialog({
                                         <tr>
                                             <td colSpan={3} className="py-3 pl-4 font-black uppercase tracking-tighter text-green-600 dark:text-green-500">Total Paid</td>
                                             <td className="py-3 pr-4 text-right font-black text-green-700 dark:text-green-400 text-sm">
-                                                {salary.payments.reduce((sum, p) => sum + p.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {formatCurrency(salary.payments.reduce((sum, p) => sum + p.amount, 0))}
                                             </td>
                                         </tr>
                                     </tfoot>

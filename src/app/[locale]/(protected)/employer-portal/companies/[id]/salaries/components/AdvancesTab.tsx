@@ -13,7 +13,7 @@ import { IssueAdvanceDialog } from "./IssueAdvanceDialog";
 import { AdvanceDetailsDialog } from "./AdvanceDetailsDialog";
 import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -90,7 +90,7 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                     <CardContent>
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-foreground tabular-nums">
-                                {totalDisbursed.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                {formatCurrency(totalDisbursed)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Lifetime Issuance</span>
                         </div>
@@ -107,7 +107,7 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                     <CardContent>
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-foreground tabular-nums">
-                                {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                {formatCurrency(totalOutstanding)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">
                                 {activeAdvances} Active Recovery Plans
@@ -126,10 +126,10 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                     <CardContent>
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-foreground tabular-nums">
-                                {advances.reduce((sum: number, adv: any) => {
+                                {formatCurrency(advances.reduce((sum: number, adv: any) => {
                                     const nextDeduction = adv.deductionSchedule?.find((s: any) => !s.isDeducted);
                                     return sum + (nextDeduction?.amount || 0);
-                                }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                }, 0))}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">
                                 Estimated from active schedules
@@ -236,13 +236,13 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium">
-                                                    {advance.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    {formatCurrency(advance.totalAmount)}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <div className="flex flex-col items-center">
                                                         <span className="text-xs font-black tabular-nums">{progress.toFixed(0)}%</span>
                                                         <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter opacity-50">
-                                                            {advance.remainingAmount.toLocaleString()} LKR REM.
+                                                            {formatCurrency(advance.remainingAmount)} LKR REM.
                                                         </span>
                                                     </div>
                                                 </TableCell>
@@ -264,7 +264,7 @@ export function AdvancesTab({ companyId }: { companyId: string }) {
                                                         {!isSettled ? (
                                                             <div className="flex flex-col items-end mr-1">
                                                                 <span className="text-sm font-bold text-foreground tabular-nums">
-                                                                    {advance.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                    {formatCurrency(advance.remainingAmount)}
                                                                 </span>
                                                             </div>
                                                         ) : (
