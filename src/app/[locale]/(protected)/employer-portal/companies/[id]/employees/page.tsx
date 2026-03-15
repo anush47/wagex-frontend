@@ -117,6 +117,7 @@ export default function EmployeesListPage({ params }: { params: Promise<{ id: st
                                 <SelectItem value="ACTIVE">Active Only</SelectItem>
                                 <SelectItem value="INACTIVE">Inactive Only</SelectItem>
                                 <SelectItem value="SUSPENDED">Suspended Only</SelectItem>
+                                <SelectItem value="DELETED">Deleted Only</SelectItem>
                                 <SelectItem value="ALL">All Employees</SelectItem>
                             </SelectContent>
                         </Select>

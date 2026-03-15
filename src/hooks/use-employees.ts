@@ -107,8 +107,8 @@ export const useEmployeeMutations = () => {
     });
 
     const deleteEmployee = useMutation({
-        mutationFn: async (id: string) => {
-            const response = await EmployeeService.deleteEmployee(id);
+        mutationFn: async ({ id, companyId }: { id: string; companyId?: string }) => {
+            const response = await EmployeeService.deleteEmployee(id, companyId);
             if (response.error) throw new Error(response.error.message);
             return response.data;
         },

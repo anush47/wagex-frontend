@@ -16,7 +16,8 @@ import {
     IconLoader2,
     IconArrowLeft,
     IconChevronRight,
-    IconUserBolt
+    IconUserBolt,
+    IconAlertTriangle
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
@@ -30,6 +31,7 @@ import { EmployeeGeneralTab } from "./components/EmployeeGeneralTab";
 import { EmployeePoliciesTab } from "./components/EmployeePoliciesTab";
 import { EmployeeAccountTab } from "./components/EmployeeAccountTab";
 import { EmployeeFilesTab } from "./components/EmployeeFilesTab";
+import { EmployeeDangerZone } from "./components/EmployeeDangerZone";
 import { useEmployee, useEmployeeMutations, useEmployees } from "@/hooks/use-employees";
 import { useEffectivePolicy, usePolicyMutations, useCompanyPolicy } from "@/hooks/use-policies";
 import { useDepartments } from "@/hooks/use-departments";
@@ -49,7 +51,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     const { data: empsResp, isLoading: empsLoading } = useEmployees({ companyId });
 
     const departments = deptsResp || [];
-    const { updateEmployee } = useEmployeeMutations();
+    const { updateEmployee, deleteEmployee } = useEmployeeMutations();
     const { savePolicy, deletePolicy } = usePolicyMutations();
 
     // Local State for Forms
@@ -119,6 +121,11 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
             console.error("Failed to save changes", error);
             toast.error("Failed to save changes");
         }
+    };
+
+    const handleDeleteEmployee = async () => {
+        await deleteEmployee.mutateAsync({ id: employeeId, companyId });
+        // The EmployeeDangerZone component handles its own navigation
     };
 
     const saving = updateEmployee.isPending;
@@ -212,6 +219,13 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                         <IconFiles className="w-4 h-4" />
                         Documents
                     </TabsTrigger>
+                    <TabsTrigger
+                        value="danger-zone"
+                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-red-200 dark:border-red-900/50 data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg shadow-red-500/20 data-[state=active]:border-red-600 bg-transparent hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400"
+                    >
+                        <IconAlertTriangle className="w-4 h-4" />
+                        Danger Zone
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="general" className="mt-0">
@@ -259,6 +273,15 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     <EmployeeFilesTab
                         formData={employeeForm}
                         handleChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
+                    />
+                </TabsContent>
+
+                <TabsContent value="danger-zone" className="mt-0">
+                    <EmployeeDangerZone
+                        employee={employeeForm}
+                        onEmployeeDeleted={() => {
+                            router.push(`/employer-portal/companies/${companyId}/employees`);
+                        }}
                     />
                 </TabsContent>
             </Tabs>

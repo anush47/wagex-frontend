@@ -77,7 +77,9 @@ export const EmployeeService = {
     /**
      * Delete employee
      */
-    async deleteEmployee(id: string): Promise<ApiResponse<void>> {
-        return backendApiClient.delete<void>(`/employees/${id}`);
+    async deleteEmployee(id: string, companyId?: string): Promise<ApiResponse<{ message: string; softDeleted: boolean }>> {
+        const params = new URLSearchParams();
+        if (companyId) params.append('companyId', companyId);
+        return backendApiClient.delete<{ message: string; softDeleted: boolean }>(`/employees/${id}?${params.toString()}`);
     }
 };

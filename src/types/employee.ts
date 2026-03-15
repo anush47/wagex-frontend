@@ -4,7 +4,8 @@ import { CompanyFile } from "./company";
 export enum EmployeeStatus {
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',
-    SUSPENDED = 'SUSPENDED'
+    SUSPENDED = 'SUSPENDED',
+    DELETED = 'DELETED'
 }
 
 export interface Employee {

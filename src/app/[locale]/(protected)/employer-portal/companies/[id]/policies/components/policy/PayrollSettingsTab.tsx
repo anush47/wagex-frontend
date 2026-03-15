@@ -668,6 +668,9 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                             { status: OvertimeDayType.HALF_DAY, label: "Half Day", defaultStart: 360 },
                                             { status: OvertimeDayType.OFF_DAY, label: "Off Day", defaultStart: 0 }
                                         ].map((defaultType) => {
+                                            // Only show "Affect Total Earnings" for Off Day
+                                            const showAffectToggle = defaultType.status === OvertimeDayType.OFF_DAY;
+                                            
                                             const ruleIdx = (config.otRules || []).findIndex(r => r.dayStatus === defaultType.status && !r.isHoliday);
                                             let rule = ruleIdx !== -1 ? config.otRules![ruleIdx] : null;
 
@@ -709,6 +712,20 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    
+                                                    {showAffectToggle && (
+                                                        <div className="flex items-center justify-between px-3 py-2 bg-muted/20 rounded-xl border border-border/50">
+                                                            <div className="flex items-center gap-2">
+                                                                <Label className="text-[10px] text-muted-foreground uppercase font-bold">Affect Total Earnings</Label>
+                                                                <Badge variant="outline" className="text-[8px] h-4 px-1">For EPF/ETF Base</Badge>
+                                                            </div>
+                                                            <Switch
+                                                                checked={rule?.affectTotalEarnings ?? true}
+                                                                onCheckedChange={(v) => updateRule({ affectTotalEarnings: v })}
+                                                                className="scale-75"
+                                                            />
+                                                        </div>
+                                                    )}
                                                     
                                                     <div className="space-y-3">
                                                             {/* Tiers List */}
@@ -866,7 +883,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                             <div className="space-y-1.5">
                                                                 <Label className="text-[10px] text-muted-foreground uppercase font-bold">Start OT At</Label>
                                                                 <div className="flex items-center gap-2">
-                                                                    <Input 
+                                                                    <Input
                                                                         type="number"
                                                                         value={rule.startAfterMinutes}
                                                                         onChange={(e) => {
@@ -883,7 +900,7 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                             <div className="space-y-1.5">
                                                                 <Label className="text-[10px] text-muted-foreground uppercase font-bold">Base Rate</Label>
                                                                 <div className="flex items-center gap-2">
-                                                                    <Input 
+                                                                    <Input
                                                                         type="number"
                                                                         step="0.1"
                                                                         value={rule.tiers[0].multiplier}
@@ -898,6 +915,21 @@ export function PayrollSettingsTab({ value, onChange }: PayrollSettingsTabProps)
                                                                         className="h-8 text-xs font-bold rounded-lg text-right text-primary"
                                                                     />
                                                                     <span className="text-[10px] text-primary font-bold">x</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-1.5 pt-2 border-t border-border">
+                                                                <div className="flex items-center justify-between">
+                                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Affect Total Earnings</Label>
+                                                                    <Switch
+                                                                        checked={rule.affectTotalEarnings ?? true}
+                                                                        onCheckedChange={(v) => {
+                                                                            const newRules = [...(config.otRules || [])];
+                                                                            const globalIdx = newRules.findIndex(r => r.id === rule.id);
+                                                                            newRules[globalIdx] = { ...rule, affectTotalEarnings: v };
+                                                                            handleChange("otRules", newRules);
+                                                                        }}
+                                                                        className="scale-75"
+                                                                    />
                                                                 </div>
                                                             </div>
                                                         </div>

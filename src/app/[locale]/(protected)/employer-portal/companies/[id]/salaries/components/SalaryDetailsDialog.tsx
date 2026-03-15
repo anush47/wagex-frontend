@@ -35,6 +35,8 @@ import {
     IconCheck,
     IconAlertCircle,
     IconClockStop,
+    IconGift,
+    IconChevronDown,
 } from "@tabler/icons-react";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
@@ -361,6 +363,33 @@ export function SalaryDetailsDialog({
                                     )}
                                 </div>
 
+                                {/* Holiday Pay Section */}
+                                {salary.holidayPayAmount > 0 && (
+                                    <div className="space-y-2 pt-2 border-t border-border">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <IconGift className="h-3.5 w-3.5 text-emerald-600" />
+                                                <span className="font-medium text-muted-foreground flex items-center gap-2">
+                                                    Holiday Pay
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-emerald-600">+{salary.holidayPayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                <IconChevronDown className="h-3 w-3 text-muted-foreground" />
+                                            </div>
+                                        </div>
+                                        {salary.holidayPayBreakdown?.map((hp, idx) => (
+                                            <div key={idx} className="flex justify-between items-center text-xs px-2 py-1 bg-muted/30 rounded">
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-emerald-600">{hp.holidayName}</span>
+                                                    <span className="text-[9px] text-muted-foreground">{hp.hours.toFixed(2)}h worked</span>
+                                                </div>
+                                                <span className="font-medium text-emerald-600">+{hp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                                 {additions.map((comp, idx) => (
                                     <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                         <Input
@@ -622,12 +651,28 @@ export function SalaryDetailsDialog({
                                     <div className="space-y-2">
                                         <div className="flex justify-between border-b pb-1">
                                             <span className="text-[10px] font-bold uppercase text-muted-foreground">OT Breakdown</span>
-                                            <span className="text-[10px] font-black text-blue-600 uppercase">Rate Multiplier</span>
                                         </div>
                                         {salary.otBreakdown.map((ot, idx) => (
                                             <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
-                                                <span className="text-muted-foreground">{ot.type} OT ({ot.hours.toFixed(2)}h)</span>
+                                                <span className="text-muted-foreground">{ot.type} ({ot.hours.toFixed(2)}h)</span>
                                                 <span className="font-medium">+{ot.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {salary.holidayPayBreakdown?.length > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between border-b pb-1">
+                                            <span className="text-[10px] font-bold uppercase text-muted-foreground">Holiday Pay Breakdown</span>
+                                            <span className="text-[10px] font-black text-emerald-600 uppercase">Holiday Premium</span>
+                                        </div>
+                                        {salary.holidayPayBreakdown.map((hp, idx) => (
+                                            <div key={idx} className="flex justify-between text-xs py-1 border-b border-border/50 last:border-0">
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-emerald-600">{hp.holidayName}</span>
+                                                    <span className="text-[9px] text-muted-foreground">{hp.hours.toFixed(2)}h worked</span>
+                                                </div>
+                                                <span className="font-medium text-emerald-600">+{hp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                             </div>
                                         ))}
                                     </div>

@@ -153,6 +153,7 @@ export interface OvertimeRule {
     otEnabled: boolean;
     startAfterMinutes: number;
     tiers: OvertimeTier[];
+    affectTotalEarnings?: boolean;
 }
 
 export interface PayrollSettingsConfig {

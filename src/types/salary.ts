@@ -44,6 +44,14 @@ export interface OTBreakdownItem {
     amount: number;
 }
 
+export interface HolidayPayBreakdownItem {
+    holidayName: string;
+    holidayDate: string;
+    hours: number;
+    amount: number;
+    affectTotalEarnings: boolean;
+}
+
 export interface NoPayBreakdownItem {
     type: 'ABSENCE' | 'UNPAID_LEAVE';
     count: number;
@@ -66,6 +74,8 @@ export interface Salary {
     basicSalary: number;
     otAmount: number;
     otBreakdown: OTBreakdownItem[];
+    holidayPayAmount: number;
+    holidayPayBreakdown: HolidayPayBreakdownItem[];
     noPayAmount: number;
     noPayBreakdown: NoPayBreakdownItem[];
     taxAmount: number;
