@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Shift } from "@/types/policy";
 import { IconClock, IconCalendarTime, IconSettings, IconAlertCircle, IconSparkles, IconLogout } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 interface ShiftEditDialogProps {
     open: boolean;
@@ -34,7 +35,7 @@ export function ShiftEditDialog({ open, onOpenChange, initialData, onSave }: Shi
 
     useEffect(() => {
         if (open) {
-            setFormData(initialData ? { ...DEFAULT_SHIFT, ...initialData } : { ...DEFAULT_SHIFT, id: crypto.randomUUID() });
+            setFormData(initialData ? { ...DEFAULT_SHIFT, ...initialData } : { ...DEFAULT_SHIFT, id: uuidv4() });
         }
     }, [open, initialData]);
 

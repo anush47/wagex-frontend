@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { PayrollComponent, PayrollComponentCategory, PayrollComponentType, PayrollComponentSystemType } from "@/types/policy";
 import { IconCoin, IconCalculator, IconScale, IconShieldCheck, IconSettings } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 interface PayrollComponentDialogProps {
     open: boolean;
@@ -39,7 +40,7 @@ export function PayrollComponentDialog({ open, onOpenChange, category, initialDa
         if (open) {
             setFormData(initialData ? { ...initialData } : {
                 ...DEFAULT_COMPONENT,
-                id: crypto.randomUUID(),
+                id: uuidv4(),
                 category: category,
             } as PayrollComponent);
         }
