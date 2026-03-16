@@ -87,6 +87,9 @@ export default function SalariesPage() {
                             startDate: searchParams.get('startDate'),
                             endDate: searchParams.get('endDate'),
                             status: searchParams.get('status'),
+                            search: searchParams.get('search'),
+                            month: searchParams.get('month'),
+                            year: searchParams.get('year'),
                         }}
                         onFilterChange={handleFilterChange}
                         onGenerateClick={() => setGenerateDialogOpen(true)}

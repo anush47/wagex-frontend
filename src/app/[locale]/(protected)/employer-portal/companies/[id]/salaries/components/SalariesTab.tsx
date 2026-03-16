@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
-import { IconSeparator, IconTrash, IconCheck, IconFilter, IconChevronRight, IconChevronLeft, IconX, IconRefresh, IconWallet, IconCash, IconPlus, IconCalendarTime } from "@tabler/icons-react";
+import { IconSeparator, IconTrash, IconCheck, IconFilter, IconChevronRight, IconChevronLeft, IconX, IconRefresh, IconWallet, IconCash, IconPlus, IconCalendarTime, IconSearch } from "@tabler/icons-react";
+import { Input } from "@/components/ui/input";
 import { useSalaries } from "@/hooks/use-salaries";
 import { usePayments } from "@/hooks/use-payments";
 import { SalaryStatus, Salary } from "@/types/salary";
@@ -51,6 +52,39 @@ export function SalariesTab({
     const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [initialPayIds, setInitialPayIds] = useState<string[]>([]);
+    const [localSearch, setLocalSearch] = useState(filters.search || "");
+    const [localYear, setLocalYear] = useState(filters.year || "");
+
+    // Sync local state with incoming filters (for reset or external changes)
+    useEffect(() => {
+        setLocalSearch(filters.search || "");
+    }, [filters.search]);
+
+    useEffect(() => {
+        setLocalYear(filters.year || "");
+    }, [filters.year]);
+
+    // Debounce search update
+    useEffect(() => {
+        if (localSearch === (filters.search || "")) return;
+        const timer = setTimeout(() => {
+            onFilterChange({ search: localSearch || undefined });
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [localSearch]);
+
+    // Debounce year update
+    useEffect(() => {
+        if (localYear === (filters.year || "")) return;
+        const timer = setTimeout(() => {
+            onFilterChange({ 
+                year: localYear || undefined,
+                startDate: undefined,
+                endDate: undefined
+            });
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [localYear]);
 
     const { salariesQuery, updateSalaryMutation, approveSalaryMutation, deleteSalaryMutation, createPaymentMutation } = useSalaries({
         companyId,
@@ -208,47 +242,123 @@ export function SalariesTab({
                     </div>
 
                     {showFilters && (
-                        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 pt-4 border-t mt-4">
-                            <SalaryPeriodQuickSelect
-                                companyId={companyId}
-                                onRangeSelect={(start, end) => onFilterChange({ startDate: start, endDate: end })}
-                                currentStart={filters.startDate}
-                                currentEnd={filters.endDate}
-                            />
-                            <div className="w-full md:w-[200px]">
-                                <SearchableEmployeeSelect
-                                    companyId={companyId}
-                                    value={filters.employeeId}
-                                    onSelect={(id) => onFilterChange({ employeeId: id })}
-                                    placeholder="Filter Employee"
-                                />
-                            </div>
-                            <Select
-                                value={filters.status || "ALL"}
-                                onValueChange={(v) => onFilterChange({ status: v === "ALL" ? undefined : v })}
-                            >
-                                <SelectTrigger className="w-full md:w-[150px]">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All Status</SelectItem>
-                                    <SelectItem value="DRAFT">Draft</SelectItem>
-                                    <SelectItem value="APPROVED">Approved</SelectItem>
-                                    <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
-                                    <SelectItem value="PAID">Paid</SelectItem>
-                                </SelectContent>
-                            </Select>
-
-                            {(filters.employeeId || filters.status || filters.startDate) && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => onFilterChange({ employeeId: undefined, status: undefined, startDate: undefined, endDate: undefined })}
-                                    title="Clear filters"
+                        <div className="flex flex-col gap-4 pt-4 border-t mt-4">
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+                                <div className="relative w-full md:w-[300px]">
+                                    <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                                    <Input 
+                                        placeholder="Search remarks, employee..." 
+                                        className="pl-10 h-10 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
+                                        value={localSearch}
+                                        onChange={(e) => setLocalSearch(e.target.value)}
+                                    />
+                                    {localSearch && (
+                                        <button 
+                                            onClick={() => {
+                                                setLocalSearch("");
+                                                onFilterChange({ search: undefined });
+                                            }}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                                        >
+                                            <IconX className="h-3 w-3" />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="w-full md:w-[200px]">
+                                    <SearchableEmployeeSelect
+                                        companyId={companyId}
+                                        value={filters.employeeId}
+                                        onSelect={(id) => onFilterChange({ employeeId: id })}
+                                        placeholder="Filter Employee"
+                                    />
+                                </div>
+                                <Select
+                                    value={filters.status || "ALL"}
+                                    onValueChange={(v) => onFilterChange({ status: v === "ALL" ? undefined : v })}
                                 >
-                                    <IconX className="h-4 w-4" />
-                                </Button>
-                            )}
+                                    <SelectTrigger className="w-full md:w-[150px]">
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">All Status</SelectItem>
+                                        <SelectItem value="DRAFT">Draft</SelectItem>
+                                        <SelectItem value="APPROVED">Approved</SelectItem>
+                                        <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
+                                        <SelectItem value="PAID">Paid</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+                                <SalaryPeriodQuickSelect
+                                    companyId={companyId}
+                                    onRangeSelect={(start, end) => onFilterChange({ startDate: start, endDate: end, month: undefined, year: undefined })}
+                                    currentStart={filters.startDate}
+                                    currentEnd={filters.endDate}
+                                />
+                                
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase text-neutral-400">OR</span>
+                                    <Select 
+                                        value={filters.month || "ALL"} 
+                                        onValueChange={(v) => onFilterChange({ month: v === "ALL" ? undefined : v, startDate: undefined, endDate: undefined })}
+                                    >
+                                        <SelectTrigger className="h-10 w-full md:w-[130px] rounded-xl border-neutral-200 dark:border-neutral-800 font-bold text-xs">
+                                            <SelectValue placeholder="Month" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl">
+                                            <SelectItem value="ALL" className="font-bold text-xs">All Months</SelectItem>
+                                            <SelectItem value="1" className="font-bold text-xs">January</SelectItem>
+                                            <SelectItem value="2" className="font-bold text-xs">February</SelectItem>
+                                            <SelectItem value="3" className="font-bold text-xs">March</SelectItem>
+                                            <SelectItem value="4" className="font-bold text-xs">April</SelectItem>
+                                            <SelectItem value="5" className="font-bold text-xs">May</SelectItem>
+                                            <SelectItem value="6" className="font-bold text-xs">June</SelectItem>
+                                            <SelectItem value="7" className="font-bold text-xs">July</SelectItem>
+                                            <SelectItem value="8" className="font-bold text-xs">August</SelectItem>
+                                            <SelectItem value="9" className="font-bold text-xs">September</SelectItem>
+                                            <SelectItem value="10" className="font-bold text-xs">October</SelectItem>
+                                            <SelectItem value="11" className="font-bold text-xs">November</SelectItem>
+                                            <SelectItem value="12" className="font-bold text-xs">December</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    <div className="relative w-full md:w-[100px]">
+                                        <Input
+                                            type="number"
+                                            placeholder="Year"
+                                            min={1900}
+                                            max={2500}
+                                            className="h-10 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
+                                            value={localYear}
+                                            onChange={(e) => setLocalYear(e.target.value)}
+                                        />
+                                        {filters.year && (
+                                            <span className="absolute -top-6 left-0 text-[10px] font-black uppercase text-neutral-400">Year</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {(filters.employeeId || filters.status || filters.startDate || filters.search || filters.month || filters.year) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => onFilterChange({ 
+                                            employeeId: undefined, 
+                                            status: undefined, 
+                                            startDate: undefined, 
+                                            endDate: undefined,
+                                            search: undefined,
+                                            month: undefined,
+                                            year: undefined
+                                        })}
+                                        title="Clear filters"
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        <IconX className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     )}
                 </CardHeader>

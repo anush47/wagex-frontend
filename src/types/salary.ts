@@ -171,6 +171,9 @@ export interface SalaryQueryParams {
     limit?: number;
     excludeEpf?: boolean;
     excludeEtf?: boolean;
+    search?: string;
+    month?: number;
+    year?: number;
 }
 
 export interface AdvanceQueryParams {

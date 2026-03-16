@@ -47,6 +47,7 @@ export interface EpfQuery {
   companyId?: string;
   month?: number;
   year?: number;
+  search?: string;
 }
 
 export interface EtfQuery {
@@ -55,6 +56,7 @@ export interface EtfQuery {
   companyId?: string;
   month?: number;
   year?: number;
+  search?: string;
 }
 
 export interface EpfPreviewItem {

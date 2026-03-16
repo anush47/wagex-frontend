@@ -11,6 +11,7 @@ export class EtfService {
     if (params.year) searchParams.append('year', params.year.toString());
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());
+    if (params.search) searchParams.append('search', params.search);
 
     return backendApiClient.get<PaginatedResponse<EtfRecord>>(`/companies/${params.companyId}/etf?${searchParams.toString()}`);
   }

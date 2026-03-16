@@ -164,6 +164,9 @@ export function GenerateSalaryDialog({
                 companyId,
                 periodStartDate: period.start,
                 periodEndDate: period.end,
+                attendanceStartDate: period.attendanceStart,
+                attendanceEndDate: period.attendanceEnd,
+                payDate: period.payDay,
                 employeeIds: selectedEmployees,
             });
             setPreviewData(data);

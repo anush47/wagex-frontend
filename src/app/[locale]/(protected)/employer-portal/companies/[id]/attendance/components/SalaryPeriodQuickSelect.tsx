@@ -9,10 +9,9 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { IconCalendarStats, IconCheck, IconChevronDown } from "@tabler/icons-react";
-import { Popover as PopoverPrimitive } from "radix-ui";
 import { useCompanyPolicy, useEffectivePolicy } from "@/hooks/use-policies";
 import { format, subMonths, startOfMonth, endOfMonth, setDate, addDays, getYear, isSameMonth, subWeeks, startOfWeek, endOfWeek, isWithinInterval, getDate } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -240,7 +239,7 @@ export function SalaryPeriodQuickSelect({
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
@@ -277,14 +276,13 @@ export function SalaryPeriodQuickSelect({
                     <IconChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverPrimitive.Content
+            <PopoverContent
                 className="w-[300px] p-0 rounded-2xl shadow-xl border border-border/60 bg-white dark:bg-neutral-900 z-[100] outline-none"
                 align="start"
                 side="bottom"
                 sideOffset={8}
                 onWheel={(e) => e.stopPropagation()}
                 onPointerDownCapture={(e) => e.stopPropagation()}
-                avoidCollisions={true}
             >
                 <Command className="rounded-2xl border-none">
                     <CommandInput placeholder="Search month or year..." className="h-11 text-xs" />
@@ -364,7 +362,7 @@ export function SalaryPeriodQuickSelect({
                         </CommandGroup>
                     </CommandList>
                 </Command>
-            </PopoverPrimitive.Content>
+            </PopoverContent>
         </Popover>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -16,7 +16,11 @@ import {
     IconFileText, 
     IconDownload, 
     IconChevronRight,
-    IconRefresh
+    IconRefresh,
+    IconSearch, 
+    IconChevronLeft,
+    IconInfoCircle,
+    IconX
 } from "@tabler/icons-react";
 import { useEpf } from "@/hooks/use-statutory";
 import { useParams } from "next/navigation";
@@ -27,30 +31,66 @@ import { EpfDetailsDialog } from "./EpfDetailsDialog";
 import { EpfRecord } from "@/types/statutory";
 import { toast } from "sonner";
 
-const months = [
+const monthsNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
 ];
 
+
+
+import { Input } from "@/components/ui/input";
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
 export const EpfTab = () => {
     const params = useParams();
     const companyId = params.id as string;
-    const [filters, setFilters] = useState({
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-    });
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [month, setMonth] = useState<string>("ALL");
+    const [year, setYear] = useState<string>("ALL");
+    const [debouncedYear, setDebouncedYear] = useState<string>("ALL");
+    const [page, setPage] = useState(1);
+    
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Debounce year
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedYear(year);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [year]);
+ 
     const [isGenerateOpen, setIsGenerateOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<EpfRecord | null>(null);
 
     const { epfRecordsQuery, deleteEpfMutation } = useEpf({
         companyId,
-        month: filters.month,
-        year: filters.year,
+        month: month === "ALL" ? undefined : parseInt(month),
+        year: debouncedYear === "ALL" || !debouncedYear ? undefined : parseInt(debouncedYear),
+        search: debouncedSearch || undefined,
+        page,
+        limit: 10,
     });
 
     const records = epfRecordsQuery.data?.items || [];
+    const totalRecords = epfRecordsQuery.data?.total || 0;
+    const totalPages = Math.ceil(totalRecords / 10);
 
-    const getMonthName = (m: number) => months[m - 1];
+    const getMonthName = (m: number) => monthsNames[m - 1];
 
     return (
         <div className="flex flex-col gap-6">
@@ -69,27 +109,114 @@ export const EpfTab = () => {
             </div>
 
             <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
-                <CardHeader className="border-b border-neutral-100 dark:border-neutral-800">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                                <IconFileText className="h-5 w-5" />
+                <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-6">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                    <IconFileText className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-xl font-bold tracking-tight text-foreground">EPF History</CardTitle>
+                                    <p className="text-xs font-medium text-muted-foreground">View and search past submissions.</p>
+                                </div>
                             </div>
-                            <div>
-                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">EPF History</CardTitle>
-                                <p className="text-xs font-medium text-muted-foreground">Select period to view past submissions.</p>
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    size="icon" 
+                                    className="rounded-xl h-10 w-10"
+                                    onClick={() => epfRecordsQuery.refetch()}
+                                    disabled={epfRecordsQuery.isFetching}
+                                >
+                                    <IconRefresh className={`h-4 w-4 ${epfRecordsQuery.isFetching ? 'animate-spin' : ''}`} />
+                                </Button>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button 
-                                variant="outline" 
-                                size="icon" 
-                                className="rounded-xl h-10 w-10"
-                                onClick={() => epfRecordsQuery.refetch()}
-                                disabled={epfRecordsQuery.isFetching}
+
+                        <div className="flex flex-col md:flex-row items-center gap-3">
+                            <div className="relative w-full md:w-[300px]">
+                                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                                <Input 
+                                    placeholder="Search ref, remarks, period..." 
+                                    className="pl-10 h-11 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        setPage(1);
+                                    }}
+                                />
+                                {search && (
+                                    <button 
+                                        onClick={() => setSearch("")}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                                    >
+                                        <IconX className="h-3 w-3" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <Select 
+                                value={month} 
+                                onValueChange={(v) => {
+                                    setMonth(v);
+                                    setPage(1);
+                                }}
                             >
-                                <IconRefresh className={`h-4 w-4 ${epfRecordsQuery.isFetching ? 'animate-spin' : ''}`} />
-                            </Button>
+                                <SelectTrigger className="h-11 w-full md:w-[150px] rounded-xl border-neutral-200 dark:border-neutral-800 font-bold text-xs">
+                                    <SelectValue placeholder="Month" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem value="ALL" className="font-bold text-xs">All Months</SelectItem>
+                                    {monthsNames.map((m, i) => (
+                                        <SelectItem key={m} value={(i + 1).toString()} className="font-bold text-xs">
+                                            {m}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <div className="relative w-full md:w-[120px]">
+                                <Input
+                                    type="number"
+                                    placeholder="Year"
+                                    min={1900}
+                                    max={2500}
+                                    className="h-11 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
+                                    value={year === "ALL" ? "" : year}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === "") {
+                                            setYear("ALL");
+                                        } else {
+                                            const num = parseInt(val);
+                                            if (!isNaN(num)) {
+                                                setYear(val);
+                                            }
+                                        }
+                                        setPage(1);
+                                    }}
+                                />
+                                {year !== "ALL" && (
+                                    <span className="absolute -top-6 left-0 text-[10px] font-black uppercase text-neutral-400">Year Filter</span>
+                                )}
+                            </div>
+
+                            {(search || month !== "ALL" || year !== "ALL") && (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-11 px-4 font-black text-[10px] uppercase text-neutral-500 hover:text-primary rounded-xl"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setMonth("ALL");
+                                        setYear("ALL");
+                                        setPage(1);
+                                    }}
+                                >
+                                    Clear Filters
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </CardHeader>
@@ -166,6 +293,34 @@ export const EpfTab = () => {
                             </Table>
                         </div>
                     )}
+
+                    {totalPages > 1 && (
+                        <div className="px-6 py-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/30 dark:bg-neutral-900/30">
+                            <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest">
+                                Page {page} of {totalPages} ({totalRecords} total)
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-9 p-0 rounded-xl border-neutral-200 dark:border-neutral-800"
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                >
+                                    <IconChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-9 p-0 rounded-xl border-neutral-200 dark:border-neutral-800"
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                >
+                                    <IconChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -194,7 +349,3 @@ export const EpfTab = () => {
     );
 };
 
-// Utility function to merge tailwind classes
-function cn(...classes: any[]) {
-    return classes.filter(Boolean).join(" ");
-}
