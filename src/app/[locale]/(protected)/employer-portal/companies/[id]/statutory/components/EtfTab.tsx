@@ -19,7 +19,8 @@ import {
     IconSearch, 
     IconChevronLeft,
     IconInfoCircle,
-    IconX
+    IconX,
+    IconTrash
 } from "@tabler/icons-react";
 import { useEtf } from "@/hooks/use-statutory";
 import { useParams } from "next/navigation";
@@ -29,6 +30,7 @@ import { GenerateEtfDialog } from "./GenerateEtfDialog";
 import { EtfDetailsDialog } from "./EtfDetailsDialog";
 import { EtfRecord } from "@/types/statutory";
 import { toast } from "sonner";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const monthsNames = [
     "January", "February", "March", "April", "May", "June",
@@ -75,6 +77,8 @@ export const EtfTab = () => {
 
     const [isGenerateOpen, setIsGenerateOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<EtfRecord | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
 
     const { etfRecordsQuery, deleteEtfMutation } = useEtf({
         companyId,
@@ -323,15 +327,33 @@ export const EtfTab = () => {
                 onOpenChange={(open) => !open && setSelectedRecord(null)}
                 record={selectedRecord}
                 onDelete={(id) => {
-                    if (confirm("Are you sure you want to delete this ETF record?")) {
-                        deleteEtfMutation.mutate(id, {
+                    setRecordToDelete(id);
+                    setIsDeleteDialogOpen(true);
+                }}
+            />
+
+            <ConfirmationDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title="Delete ETF Record"
+                description="This action cannot be undone. This record and its associated data will be permanently removed."
+                icon={<IconTrash className="h-8 w-8 text-red-500" />}
+                actionLabel="Delete Record"
+                cancelLabel="Cancel"
+                onAction={() => {
+                    if (recordToDelete) {
+                        deleteEtfMutation.mutate(recordToDelete, {
                             onSuccess: () => {
+                                setIsDeleteDialogOpen(false);
+                                setRecordToDelete(null);
                                 setSelectedRecord(null);
                                 toast.success("Record deleted successfully");
                             }
                         });
                     }
                 }}
+                variant="destructive"
+                loading={deleteEtfMutation.isPending}
             />
         </div>
     );

@@ -188,5 +188,8 @@ export interface SalaryPreviewDto {
     companyId: string;
     periodStartDate: string;
     periodEndDate: string;
+    attendanceStartDate?: string;
+    attendanceEndDate?: string;
+    payDate?: string;
     employeeIds?: string[];
 }

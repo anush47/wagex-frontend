@@ -20,7 +20,8 @@ import {
     IconSearch, 
     IconChevronLeft,
     IconInfoCircle,
-    IconX
+    IconX,
+    IconTrash
 } from "@tabler/icons-react";
 import { useEpf } from "@/hooks/use-statutory";
 import { useParams } from "next/navigation";
@@ -30,6 +31,7 @@ import { GenerateEpfDialog } from "./GenerateEpfDialog";
 import { EpfDetailsDialog } from "./EpfDetailsDialog";
 import { EpfRecord } from "@/types/statutory";
 import { toast } from "sonner";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const monthsNames = [
     "January", "February", "March", "April", "May", "June",
@@ -76,6 +78,8 @@ export const EpfTab = () => {
  
     const [isGenerateOpen, setIsGenerateOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<EpfRecord | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
 
     const { epfRecordsQuery, deleteEpfMutation } = useEpf({
         companyId,
@@ -335,15 +339,33 @@ export const EpfTab = () => {
                 onOpenChange={(open) => !open && setSelectedRecord(null)}
                 record={selectedRecord}
                 onDelete={(id) => {
-                    if (confirm("Are you sure you want to delete this EPF record?")) {
-                        deleteEpfMutation.mutate(id, {
+                    setRecordToDelete(id);
+                    setIsDeleteDialogOpen(true);
+                }}
+            />
+
+            <ConfirmationDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title="Delete EPF Record"
+                description="This action cannot be undone. This record and its associated data will be permanently removed."
+                icon={<IconTrash className="h-8 w-8 text-red-500" />}
+                actionLabel="Delete Record"
+                cancelLabel="Cancel"
+                onAction={() => {
+                    if (recordToDelete) {
+                        deleteEpfMutation.mutate(recordToDelete, {
                             onSuccess: () => {
+                                setIsDeleteDialogOpen(false);
+                                setRecordToDelete(null);
                                 setSelectedRecord(null);
                                 toast.success("Record deleted successfully");
                             }
                         });
                     }
                 }}
+                variant="destructive"
+                loading={deleteEpfMutation.isPending}
             />
         </div>
     );
