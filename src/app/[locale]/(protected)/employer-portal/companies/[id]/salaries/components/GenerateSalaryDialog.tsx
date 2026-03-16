@@ -539,7 +539,7 @@ export function GenerateSalaryDialog({
                                 </div>
                             </div>
 
-                            {hasExistingSalaries ? (
+                            {hasConflicts ? (
                                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex gap-3 items-start">
                                     <IconAlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
@@ -718,9 +718,9 @@ export function GenerateSalaryDialog({
 
                     {step === "VALIDATION" && (
                         <Button
-                            disabled={hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR')))}
+                            disabled={hasConflicts || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR')))}
                             onClick={() => setStep("PREVIEW")}
-                            className="w-full md:w-auto"
+                            className="w-full md:w-auto shadow-lg shadow-primary/20 font-bold"
                         >
                             Proceed to Preview <IconArrowRight className="ml-2 h-4 w-4" />
                         </Button>
