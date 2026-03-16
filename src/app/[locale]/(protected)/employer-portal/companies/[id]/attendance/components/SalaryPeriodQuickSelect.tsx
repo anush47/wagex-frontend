@@ -13,16 +13,44 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { IconCalendarStats, IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useCompanyPolicy, useEffectivePolicy } from "@/hooks/use-policies";
-import { format, subMonths, startOfMonth, endOfMonth, setDate, addDays, getYear, isSameMonth, subWeeks, startOfWeek, endOfWeek, isWithinInterval, getDate } from "date-fns";
+import {
+    format,
+    subMonths,
+    startOfMonth,
+    endOfMonth,
+    setDate,
+    addDays,
+    getYear,
+    isSameMonth,
+    subWeeks,
+    startOfWeek,
+    endOfWeek,
+    isWithinInterval,
+    getDate,
+    subDays,
+    addWeeks,
+    differenceInCalendarWeeks,
+    isSameDay,
+} from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { PayCycleFrequency, Policy } from "@/types/policy";
 import { cn } from "@/lib/utils";
-import { subDays } from "date-fns";
 
 const DEFAULT_PAYROLL_CONFIG = {
     frequency: PayCycleFrequency.MONTHLY,
     runDay: "LAST",
-    cutoffDaysBeforePayDay: 5
+    runDayAnchor: undefined as string | undefined,
+    cutoffDaysBeforePayDay: 5,
+};
+
+const DAY_MAP: Record<string, number> = {
+    SUN: 0,
+    MON: 1,
+    TUE: 2,
+    WED: 3,
+    THU: 4,
+    FRI: 5,
+    SAT: 6,
 };
 
 interface SalaryPeriodQuickSelectProps {
@@ -44,20 +72,26 @@ export function SalaryPeriodQuickSelect({
     currentEnd,
     timezone = "UTC",
     manualPolicy,
-    className
+    className,
 }: SalaryPeriodQuickSelectProps) {
     const [open, setOpen] = useState(false);
     const { data: defaultPolicy, isLoading: isLoadingDefault } = useCompanyPolicy(companyId);
-    const { data: effectiveData, isLoading: isLoadingEffective } = useEffectivePolicy(employeeId || null);
+    const {
+        data: effectiveData,
+        isLoading: isLoadingEffective,
+    } = useEffectivePolicy(employeeId || null);
 
     const isLoading = isLoadingDefault || (!!employeeId && isLoadingEffective);
-    const policy = manualPolicy || (employeeId ? (effectiveData?.effective as unknown as Policy) : defaultPolicy);
+    const policy =
+        manualPolicy ||
+        (employeeId ? (effectiveData?.effective as unknown as Policy) : defaultPolicy);
     const payrollConfig = policy?.settings?.payrollConfiguration || DEFAULT_PAYROLL_CONFIG;
 
     const periods = useMemo(() => {
         const today = toZonedTime(new Date(), timezone);
         const result = [];
         const frequency = payrollConfig.frequency;
+        const cutoff = parseInt(payrollConfig.cutoffDaysBeforePayDay as any) || 0;
 
         if (frequency === PayCycleFrequency.MONTHLY) {
             const { runDay } = payrollConfig;
@@ -68,27 +102,24 @@ export function SalaryPeriodQuickSelect({
                 let start: Date;
                 let end: Date;
 
-                if (day === 0 || day >= 28) {
+                if (day === 0 || day >= 28 || runDay === "LAST") {
                     // Full month mechanism (e.g. 1st to 30th/31st)
                     start = startOfMonth(referenceDate);
                     end = endOfMonth(referenceDate);
                 } else {
                     // Split month mechanism (e.g. 26th to 25th)
-                    // If runDay is 25, the period for "Jan" ends ends on Jan 25.
-                    // It starts Dec 26.
-
-                    // We define the period by its END date's month.
-                    // So if we are looking at "referenceDate", we calculate the period that ends in referenceDate's month.
-
                     end = setDate(referenceDate, day);
                     // Start is previous month's day + 1
                     const prevMonth = subMonths(referenceDate, 1);
                     start = addDays(setDate(prevMonth, day), 1);
                 }
 
-                const attendanceEnd = subDays(end, parseInt(payrollConfig.cutoffDaysBeforePayDay as any) || 0);
-                const prevPeriodEnd = day === 0 || day >= 28 ? endOfMonth(subMonths(referenceDate, 1)) : setDate(subMonths(referenceDate, 1), day);
-                const attendanceStart = addDays(subDays(prevPeriodEnd, parseInt(payrollConfig.cutoffDaysBeforePayDay as any) || 0), 1);
+                const attendanceEnd = subDays(end, cutoff);
+                const prevPeriodEnd =
+                    day === 0 || day >= 28 || runDay === "LAST"
+                        ? endOfMonth(subMonths(referenceDate, 1))
+                        : setDate(subMonths(referenceDate, 1), day);
+                const attendanceStart = addDays(subDays(prevPeriodEnd, cutoff), 1);
 
                 return {
                     start: format(start, "yyyy-MM-dd"),
@@ -99,50 +130,45 @@ export function SalaryPeriodQuickSelect({
                     label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
                     monthLabel: format(end, "MMMM"),
                     year: getYear(end),
-                    endObj: end
+                    endObj: end,
                 };
             };
 
-            // Generate periods:
-            // -2: 2 months in future
-            // -1: 1 month in future
-            // 0: Current month
-            // 1...60: Past months
-            for (let i = -2; i < 120; i++) {
+            for (let i = -2; i < 60; i++) {
                 const periodDate = subMonths(today, i);
                 const periodData = getPeriodForDate(periodDate);
 
                 let status = "past";
-                // Check if this period is the "current" one based solely on today's date
-                // For split periods (e.g. 25th), if today is 26th, we are in next month's period.
-                // But iteration based on 'Reference Date' (Month) is stable. 
-                // i=0 is "This Month's Period". 
-                // If today is Jan 26, and runDay is 25. "This Month" (Jan) period ended Jan 25. So it's technically past/closed.
-                // The "Active" period is Feb (Jan 26 - Feb 25).
-
-                // Let's rely on date comparison for "Current" status
-                if (isWithinInterval(today, { start: new Date(periodData.start), end: new Date(periodData.end) })) {
+                if (
+                    isWithinInterval(today, {
+                        start: new Date(periodData.start),
+                        end: new Date(periodData.end),
+                    })
+                ) {
                     status = "current";
                 } else if (new Date(periodData.start) > today) {
                     status = "upcoming";
                 }
 
-
                 result.push({
                     ...periodData,
                     key: `${periodData.start}_${periodData.end}`,
                     status,
-                    fullLabel: `${periodData.monthLabel} ${periodData.year} ${periodData.label}`
+                    fullLabel: `${periodData.monthLabel} ${periodData.year} ${periodData.label}`,
                 });
             }
-        } else if (frequency === PayCycleFrequency.WEEKLY || frequency === PayCycleFrequency.BI_WEEKLY) {
-            const step = frequency === PayCycleFrequency.WEEKLY ? 1 : 2;
-            const periodCount = frequency === PayCycleFrequency.WEEKLY ? 52 : 26;
+        } else if (frequency === PayCycleFrequency.WEEKLY) {
+            const targetDay = DAY_MAP[payrollConfig.runDay] ?? 5; // Default to Friday
+            const weekStartsOn = ((targetDay + 1) % 7) as any;
 
-            for (let i = -2; i < periodCount; i++) {
-                const refDate = subWeeks(today, i * step);
-                const start = startOfWeek(refDate);
-                const end = endOfWeek(refDate);
+            for (let i = -2; i < 52; i++) {
+                const refDate = subWeeks(today, i);
+                const start = startOfWeek(refDate, { weekStartsOn });
+                const end = endOfWeek(refDate, { weekStartsOn });
+
+                const attendanceEnd = subDays(end, cutoff);
+                const prevPeriodEnd = subDays(start, 1);
+                const attendanceStart = addDays(subDays(prevPeriodEnd, cutoff), 1);
 
                 let status = "past";
                 if (isWithinInterval(today, { start, end })) {
@@ -154,13 +180,82 @@ export function SalaryPeriodQuickSelect({
                 result.push({
                     start: format(start, "yyyy-MM-dd"),
                     end: format(end, "yyyy-MM-dd"),
+                    attendanceStart: format(attendanceStart, "yyyy-MM-dd"),
+                    attendanceEnd: format(attendanceEnd, "yyyy-MM-dd"),
                     label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
                     monthLabel: format(end, "MMM"),
                     year: getYear(end),
                     endObj: end,
                     key: `${format(start, "yyyy-MM-dd")}_${format(end, "yyyy-MM-dd")}`,
                     status,
-                    fullLabel: `${format(end, "MMM")} Week ${Math.ceil(getDate(end) / 7)} ${getYear(end)}`
+                    fullLabel: `${format(end, "MMM")} Week ${Math.ceil(getDate(end) / 7)} ${getYear(end)}`,
+                });
+            }
+        } else if (frequency === PayCycleFrequency.BI_WEEKLY) {
+            const anchor = payrollConfig.runDayAnchor
+                ? new Date(payrollConfig.runDayAnchor)
+                : new Date("2024-01-05"); // Default anchor (a Friday)
+
+            const diffInWeeks = Math.floor(differenceInCalendarWeeks(today, anchor) / 2);
+
+            for (let i = -2; i < 26; i++) {
+                const end = addWeeks(anchor, (diffInWeeks - i) * 2);
+                const start = addDays(subWeeks(end, 2), 1);
+
+                const attendanceEnd = subDays(end, cutoff);
+                const prevPeriodEnd = subDays(start, 1);
+                const attendanceStart = addDays(subDays(prevPeriodEnd, cutoff), 1);
+
+                let status = "past";
+                if (isWithinInterval(today, { start, end })) {
+                    status = "current";
+                } else if (start > today) {
+                    status = "upcoming";
+                }
+
+                result.push({
+                    start: format(start, "yyyy-MM-dd"),
+                    end: format(end, "yyyy-MM-dd"),
+                    attendanceStart: format(attendanceStart, "yyyy-MM-dd"),
+                    attendanceEnd: format(attendanceEnd, "yyyy-MM-dd"),
+                    label: `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
+                    monthLabel: format(end, "MMM"),
+                    year: getYear(end),
+                    endObj: end,
+                    key: `${format(start, "yyyy-MM-dd")}_${format(end, "yyyy-MM-dd")}`,
+                    status,
+                    fullLabel: `Bi-Weekly ${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`,
+                });
+            }
+        } else if (frequency === PayCycleFrequency.DAILY) {
+            for (let i = -2; i < 90; i++) {
+                const day = subDays(today, i);
+                const start = day;
+                const end = day;
+
+                const attendanceEnd = subDays(end, cutoff);
+                const prevPeriodEnd = subDays(start, 1);
+                const attendanceStart = addDays(subDays(prevPeriodEnd, cutoff), 1);
+
+                let status = "past";
+                if (isWithinInterval(today, { start, end })) {
+                    status = "current";
+                } else if (start > today) {
+                    status = "upcoming";
+                }
+
+                result.push({
+                    start: format(start, "yyyy-MM-dd"),
+                    end: format(end, "yyyy-MM-dd"),
+                    attendanceStart: format(attendanceStart, "yyyy-MM-dd"),
+                    attendanceEnd: format(attendanceEnd, "yyyy-MM-dd"),
+                    label: format(start, "MMM d, yyyy"),
+                    monthLabel: format(start, "MMM"),
+                    year: getYear(start),
+                    endObj: end,
+                    key: format(start, "yyyy-MM-dd"),
+                    status,
+                    fullLabel: format(start, "MMMM d, yyyy"),
                 });
             }
         } else if (frequency === PayCycleFrequency.SEMI_MONTHLY) {
@@ -186,7 +281,7 @@ export function SalaryPeriodQuickSelect({
                     { start: s2, end: e2, labelSuffix: "H2" }
                 ];
 
-                currentMonthPeriods.forEach(p => {
+                currentMonthPeriods.forEach((p) => {
                     let status = "past";
                     if (isWithinInterval(today, { start: p.start, end: p.end })) {
                         status = "current";
@@ -194,16 +289,22 @@ export function SalaryPeriodQuickSelect({
                         status = "upcoming";
                     }
 
+                    const attendanceEnd = subDays(p.end, cutoff);
+                    const prevPeriodEnd = subDays(p.start, 1);
+                    const attendanceStart = addDays(subDays(prevPeriodEnd, cutoff), 1);
+
                     generatedPeriods.push({
                         start: format(p.start, "yyyy-MM-dd"),
                         end: format(p.end, "yyyy-MM-dd"),
+                        attendanceStart: format(attendanceStart, "yyyy-MM-dd"),
+                        attendanceEnd: format(attendanceEnd, "yyyy-MM-dd"),
                         label: `${format(p.start, "MMM d")} - ${format(p.end, "MMM d, yyyy")}`,
                         monthLabel: format(p.end, "MMMM"),
                         year: getYear(p.end),
                         endObj: p.end,
                         key: `${format(p.start, "yyyy-MM-dd")}_${format(p.end, "yyyy-MM-dd")}`,
                         status,
-                        fullLabel: `${format(p.end, "MMMM")} ${p.labelSuffix} ${getYear(p.end)}`
+                        fullLabel: `${format(p.end, "MMMM")} ${p.labelSuffix} ${getYear(p.end)}`,
                     });
                 });
             }

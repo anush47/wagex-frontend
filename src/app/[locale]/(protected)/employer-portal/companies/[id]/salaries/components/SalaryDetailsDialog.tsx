@@ -144,8 +144,14 @@ export function SalaryDetailsDialog({
 
     const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
     const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
-    const grossEarnings = (editableBasicSalary || 0) + salary.otAmount + (editableOtAdjustment || 0) + (editableHolidayPayAdjustment || 0) + totalAdditions;
+    
+    // grossEarnings = basic + totalAdditions + adjustments
+    // totalAdditions already contains ot-pay and holiday-pay as components if they exist
+    const grossEarnings = (editableBasicSalary || 0) + totalAdditions + (editableOtAdjustment || 0) + (editableHolidayPayAdjustment || 0);
+    
+    // totalRecoveries = (unpaid/late) + advance + tax + componentDeductions + recoveryAdjustment
     const totalRecoveries = (salary.noPayAmount || 0) + (salary.lateDeduction || 0) + (editableLateAdjustment || 0) + editableAdvanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
+    
     const currentNetSalary = grossEarnings - totalRecoveries;
 
     const isDirty = (
@@ -287,15 +293,6 @@ export function SalaryDetailsDialog({
                                     </span>
                                 </div>
 
-                                {salary.otAmount > 0 && (
-                                    <div className="p-3 px-4 flex justify-between items-center text-sm hover:bg-muted/30 transition-colors">
-                                        <span className="font-medium text-muted-foreground flex items-center gap-2">
-                                            <IconClock className="h-3.5 w-3.5" /> Calculated Overtime (OT)
-                                        </span>
-                                        <span className="font-bold text-blue-600">+{formatCurrency(salary.otAmount)}</span>
-                                    </div>
-                                )}
-
                                 {/* Holiday Pay Adjustment Row */}
                                 <div className="p-3 px-4 space-y-3 bg-amber-50/10 border-l-2 border-l-amber-400">
                                     <div className="flex justify-between items-center text-xs">
@@ -363,35 +360,6 @@ export function SalaryDetailsDialog({
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Holiday Pay Section */}
-                                {salary.holidayPayAmount > 0 && (
-                                    <div className="space-y-3 pt-4 border-t border-emerald-200 dark:border-emerald-900/30">
-                                        <div className="flex items-center justify-between p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200/50 dark:border-emerald-900/30">
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                                                    <IconGift className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                                </div>
-                                                <div>
-                                                    <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm block">Holiday Pay</span>
-                                                    <span className="text-[9px] text-emerald-600/70 dark:text-emerald-500/60 font-medium">Affects Total Earnings</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-black text-emerald-700 dark:text-emerald-400 text-lg">+{formatCurrency(salary.holidayPayAmount)}</span>
-                                            </div>
-                                        </div>
-                                        {salary.holidayPayBreakdown?.map((hp, idx) => (
-                                            <div key={idx} className="flex justify-between items-center p-3 bg-emerald-50/30 dark:bg-emerald-950/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm">{hp.holidayName}</span>
-                                                    <span className="text-[10px] text-emerald-600/70 dark:text-emerald-500/60">{hp.hours.toFixed(2)}h worked</span>
-                                                </div>
-                                                <span className="font-bold text-emerald-700 dark:text-emerald-400">+{formatCurrency(hp.amount)}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
 
                                 {additions.map((comp, idx) => (
                                     <div key={idx} className="p-3 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors rounded-xl border border-transparent hover:border-border">
