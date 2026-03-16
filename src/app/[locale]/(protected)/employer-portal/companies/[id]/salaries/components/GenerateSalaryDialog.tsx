@@ -48,7 +48,17 @@ export function GenerateSalaryDialog({
     });
 
     const existingSalaries = (existingSalariesQuery.data as any)?.items || [];
-    const hasExistingSalaries = existingSalaries.length > 0;
+    const conflictingEmployeeIds = useMemo(() => {
+        return existingSalaries.map((s: any) => s.employeeId);
+    }, [existingSalaries]);
+
+    const hasConflicts = useMemo(() => {
+        return selectedEmployees.some(id => conflictingEmployeeIds.includes(id));
+    }, [selectedEmployees, conflictingEmployeeIds]);
+
+    const employeesWithConflicts = useMemo(() => {
+        return selectedEmployees.filter(id => conflictingEmployeeIds.includes(id));
+    }, [selectedEmployees, conflictingEmployeeIds]);
 
     const payrollGroups = useMemo(() => {
         if (!employees || employees.length === 0) return [];
@@ -143,8 +153,7 @@ export function GenerateSalaryDialog({
     }, [payrollGroups, selectedGroupKey]);
 
     const handleExcludeConflicts = () => {
-        const conflictingIds = existingSalaries.map((s: any) => s.employeeId);
-        setSelectedEmployees(prev => prev.filter(id => !conflictingIds.includes(id)));
+        setSelectedEmployees(prev => prev.filter(id => !conflictingEmployeeIds.includes(id)));
         setPreviewData([]);
     };
 
@@ -440,15 +449,15 @@ export function GenerateSalaryDialog({
                                     </span>
                                     <span className="text-[10px] font-black uppercase text-green-600 tracking-wider">Ready for Payroll</span>
                                 </Card>
-                                 <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
+                                 <Card className={`p-6 border-2 flex flex-col items-center gap-2 ${hasConflicts || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'border-red-100 bg-red-50/10' : previewData.some(g => (g.problemCount || 0) > 0) ? 'border-amber-100 bg-amber-50/10' : 'border-neutral-100'}`}>
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${hasConflicts || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'bg-red-100 text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'}`}>
                                         <IconAlertTriangle className="h-6 w-6" />
                                     </div>
-                                    <span className={`text-2xl font-black ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
-                                        {hasExistingSalaries ? 'Conflict' : previewData.reduce((s, g) => s + (g.problemCount || 0), 0)}
+                                    <span className={`text-2xl font-black ${hasConflicts || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-700' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-700' : 'text-neutral-400'}`}>
+                                        {hasConflicts ? 'Conflict' : previewData.reduce((s, g) => s + (g.problemCount || 0), 0)}
                                     </span>
-                                    <span className={`text-[10px] font-black uppercase tracking-wider ${hasExistingSalaries || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
-                                        {hasExistingSalaries ? 'Already Generated' : (previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention'))}
+                                    <span className={`text-[10px] font-black uppercase tracking-wider ${hasConflicts || previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'text-red-600' : previewData.some(g => (g.problemCount || 0) > 0) ? 'text-amber-600' : 'text-neutral-400'}`}>
+                                        {hasConflicts ? 'Already Generated' : (previewData.some(g => g.employees.some((e: any) => e.problems.some((p: any) => p.severity === 'ERROR'))) ? 'Fix Errors' : (previewData.some(g => (g.problemCount || 0) > 0) ? 'Warnings Found' : 'Requires Attention'))}
                                     </span>
                                 </Card>
                             </div>
@@ -456,7 +465,7 @@ export function GenerateSalaryDialog({
                             <div className="space-y-4">
                                 <div className="text-xs font-black uppercase tracking-widest text-muted-foreground pl-1">Identified Issues By Staff</div>
                                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                                    {hasExistingSalaries && (
+                                    {hasConflicts && (
                                         <div className="bg-red-500/5 border-2 border-red-500/20 rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
                                             <div className="flex justify-between items-center pb-2 border-b border-red-500/10">
                                                 <div className="flex items-center gap-2">
@@ -466,7 +475,7 @@ export function GenerateSalaryDialog({
                                                 <Badge variant="destructive" className="font-bold px-2 py-0 text-[10px]">CRITICAL</Badge>
                                             </div>
                                             <div className="text-xs font-medium text-red-600/90 leading-relaxed italic">
-                                                Salaries have already been generated for {existingSalaries.length} employees in this period ({format(new Date(period.start), "MMM d")} - {format(new Date(period.end), "MMM d, yyyy")}). 
+                                                Salaries have already been generated for {employeesWithConflicts.length} of your selected employees in this period ({format(new Date(period.start), "MMM d")} - {format(new Date(period.end), "MMM d, yyyy")}). 
                                                 You cannot generate duplicate payroll records.
                                             </div>
                                             <Button 
@@ -475,7 +484,7 @@ export function GenerateSalaryDialog({
                                                 onClick={handleExcludeConflicts}
                                                 className="mt-2 w-fit font-bold uppercase tracking-wider text-[10px]"
                                             >
-                                                Exclude Conflicting Staff ({existingSalaries.length})
+                                                Exclude Conflicting Staff ({employeesWithConflicts.length})
                                             </Button>
                                         </div>
                                     )}
