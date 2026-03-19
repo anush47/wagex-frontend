@@ -104,6 +104,11 @@ export interface Salary {
         id: string;
         fullName: string;
         employeeNo: number;
+        basicSalary: number;
+        policy?: {
+            name: string;
+            settings: any;
+        }
     };
     payments?: Payment[];
     createdAt: string;

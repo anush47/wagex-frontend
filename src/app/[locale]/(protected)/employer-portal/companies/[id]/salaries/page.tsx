@@ -32,6 +32,22 @@ export default function SalariesPage() {
         router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
     };
 
+    // Initialize month/year filters if empty
+    useEffect(() => {
+        const tab = searchParams.get("tab") || "salaries";
+        if (tab === "salaries") {
+            const month = searchParams.get("month");
+            const year = searchParams.get("year");
+            if (!month || !year) {
+                const now = new Date();
+                const params = new URLSearchParams(searchParams.toString());
+                if (!month) params.set("month", (now.getMonth() + 1).toString());
+                if (!year) params.set("year", now.getFullYear().toString());
+                router.replace(`${window.location.pathname}?${params.toString()}`);
+            }
+        }
+    }, [searchParams, router]);
+
     const handleFilterChange = (filters: Record<string, string | undefined>) => {
         const params = new URLSearchParams(searchParams.toString());
         Object.entries(filters).forEach(([key, value]) => {

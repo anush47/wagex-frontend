@@ -227,15 +227,34 @@ export function SalaryDetailsDialog({
                                 className="h-12 w-12 rounded-xl text-lg shadow-sm"
                             />
                             <div>
-                                <div className="font-bold text-sm text-foreground">{salary.employee?.fullName}</div>
-                                <div className="text-xs font-mono text-muted-foreground">EMP-{salary.employee?.employeeNo}</div>
+                                <div className="font-bold text-sm text-foreground flex items-center gap-2">
+                                    {salary.employee?.fullName}
+                                    <Badge variant="secondary" className="text-[10px] h-5 py-0 font-black uppercase bg-primary/10 text-primary border-primary/20">
+                                        {salary.employee?.policy?.settings?.payrollConfiguration?.frequency || 'MONTHLY'}
+                                    </Badge>
+                                </div>
+                                <div className="text-xs font-mono text-muted-foreground flex items-center gap-2 mt-0.5">
+                                    <span>EMP-{salary.employee?.employeeNo}</span>
+                                    <span className="h-1 w-1 rounded-full bg-neutral-300" />
+                                    <span>{salary.employee?.policy?.name || 'Default Policy'}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="md:w-1/3 bg-background p-4 rounded-2xl border shadow-sm flex flex-col justify-center">
-                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Net Payable</Label>
-                            <div className="text-2xl font-black text-foreground">
+                        <div className="md:w-[220px] bg-background p-4 rounded-2xl border shadow-sm flex flex-col justify-center">
+                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Net Payable</Label>
+                            <div className="text-xl font-black text-foreground">
                                 LKR {formatCurrency(currentNetSalary)}
+                            </div>
+                        </div>
+
+                        <div className="md:w-[220px] bg-primary/5 p-4 rounded-2xl border border-primary/20 shadow-sm flex flex-col justify-center relative overflow-hidden group">
+                            <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                                <IconReceipt className="h-20 w-20" />
+                            </div>
+                            <Label className="text-[10px] font-black text-primary/60 uppercase tracking-wider mb-1">Contractual Monthly</Label>
+                            <div className="text-xl font-black text-primary tabular-nums">
+                                {formatCurrency(salary.employee?.basicSalary || 0)}
                             </div>
                         </div>
                     </div>

@@ -62,6 +62,7 @@ interface SalaryPeriodQuickSelectProps {
     timezone?: string;
     manualPolicy?: Policy | null;
     className?: string;
+    disableAutoSelect?: boolean;
 }
 
 export function SalaryPeriodQuickSelect({
@@ -73,6 +74,7 @@ export function SalaryPeriodQuickSelect({
     timezone = "UTC",
     manualPolicy,
     className,
+    disableAutoSelect = false,
 }: SalaryPeriodQuickSelectProps) {
     const [open, setOpen] = useState(false);
     const { data: defaultPolicy, isLoading: isLoadingDefault } = useCompanyPolicy(companyId);
@@ -320,7 +322,7 @@ export function SalaryPeriodQuickSelect({
         }
 
         return result;
-    }, [payrollConfig]);
+    }, [payrollConfig, timezone]);
 
     const selectedPeriod = useMemo(() => {
         if (!currentStart || !currentEnd) return null;
@@ -328,16 +330,16 @@ export function SalaryPeriodQuickSelect({
     }, [periods, currentStart, currentEnd]);
 
     // Auto-select current (index 0) if nothing selected
-    // Only if we haven't selected anything yet
+    // Only if we haven't selected anything yet and auto-select is NOT disabled
     useEffect(() => {
-        if (periods.length > 0 && !currentStart && !currentEnd) {
+        if (!disableAutoSelect && periods.length > 0 && !currentStart && !currentEnd) {
             // Find the period that corresponds to 'this month' (i=0)
             const current = periods.find(p => p.status === "current");
             if (current) {
                 onRangeSelect(current.start, current.end, current);
             }
         }
-    }, [periods, currentStart, currentEnd, onRangeSelect]);
+    }, [periods, currentStart, currentEnd, onRangeSelect, disableAutoSelect]);
 
     if (isLoading) {
         return <div className="h-10 w-full md:w-[240px] rounded-xl bg-muted/50 animate-pulse" />;
