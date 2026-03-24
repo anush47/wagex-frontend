@@ -18,8 +18,13 @@ import {
     IconDeviceFloppy,
     IconDownload,
     IconPaperclip,
-    IconTrash
+    IconTrash,
+    IconUsers,
+    IconChevronRight,
+    IconRefresh
 } from "@tabler/icons-react";
+import { SalaryDetailsDialog } from "../../salaries/components/SalaryDetailsDialog";
+import { Salary } from "@/types/salary";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
@@ -49,9 +54,14 @@ export const EtfDetailsDialog = ({
     record: EtfRecord | null;
     onDelete?: (id: string) => void;
 }) => {
-    const { updateEtfMutation } = useEtf({ companyId: record?.companyId || "" });
+    const { updateEtfMutation, etfRecordQuery } = useEtf({ companyId: record?.companyId || "" });
+    
+    // Fetch detailed record with salaries
+    const { data: fullRecord, isLoading: isFetchingFull } = etfRecordQuery(record?.id);
+
     const [formData, setFormData] = useState<Partial<EtfRecord>>({});
     const [showUpload, setShowUpload] = useState(false);
+    const [selectedSalary, setSelectedSalary] = useState<Salary | null>(null);
 
     const { data: resolvedSlipUrl } = useStorageUrl(
         formData.slipUrl && !formData.slipUrl.startsWith('http') && !formData.slipUrl.startsWith('blob:')
@@ -310,6 +320,68 @@ export const EtfDetailsDialog = ({
                             className="w-full h-24 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm font-bold p-4 text-sm focus:ring-primary/20 outline-none transition-all resize-none"
                         />
                     </div>
+
+                    <div className="mt-8 space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <IconUsers className="h-4 w-4" />
+                                <h4 className="text-[10px] font-black uppercase text-neutral-400 tracking-widest italic">Included Salaries</h4>
+                            </div>
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                {(fullRecord?.salaries?.length || 0)} Employees
+                            </span>
+                        </div>
+
+                        <div className="bg-background rounded-3xl border border-neutral-100 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-50 dark:divide-neutral-800">
+                            {isFetchingFull ? (
+                                <div className="p-8 flex justify-center">
+                                    <IconRefresh className="h-5 w-5 animate-spin text-primary/20" />
+                                </div>
+                            ) : fullRecord?.salaries?.length === 0 ? (
+                                <p className="p-8 text-center text-xs font-bold text-neutral-400 italic">No salaries linked to this record.</p>
+                            ) : (
+                                fullRecord?.salaries?.map((salary) => (
+                                    <div 
+                                        key={salary.id}
+                                        className="p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors group"
+                                        onClick={() => setSelectedSalary(salary)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-8 w-8 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-black text-[10px]">
+                                                {salary.employee?.employeeNo}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
+                                                    {salary.employee?.fullName}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[10px] font-bold text-neutral-400 italic">Net: LKR {salary.netSalary.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="text-xs font-black text-primary">
+                                                    LKR {(() => {
+                                                        const etfEmployerComp = (salary.components || []).find((c: any) => c.systemType === 'ETF_EMPLOYER' || (c.name.toLowerCase().includes('etf') && c.employerAmount > 0));
+                                                        return (etfEmployerComp?.employerAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                    })()}
+                                                </p>
+                                                <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">Total ETF (3%)</p>
+                                            </div>
+                                            <IconChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-primary transition-colors" />
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    <SalaryDetailsDialog 
+                        open={!!selectedSalary}
+                        onOpenChange={(open) => !open && setSelectedSalary(null)}
+                        salary={selectedSalary}
+                    />
                 </div>
 
                 <DialogFooter className="p-6 sm:p-8 bg-neutral-50/50 dark:bg-neutral-800/30 border-t border-neutral-100 dark:border-neutral-800 flex flex-row justify-between items-center gap-4 flex-shrink-0">

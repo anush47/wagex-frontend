@@ -17,6 +17,16 @@ export function useEpf(params: EpfQuery) {
         enabled: !!params.companyId,
     });
 
+    const epfRecordQuery = (id?: string) => useQuery({
+        queryKey: ['epf-record', params.companyId, id],
+        queryFn: async () => {
+            const response = await EpfService.getRecordById(params.companyId!, id!);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        enabled: !!params.companyId && !!id,
+    });
+
     const createEpfMutation = useMutation({
         mutationFn: async (dto: any) => {
             const response = await EpfService.createRecord(params.companyId!, dto);
@@ -57,6 +67,7 @@ export function useEpf(params: EpfQuery) {
 
     return {
         epfRecordsQuery,
+        epfRecordQuery,
         createEpfMutation,
         updateEpfMutation,
         deleteEpfMutation,
@@ -74,6 +85,16 @@ export function useEtf(params: EtfQuery) {
             return response.data || { items: [], total: 0 };
         },
         enabled: !!params.companyId,
+    });
+
+    const etfRecordQuery = (id?: string) => useQuery({
+        queryKey: ['etf-record', params.companyId, id],
+        queryFn: async () => {
+            const response = await EtfService.getRecordById(params.companyId!, id!);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        enabled: !!params.companyId && !!id,
     });
 
     const createEtfMutation = useMutation({
@@ -116,6 +137,7 @@ export function useEtf(params: EtfQuery) {
 
     return {
         etfRecordsQuery,
+        etfRecordQuery,
         createEtfMutation,
         updateEtfMutation,
         deleteEtfMutation,

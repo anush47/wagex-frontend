@@ -1,4 +1,4 @@
-import { PaymentMethod } from './salary';
+import { PaymentMethod, Salary } from './salary';
 
 export interface EpfRecord {
   id: string;
@@ -17,6 +17,7 @@ export interface EpfRecord {
   branchCode?: string;
   chequeNo?: string;
   remarks?: string;
+  salaries?: Salary[];
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +38,7 @@ export interface EtfRecord {
   branchCode?: string;
   chequeNo?: string;
   remarks?: string;
+  salaries?: Salary[];
   createdAt: string;
   updatedAt: string;
 }

@@ -140,9 +140,9 @@ export const GenerateEtfDialog = ({
 
     const preview = previewQuery.data;
 
-    // Check if record already exists for this month/year
+    // Check if records exist for this month/year (informative only)
     const { data: existingRecords } = useEtf({ companyId, month, year }).etfRecordsQuery;
-    const isDuplicate = (existingRecords?.items?.length || 0) > 0;
+    const hasExisting = (existingRecords?.items?.length || 0) > 0;
 
     const handleNext = () => {
         if (step < steps.length - 1) setStep(step + 1);
@@ -242,16 +242,16 @@ export const GenerateEtfDialog = ({
                             </div>
                         </div>
 
-                        {isDuplicate && (
-                            <div className="mt-8 p-6 rounded-[2rem] bg-orange-50 border border-orange-100 dark:bg-orange-900/10 dark:border-orange-800/30 flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div className="h-10 w-10 rounded-2xl bg-orange-100 dark:bg-orange-800 text-orange-600 flex items-center justify-center shrink-0 shadow-sm">
+                        {hasExisting && (
+                            <div className="mt-8 p-6 rounded-[2rem] bg-blue-50 border border-blue-100 dark:bg-blue-900/10 dark:border-blue-800/30 flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div className="h-10 w-10 rounded-2xl bg-blue-100 dark:bg-blue-800 text-blue-600 flex items-center justify-center shrink-0 shadow-sm">
                                     <IconInfoCircle className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-1 pt-1">
-                                    <h4 className="text-sm font-black text-orange-800 dark:text-orange-400 uppercase tracking-tight">Record Already Generated</h4>
-                                    <p className="text-xs font-bold text-orange-700/70 dark:text-orange-500/70 leading-relaxed">
-                                        An ETF submission for {months.find(m => m.value === month)?.label} {year} already exists for this company. 
-                                        You must delete the existing record if you wish to re-generate it.
+                                    <h4 className="text-sm font-black text-blue-800 dark:text-blue-400 uppercase tracking-tight">Existing Batches Found</h4>
+                                    <p className="text-xs font-bold text-blue-700/70 dark:text-blue-500/70 leading-relaxed">
+                                        There are already {existingRecords?.items?.length} ETF batch(es) for {months.find(m => m.value === month)?.label} {year}. 
+                                        You can still generate another batch for any remaining salaries.
                                     </p>
                                 </div>
                             </div>
@@ -496,7 +496,7 @@ export const GenerateEtfDialog = ({
                     </Button>
                     <Button
                         onClick={handleNext}
-                        disabled={(step === 1 && selectedSalaryIds.length === 0) || previewQuery.isLoading || createEtfMutation.isPending || (step === 0 && isDuplicate)}
+                        disabled={(step === 1 && selectedSalaryIds.length === 0) || previewQuery.isLoading || createEtfMutation.isPending}
                         className="rounded-xl font-black text-[10px] uppercase tracking-wider h-11 px-8 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         {step === steps.length - 1 ? (

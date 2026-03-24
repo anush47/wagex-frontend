@@ -36,6 +36,7 @@ export interface SalaryComponentResult {
     affectsTotalEarnings?: boolean;
     isStatutory?: boolean;
     systemType?: string;
+    employerAmount?: number;
 }
 
 export interface OTBreakdownItem {
@@ -111,6 +112,8 @@ export interface Salary {
         }
     };
     payments?: Payment[];
+    epfRecords?: any[];
+    etfRecords?: any[];
     createdAt: string;
     updatedAt: string;
 }

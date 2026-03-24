@@ -542,7 +542,21 @@ export function SalariesTab({
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                {getStatusBadge(salary.status)}
+                                                <div className="flex flex-col gap-1.5 items-start">
+                                                    {getStatusBadge(salary.status)}
+                                                    <div className="flex items-center gap-1">
+                                                        {(salary.epfRecords?.length || 0) > 0 && (
+                                                            <div className="flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-200 text-[8px] font-black uppercase tracking-tighter leading-none h-4">
+                                                                EPF
+                                                            </div>
+                                                        )}
+                                                        {(salary.etfRecords?.length || 0) > 0 && (
+                                                            <div className="flex items-center px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 border border-indigo-200 text-[8px] font-black uppercase tracking-tighter leading-none h-4">
+                                                                ETF
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">

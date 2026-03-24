@@ -208,6 +208,16 @@ export function SalaryDetailsDialog({
                                     Net Pay Details
                                 </DialogTitle>
                                 {getStatusBadge(salary.status)}
+                                {(salary as any).epfRecords?.length > 0 && (
+                                    <Badge variant="outline" className="font-black text-[9px] uppercase tracking-widest bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                        EPF Linked
+                                    </Badge>
+                                )}
+                                {(salary as any).etfRecords?.length > 0 && (
+                                    <Badge variant="outline" className="font-black text-[9px] uppercase tracking-widest bg-indigo-500/10 text-indigo-600 border-indigo-500/20">
+                                        ETF Linked
+                                    </Badge>
+                                )}
                             </div>
                             <DialogDescription className="text-xs font-medium text-muted-foreground flex items-center gap-2 mt-1">
                                 <IconCalendarEvent className="h-3.5 w-3.5" />
@@ -252,7 +262,7 @@ export function SalaryDetailsDialog({
                             <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
                                 <IconReceipt className="h-20 w-20" />
                             </div>
-                            <Label className="text-[10px] font-black text-primary/60 uppercase tracking-wider mb-1">Contractual Monthly</Label>
+                            <Label className="text-[10px] font-black text-primary/60 uppercase tracking-wider mb-1">Full Month Basic</Label>
                             <div className="text-xl font-black text-primary tabular-nums">
                                 {formatCurrency(salary.employee?.basicSalary || 0)}
                             </div>
@@ -301,7 +311,7 @@ export function SalaryDetailsDialog({
                                     <span className="font-black uppercase tracking-widest text-primary/60 flex items-center gap-1.5 px-2">
                                         <IconTable className="h-3 w-3" /> Tot. Earn. (EPF/ETF)
                                     </span>
-                                    <span className="font-black text-primary tabular-nums px-3 py-1 bg-white rounded-lg border border-primary/20 shadow-sm">
+                                    <span className="font-black text-primary tabular-nums px-3 py-1 bg-background dark:bg-neutral-800 rounded-lg border border-primary/20 shadow-sm">
                                         {(() => {
                                             const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
                                             const baseBeforeAdj = (epfComp && epfComp.value > 0)
@@ -326,7 +336,7 @@ export function SalaryDetailsDialog({
                                                 placeholder="0.00"
                                                 value={editableHolidayPayAdjustment === 0 ? "" : editableHolidayPayAdjustment.toFixed(2)}
                                                 onChange={(e) => setEditableHolidayPayAdjustment(parseFloat(e.target.value) || 0)}
-                                                className="h-7 w-32 pl-5 text-right font-bold text-amber-600 border-dashed border-amber-200 focus:border-amber-400 bg-white"
+                                                className="h-7 w-32 pl-5 text-right font-bold text-amber-600 border-dashed border-amber-200 focus:border-amber-400 bg-background dark:bg-neutral-800"
                                             />
                                         </div>
                                     </div>
@@ -363,7 +373,7 @@ export function SalaryDetailsDialog({
                                                         setEditableOtAdjustment(val);
                                                     }
                                                 }}
-                                                className="h-7 w-32 pl-5 text-right font-bold text-blue-600 border-dashed border-blue-200 focus:border-blue-400 bg-white"
+                                                className="h-7 w-32 pl-5 text-right font-bold text-blue-600 border-dashed border-blue-200 focus:border-blue-400 bg-background dark:bg-neutral-800"
                                             />
                                         </div>
                                     </div>
@@ -611,7 +621,7 @@ export function SalaryDetailsDialog({
                                                         setEditableRecoveryAdjustment(val);
                                                     }
                                                 }}
-                                                className="h-7 w-32 pl-5 text-right font-bold text-red-600 border-dashed border-red-200 focus:border-red-400 bg-white"
+                                                className="h-7 w-32 pl-5 text-right font-bold text-red-600 border-dashed border-red-200 focus:border-red-400 bg-background dark:bg-neutral-800"
                                             />
                                         </div>
                                     </div>
