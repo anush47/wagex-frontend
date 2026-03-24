@@ -148,11 +148,36 @@ export const EpfDetailsDialog = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Summary Section */}
                         <div className="space-y-6">
-                            <div className="p-6 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1">
-                                <span className="text-[10px] font-black uppercase text-primary-foreground/70 tracking-widest italic">Total Contribution</span>
-                                <span className="text-3xl font-black italic tracking-tighter">
+                            <div className="p-6 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                                    <IconCurrencyDollar className="h-12 w-12" />
+                                </div>
+                                <span className="text-[10px] font-black uppercase text-primary-foreground/70 tracking-widest italic z-10">Total Contribution</span>
+                                <span className="text-3xl font-black italic tracking-tighter z-10">
                                     LKR {record.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </span>
+                                {fullRecord && (
+                                    <div className="mt-3 flex gap-4 pt-3 border-t border-primary-foreground/10 z-10">
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] font-black uppercase text-primary-foreground/60 tracking-widest leading-none">Employee Total</span>
+                                            <span className="text-xs font-black">
+                                                LKR {fullRecord.salaries?.reduce((sum: number, salary: any) => {
+                                                    const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE' || (c.name.toLowerCase().includes('epf') && c.category === 'DEDUCTION'));
+                                                    return sum + (epfComp?.amount || 0);
+                                                }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col border-l pl-4 border-primary-foreground/10">
+                                            <span className="text-[8px] font-black uppercase text-primary-foreground/60 tracking-widest leading-none">Employer Total</span>
+                                            <span className="text-xs font-black">
+                                                LKR {fullRecord.salaries?.reduce((sum: number, salary: any) => {
+                                                    const epfEmployerComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYER' || (c.name.toLowerCase().includes('epf') && c.employerAmount > 0));
+                                                    return sum + (epfEmployerComp?.employerAmount || 0);
+                                                }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-4">
@@ -372,16 +397,36 @@ export const EpfDetailsDialog = ({
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <p className="text-xs font-black text-primary">
-                                                    LKR {(() => {
-                                                        const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE' || (c.name.toLowerCase().includes('epf') && c.category === 'DEDUCTION'));
-                                                        const epfEmployerComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYER' || (c.name.toLowerCase().includes('epf') && c.employerAmount > 0));
-                                                        return ((epfComp?.amount || 0) + (epfEmployerComp?.employerAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 });
-                                                    })()}
-                                                </p>
-                                                <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">Total EPF (20% / 25%)</p>
+                                        <div className="flex items-center gap-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">Employee (8%)</p>
+                                                    <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+                                                        LKR {(() => {
+                                                            const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE' || (c.name.toLowerCase().includes('epf') && c.category === 'DEDUCTION'));
+                                                            return (epfComp?.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                        })()}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right border-l pl-4 border-neutral-100 dark:border-neutral-800">
+                                                    <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">Employer (12%)</p>
+                                                    <p className="text-xs font-semibold text-primary/80">
+                                                        LKR {(() => {
+                                                            const epfEmployerComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYER' || (c.name.toLowerCase().includes('epf') && c.employerAmount > 0));
+                                                            return (epfEmployerComp?.employerAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                        })()}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right border-l pl-4 border-neutral-100 dark:border-neutral-800">
+                                                    <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">Total EPF (20%)</p>
+                                                    <p className="text-sm font-black text-primary">
+                                                        LKR {(() => {
+                                                            const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE' || (c.name.toLowerCase().includes('epf') && c.category === 'DEDUCTION'));
+                                                            const epfEmployerComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYER' || (c.name.toLowerCase().includes('epf') && c.employerAmount > 0));
+                                                            return ((epfComp?.amount || 0) + (epfEmployerComp?.employerAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                                        })()}
+                                                    </p>
+                                                </div>
                                             </div>
                                             <IconChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-primary transition-colors" />
                                         </div>

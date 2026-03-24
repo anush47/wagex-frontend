@@ -6,6 +6,13 @@ export enum DocumentType {
   ETF_FORM = 'ETF_FORM',
 }
 
+export enum TemplateStatus {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
 export interface DocumentTemplate {
   id: string;
   companyId?: string | null;
@@ -17,6 +24,7 @@ export interface DocumentTemplate {
   config?: any;
   isActive: boolean;
   isDefault: boolean;
+  status: TemplateStatus;
   createdAt: string;
   updatedAt: string;
 }

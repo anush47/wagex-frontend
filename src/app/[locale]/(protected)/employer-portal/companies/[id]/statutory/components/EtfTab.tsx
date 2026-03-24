@@ -18,9 +18,10 @@ import {
     IconRefresh,
     IconSearch, 
     IconChevronLeft,
-    IconInfoCircle,
     IconX,
-    IconTrash
+    IconTrash,
+    IconActivity,
+    IconFilter
 } from "@tabler/icons-react";
 import { useEtf } from "@/hooks/use-statutory";
 import { useParams } from "next/navigation";
@@ -31,14 +32,6 @@ import { EtfDetailsDialog } from "./EtfDetailsDialog";
 import { EtfRecord } from "@/types/statutory";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-
-const monthsNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-];
-
-
-
 import { Input } from "@/components/ui/input";
 import { 
     Select, 
@@ -47,7 +40,12 @@ import {
     SelectTrigger, 
     SelectValue 
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+
+const monthsNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
 
 export const EtfTab = () => {
     const params = useParams();
@@ -58,20 +56,15 @@ export const EtfTab = () => {
     const [year, setYear] = useState<string>("ALL");
     const [debouncedYear, setDebouncedYear] = useState<string>("ALL");
     const [page, setPage] = useState(1);
+    const [showFilters, setShowFilters] = useState(false);
     
-    // Debounce search
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(search);
-        }, 500);
+        const timer = setTimeout(() => { setDebouncedSearch(search); }, 500);
         return () => clearTimeout(timer);
     }, [search]);
 
-    // Debounce year
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedYear(year);
-        }, 500);
+        const timer = setTimeout(() => { setDebouncedYear(year); }, 500);
         return () => clearTimeout(timer);
     }, [year]);
 
@@ -95,189 +88,207 @@ export const EtfTab = () => {
 
     const getMonthName = (m: number) => monthsNames[m - 1];
 
+    const hasActiveFilters = search || month !== "ALL" || year !== "ALL";
+
     return (
-        <div className="flex flex-col gap-6">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                     <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90">ETF Submissions</h3>
                     <p className="text-neutral-500 font-medium text-xs">Manage monthly ETF contributions and payment slips</p>
                 </div>
                 <Button 
                     onClick={() => setIsGenerateOpen(true)}
-                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.05] active:scale-[0.95] transition-all bg-primary text-white"
                 >
-                    <IconPlus className="mr-2 h-5 w-5" />
+                    <IconPlus className="mr-2 h-5 w-5 stroke-[3]" />
                     Generate ETF
                 </Button>
             </div>
 
             <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
-                <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-6">
-                    <div className="flex flex-col gap-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
-                                    <IconFileText className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-xl font-bold tracking-tight text-foreground">ETF History</CardTitle>
-                                    <p className="text-xs font-medium text-muted-foreground">View and search past submissions.</p>
-                                </div>
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <IconActivity className="h-5 w-5" />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button 
-                                    variant="outline" 
-                                    size="icon" 
-                                    className="rounded-xl h-10 w-10"
-                                    onClick={() => etfRecordsQuery.refetch()}
-                                    disabled={etfRecordsQuery.isFetching}
-                                >
-                                    <IconRefresh className={`h-4 w-4 ${etfRecordsQuery.isFetching ? 'animate-spin' : ''}`} />
-                                </Button>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">Submission History</CardTitle>
+                                <p className="text-xs font-medium text-muted-foreground">Review and verify past employer contributions.</p>
                             </div>
                         </div>
-
-                        <div className="flex flex-col md:flex-row items-center gap-3">
-                            <div className="relative w-full md:w-[300px]">
-                                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                                <Input 
-                                    placeholder="Search remarks, period..." 
-                                    className="pl-10 h-11 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
-                                    value={search}
-                                    onChange={(e) => {
-                                        setSearch(e.target.value);
-                                        setPage(1);
-                                    }}
-                                />
-                                {search && (
-                                    <button 
-                                        onClick={() => setSearch("")}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
-                                    >
-                                        <IconX className="h-3 w-3" />
-                                    </button>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={cn(
+                                    "rounded-xl h-10 px-4",
+                                    (showFilters || hasActiveFilters) && "bg-muted"
                                 )}
-                            </div>
-
-                            <Select 
-                                value={month} 
-                                onValueChange={(v) => {
-                                    setMonth(v);
-                                    setPage(1);
-                                }}
                             >
-                                <SelectTrigger className="h-11 w-full md:w-[150px] rounded-xl border-neutral-200 dark:border-neutral-800 font-bold text-xs">
-                                    <SelectValue placeholder="Month" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                    <SelectItem value="ALL" className="font-bold text-xs">All Months</SelectItem>
-                                    {monthsNames.map((m, i) => (
-                                        <SelectItem key={m} value={(i + 1).toString()} className="font-bold text-xs">
-                                            {m}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <div className="relative w-full md:w-[120px]">
-                                <Input
-                                    type="number"
-                                    placeholder="Year"
-                                    min={1900}
-                                    max={2500}
-                                    className="h-11 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
-                                    value={year === "ALL" ? "" : year}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setYear(val === "" ? "ALL" : val);
-                                        setPage(1);
-                                    }}
-                                />
-                                {year !== "ALL" && (
-                                    <span className="absolute -top-6 left-0 text-[10px] font-black uppercase text-neutral-400">Year Filter</span>
-                                )}
-                            </div>
-
-                             {(search || month !== "ALL" || year !== "ALL") && (
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-11 px-4 font-black text-[10px] uppercase text-neutral-500 hover:text-primary rounded-xl"
-                                    onClick={() => {
-                                        setSearch("");
-                                        setMonth("ALL");
-                                        setYear("ALL");
-                                        setPage(1);
-                                    }}
-                                >
-                                    Clear Filters
-                                </Button>
-                            )}
+                                <IconFilter className="h-4 w-4 mr-2" />
+                                Filters
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="rounded-xl h-10 w-10 hover:bg-muted"
+                                onClick={() => etfRecordsQuery.refetch()}
+                                disabled={etfRecordsQuery.isFetching}
+                            >
+                                <IconRefresh className={`h-4 w-4 ${etfRecordsQuery.isFetching ? 'animate-spin' : ''}`} />
+                            </Button>
                         </div>
                     </div>
+
+                        {showFilters && (
+                            <div className="flex flex-col md:flex-row items-center gap-3 pt-4 border-t mt-4 overflow-x-auto pb-2 no-scrollbar p-1">
+                                <div className="relative w-full md:w-[280px] shrink-0">
+                                    <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-focus-within:text-primary transition-colors" />
+                                    <Input 
+                                        placeholder="Search references..." 
+                                        className="pl-10 h-10 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 focus:ring-primary/20 font-bold text-xs"
+                                        value={search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value);
+                                            setPage(1);
+                                        }}
+                                    />
+                                    {search && (
+                                        <button 
+                                            onClick={() => setSearch("")}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                                        >
+                                            <IconX className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <Select 
+                                    value={month} 
+                                    onValueChange={(v) => {
+                                        setMonth(v);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-10 w-full md:w-[130px] rounded-xl border-neutral-200 dark:border-neutral-800 font-bold text-xs bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
+                                        <SelectValue placeholder="Month" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                        <SelectItem value="ALL" className="font-bold text-xs">All Months</SelectItem>
+                                        {monthsNames.map((m, i) => (
+                                            <SelectItem key={m} value={(i + 1).toString()} className="font-bold text-xs">
+                                                {m}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <div className="relative w-full md:w-[90px] shrink-0">
+                                    <Input
+                                        type="number"
+                                        placeholder="Year"
+                                        className="h-10 rounded-xl border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 font-bold text-xs focus:ring-primary/20"
+                                        value={year === "ALL" ? "" : year}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setYear(val === "" ? "ALL" : val);
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+
+                                {hasActiveFilters && (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl shrink-0"
+                                        onClick={() => {
+                                            setSearch("");
+                                            setMonth("ALL");
+                                            setYear("ALL");
+                                            setPage(1);
+                                        }}
+                                    >
+                                        <IconX className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                 </CardHeader>
-                <CardContent className="p-0">
+                
+                <CardContent>
                     {etfRecordsQuery.isLoading ? (
-                        <div className="p-20 flex justify-center">
-                            <IconRefresh className="h-8 w-8 animate-spin text-primary/20" />
+                        <div className="p-32 flex flex-col items-center justify-center gap-4 animate-pulse">
+                            <IconRefresh className="h-10 w-10 animate-spin text-primary/30" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Synthesizing Records...</span>
                         </div>
                     ) : records.length === 0 ? (
-                        <div className="rounded-xl p-20 flex flex-col items-center justify-center text-center gap-2">
-                            <div className="h-16 w-16 rounded-3xl bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center mb-2">
-                                <IconFileText className="h-8 w-8 text-neutral-300" />
+                        <div className="p-32 flex flex-col items-center justify-center text-center gap-6 bg-neutral-50/20 dark:bg-transparent">
+                            <div className="h-20 w-20 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-2 shadow-inner ring-1 ring-neutral-200 dark:ring-neutral-700">
+                                <IconFileText className="h-10 w-10 text-neutral-300 dark:text-neutral-600" />
                             </div>
-                            <p className="text-sm font-bold text-neutral-500">No ETF submission records found.</p>
-                            <p className="text-xs text-neutral-400">Try changing the period or generate a new submission.</p>
+                            <div className="space-y-1">
+                                <h4 className="font-black uppercase tracking-tight text-neutral-400 dark:text-neutral-500">No submission records</h4>
+                                <p className="text-[11px] font-medium text-neutral-400 max-w-[240px]">Access your ETF history by generating a new report or adjusting filters.</p>
+                            </div>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="bg-neutral-50/50 dark:bg-neutral-800/50 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50">
-                                        <TableHead className="py-4 px-6 font-black uppercase text-[10px] tracking-wider text-neutral-500">Period</TableHead>
-                                        <TableHead className="py-4 px-6 font-black uppercase text-[10px] tracking-wider text-neutral-500 text-right">Total Contribution</TableHead>
-                                        <TableHead className="py-4 px-6 font-black uppercase text-[10px] tracking-wider text-neutral-500">Paid Date</TableHead>
-                                        <TableHead className="py-4 px-6 font-black uppercase text-[10px] tracking-wider text-neutral-500 text-center">Status</TableHead>
-                                        <TableHead className="py-4 px-6 w-[50px]"></TableHead>
+                                    <TableRow>
+                                        <TableHead>Period</TableHead>
+                                        <TableHead className="text-right">Total Contribution</TableHead>
+                                        <TableHead>Paid Date</TableHead>
+                                        <TableHead className="text-center">Status</TableHead>
+                                        <TableHead className="w-[80px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {records.map((record: any) => (
                                         <TableRow 
                                             key={record.id} 
-                                            className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors border-b border-neutral-100 dark:border-neutral-800 last:border-0 cursor-pointer"
+                                            className="cursor-pointer hover:bg-muted/50 transition-colors"
                                             onClick={() => setSelectedRecord(record)}
                                         >
-                                            <TableCell className="py-4 px-6 font-bold text-sm">
-                                                {getMonthName(record.month)} {record.year}
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-sm">{getMonthName(record.month)}</span>
+                                                    <span className="text-xs text-muted-foreground">{record.year}</span>
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="py-4 px-6 text-right">
-                                                <span className="font-black text-sm text-orange-600">
-                                                    {record.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                </span>
+                                            <TableCell className="text-right">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-bold text-sm tracking-tight text-primary">
+                                                        {formatCurrency(record.totalContribution)}
+                                                    </span>
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="py-4 px-6 text-sm text-neutral-500">
-                                                {record.paidDate ? format(new Date(record.paidDate), "MMM d, yyyy") : "Pending"}
+                                            <TableCell className="text-xs">
+                                                {record.paidDate ? format(new Date(record.paidDate), "MMM d, yyyy") : 
+                                                    <span className="text-amber-500 font-bold uppercase text-[9px]">Outstanding</span>
+                                                }
                                             </TableCell>
-                                            <TableCell className="py-4 px-6 text-center">
+                                            <TableCell className="text-center">
                                                 <Badge
                                                     variant="outline"
                                                     className={cn(
-                                                        "font-black uppercase text-[10px] tracking-widest px-2 py-0.5 rounded-lg",
+                                                        "font-bold text-[10px]",
                                                         record.paidDate 
-                                                            ? "bg-green-50 text-green-600 border-green-200"
-                                                            : "bg-orange-50 text-orange-600 border-orange-200"
+                                                            ? "bg-green-50 text-green-700 border-green-200"
+                                                            : "bg-amber-50 text-amber-700 border-amber-200"
                                                     )}
                                                 >
-                                                    {record.paidDate ? "Paid" : "Pending"}
+                                                    {record.paidDate ? "Cleared" : "Pending"}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="py-4 px-6">
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white dark:hover:bg-neutral-800 shadow-sm border border-transparent hover:border-neutral-100 dark:hover:border-neutral-700 transition-all">
-                                                        <IconChevronRight className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
+                                            <TableCell>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                    <IconChevronRight className="h-4 w-4" />
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -287,15 +298,13 @@ export const EtfTab = () => {
                     )}
 
                     {totalPages > 1 && (
-                        <div className="px-6 py-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/30 dark:bg-neutral-900/30">
-                            <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest">
-                                Page {page} of {totalPages} ({totalRecords} total)
-                            </p>
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between px-6 py-4 border-t">
+                            <p className="text-xs text-muted-foreground">Page {page} of {totalPages}</p>
+                            <div className="flex gap-1">
                                 <Button
                                     variant="outline"
-                                    size="sm"
-                                    className="h-9 w-9 p-0 rounded-xl border-neutral-200 dark:border-neutral-800"
+                                    size="icon"
+                                    className="h-8 w-8"
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1}
                                 >
@@ -303,8 +312,8 @@ export const EtfTab = () => {
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    size="sm"
-                                    className="h-9 w-9 p-0 rounded-xl border-neutral-200 dark:border-neutral-800"
+                                    size="icon"
+                                    className="h-8 w-8"
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
                                 >
@@ -316,28 +325,20 @@ export const EtfTab = () => {
                 </CardContent>
             </Card>
 
-            <GenerateEtfDialog 
-                open={isGenerateOpen} 
-                onOpenChange={setIsGenerateOpen} 
-                companyId={companyId}
-            />
-
+            <GenerateEtfDialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen} companyId={companyId} />
             <EtfDetailsDialog 
                 open={!!selectedRecord}
                 onOpenChange={(open) => !open && setSelectedRecord(null)}
                 record={selectedRecord}
-                onDelete={(id) => {
-                    setRecordToDelete(id);
-                    setIsDeleteDialogOpen(true);
-                }}
+                onDelete={(id) => { setRecordToDelete(id); setIsDeleteDialogOpen(true); }}
             />
 
             <ConfirmationDialog
                 open={isDeleteDialogOpen}
                 onOpenChange={setIsDeleteDialogOpen}
                 title="Delete ETF Record"
-                description="This action cannot be undone. This record and its associated data will be permanently removed."
-                icon={<IconTrash className="h-8 w-8 text-red-500" />}
+                description="This action cannot be undone. This record and its associated data will be permanently removed from the system."
+                icon={<IconTrash className="h-8 w-8 text-rose-500" />}
                 actionLabel="Delete Record"
                 cancelLabel="Cancel"
                 onAction={() => {
@@ -358,4 +359,3 @@ export const EtfTab = () => {
         </div>
     );
 };
-

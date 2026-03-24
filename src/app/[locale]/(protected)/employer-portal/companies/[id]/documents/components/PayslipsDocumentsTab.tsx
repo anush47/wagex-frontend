@@ -1,10 +1,11 @@
+"use client";
+
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { IconDownload, IconFileInvoice, IconSearch, IconUserCircle, IconLayoutGrid } from "@tabler/icons-react";
+import { IconDownload, IconFileInvoice, IconSearch, IconFilter, IconX, IconRefresh, IconMail } from "@tabler/icons-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TemplateEditor } from "./TemplateEditor";
 import { DocumentType } from "@/types/template";
 import { useParams } from "next/navigation";
 import { useTemplates } from "@/hooks/use-templates";
@@ -13,16 +14,23 @@ import { printDocument, bulkPrintDocuments } from "@/services/document-print.ser
 import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { cn, formatCurrency } from "@/lib/utils";
+
+const monthsNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
 
 export function PayslipsDocumentsTab() {
     const params = useParams();
     const companyId = params.id as string;
-    const [isManagingTemplate, setIsManagingTemplate] = React.useState(false);
     
     // Filters
     const [month, setMonth] = React.useState(new Date().getMonth() + 1);
     const [year, setYear] = React.useState(new Date().getFullYear());
     const [searchTerm, setSearchTerm] = React.useState("");
+    const [showFilters, setShowFilters] = React.useState(false);
 
     const { salariesQuery } = useSalaries({
         companyId,
@@ -31,14 +39,10 @@ export function PayslipsDocumentsTab() {
     });
 
     const { templatesQuery } = useTemplates({ companyId, type: DocumentType.PAYSLIP, isActive: true });
-    const [selectedTemplate, setSelectedTemplate] = React.useState<string>("");
+    
+    const selectedTemplate = templatesQuery.data?.[0]?.id;
+    const selectedTemplateName = templatesQuery.data?.[0]?.name || "System Standard";
     const [selectedSalaries, setSelectedSalaries] = React.useState<string[]>([]);
-
-    React.useEffect(() => {
-        if (templatesQuery.data?.length > 0 && !selectedTemplate) {
-            setSelectedTemplate(templatesQuery.data[0].id);
-        }
-    }, [templatesQuery.data, selectedTemplate]);
 
     const handlePrintIndividual = (salaryId: string) => {
         if (!selectedTemplate) return toast.error("Please select a template first");
@@ -62,169 +66,178 @@ export function PayslipsDocumentsTab() {
         setSelectedSalaries(selectedSalaries.length === allIds.length ? [] : allIds);
     };
 
-    if (isManagingTemplate) {
-        return (
-            <TemplateEditor 
-                type={DocumentType.PAYSLIP}
-                companyId={companyId}
-                onCancel={() => setIsManagingTemplate(false)}
-                onSave={() => setIsManagingTemplate(false)}
-            />
-        );
-    }
-
     const filteredSalaries = (salariesQuery.data?.items || []).filter((s: any) => 
         s.employee?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.employee?.employeeNo?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1.5">
-                    <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest pl-1">Select Template</Label>
-                    <select 
-                        value={selectedTemplate}
-                        onChange={(e) => setSelectedTemplate(e.target.value)}
-                        className="h-11 rounded-xl bg-white border border-neutral-100 shadow-sm px-4 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    >
-                        {templatesQuery.data?.map((t: any) => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
-                        ))}
-                        {(!templatesQuery.data || templatesQuery.data.length === 0) && (
-                            <option disabled>No active templates found</option>
-                        )}
-                    </select>
-                </div>
-                
-                <div className="flex flex-col gap-1.5">
-                    <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest pl-1">Period</Label>
-                    <div className="flex gap-2">
-                        <select 
-                            value={month}
-                            onChange={(e) => setMonth(parseInt(e.target.value))}
-                            className="flex-1 h-11 rounded-xl bg-white border border-neutral-100 shadow-sm px-4 text-xs font-bold"
-                        >
-                            {Array.from({ length: 12 }).map((_, i) => (
-                                <option key={i + 1} value={i + 1}>{format(new Date(2000, i), 'MMMM')}</option>
-                            ))}
-                        </select>
-                        <select 
-                            value={year}
-                            onChange={(e) => setYear(parseInt(e.target.value))}
-                            className="w-24 h-11 rounded-xl bg-white border border-neutral-100 shadow-sm px-4 text-xs font-bold"
-                        >
-                            {[2024, 2025, 2026].map(y => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+    const hasActiveFilters = searchTerm !== "" || month !== new Date().getMonth() + 1 || year !== new Date().getFullYear();
 
-                <div className="flex items-end gap-3">
+    return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+                <div className="space-y-1.5">
+                    <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90">Employee Payslips</h3>
+                    <p className="text-neutral-500 font-medium text-xs">Generate and distribute monthly payslips to your staff</p>
+                </div>
+                <div className="flex items-center gap-2">
                     <Button 
                         variant="outline" 
-                        className="flex-1 h-11 px-6 rounded-xl font-bold text-xs uppercase tracking-wider bg-white shadow-sm border-neutral-100"
-                        onClick={() => setIsManagingTemplate(true)}
+                        size="sm"
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={cn(
+                            "h-10 rounded-xl px-4 font-bold text-xs uppercase transition-all gap-2",
+                            showFilters ? "bg-primary/10 text-primary border-primary/20" : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
+                        )}
                     >
-                        <IconLayoutGrid className="mr-2 h-4 w-4 text-primary" />
-                        Manage Template
+                        <IconFilter className="h-4 w-4" />
+                        <span>Filters</span>
                     </Button>
-                </div>
-            </div>
-
-            <Card className="rounded-2xl border-none bg-white dark:bg-neutral-900 shadow-sm overflow-hidden border border-neutral-100">
-                <CardHeader className="bg-neutral-50/50 dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700/50 px-6 py-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                <IconFileInvoice className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-lg font-bold">Generate Payslips</CardTitle>
-                                <p className="text-xs text-neutral-500 font-medium">Generate and email monthly payslips to staff members</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
+                    {selectedSalaries.length > 0 ? (
+                        <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
                              <Button 
                                 variant="outline" 
-                                className="h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider"
+                                className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-white text-primary border-2 border-primary/10 hover:bg-primary/5 transition-all"
                                 onClick={handleBulkPrint}
-                                disabled={selectedSalaries.length === 0}
                              >
-                                <IconDownload className="mr-2 h-4 w-4" />
+                                <IconDownload className="mr-2 h-4 w-4 stroke-[3]" />
                                 Bulk Print ({selectedSalaries.length})
                              </Button>
-                             <Button className="h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg bg-primary hover:bg-primary/90">
+                             <Button className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary text-white hover:scale-105 transition-all">
+                                <IconMail className="mr-2 h-4 w-4 stroke-[3]" />
                                 Email Batch
                              </Button>
                         </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <div className="p-4 px-6 border-b border-neutral-100 bg-white">
-                        <div className="relative w-full max-w-sm">
-                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                            <Input 
-                                placeholder="Search employee..." 
-                                className="pl-9 h-10 rounded-xl text-xs bg-neutral-50 border-none focus-visible:ring-1" 
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                    ) : (
+                        <Button className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest opacity-40 cursor-not-allowed bg-neutral-100 dark:bg-neutral-800 text-neutral-400" disabled>
+                            Select Employees
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {showFilters && (
+                <Card className="border-2 border-dashed border-neutral-100 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-950/20 rounded-[2rem] p-8 animate-in slide-in-from-top-4 duration-300 shadow-inner">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="space-y-3">
+                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Configuration</Label>
+                            <div className="h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 flex items-center justify-between shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <IconFileInvoice className="h-5 w-5 text-primary" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-tight leading-none mb-1">Active Template</span>
+                                        <span className="text-xs font-black uppercase tracking-tight text-foreground">{selectedTemplateName}</span>
+                                    </div>
+                                </div>
+                                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest h-6 px-3 rounded-lg">Default</Badge>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 lg:col-span-2">
+                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Period & Search</Label>
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="flex flex-1 gap-3">
+                                    <select 
+                                        value={month}
+                                        onChange={(e) => setMonth(parseInt(e.target.value))}
+                                        className="flex-1 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 text-xs font-black uppercase tracking-wider focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                                    >
+                                        {monthsNames.map((m, i) => (
+                                            <option key={i + 1} value={i + 1}>{m}</option>
+                                        ))}
+                                    </select>
+                                    <select 
+                                        value={year}
+                                        onChange={(e) => setYear(parseInt(e.target.value))}
+                                        className="w-32 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 text-xs font-black uppercase tracking-wider focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                                    >
+                                        {[2024, 2025, 2026].map(y => (
+                                            <option key={y} value={y}>{y}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="relative flex-[1.5] group">
+                                    <IconSearch className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-focus-within:text-primary transition-colors" />
+                                    <Input 
+                                        placeholder="Search by name or ID..." 
+                                        className="pl-12 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-xs font-black uppercase tracking-wide focus:border-primary/50 transition-all shadow-sm"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    {searchTerm && (
+                                        <button onClick={() => setSearchTerm("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+                                            <IconX className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </Card>
+            )}
 
+            <Card className="border border-neutral-200 dark:border-white/10 shadow-sm bg-white dark:bg-neutral-900/40 overflow-hidden rounded-[2.5rem] ring-1 ring-neutral-100 dark:ring-neutral-800/50">
+                <CardContent className="p-0">
                     {salariesQuery.isLoading ? (
-                        <div className="py-20 text-center text-neutral-400 text-xs font-bold uppercase tracking-widest animate-pulse">Loading Staff Records...</div>
+                        <div className="p-32 flex flex-col items-center justify-center gap-4 animate-pulse">
+                            <IconRefresh className="h-10 w-10 animate-spin text-primary/30" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Syncing Records...</span>
+                        </div>
                     ) : filteredSalaries.length === 0 ? (
-                        <div className="py-20 text-center flex flex-col items-center">
-                            <div className="h-12 w-12 rounded-2xl bg-neutral-50 flex items-center justify-center mb-4">
-                                <IconSearch className="h-6 w-6 text-neutral-300" />
+                        <div className="p-32 flex flex-col items-center justify-center text-center gap-6">
+                            <div className="h-20 w-20 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-2 shadow-inner ring-1 ring-neutral-100 dark:ring-neutral-700">
+                                <IconSearch className="h-10 w-10 text-neutral-300 dark:text-neutral-600" />
                             </div>
-                            <h3 className="font-bold text-sm">No Salaries Found</h3>
-                            <p className="text-neutral-400 text-[11px] mt-1">Try adjusting your filters or period selection.</p>
+                            <div className="space-y-1">
+                                <h4 className="font-black uppercase tracking-tight text-neutral-400 dark:text-neutral-500">No staff records found</h4>
+                                <p className="text-[11px] font-medium text-neutral-400 max-w-[240px]">We couldn't find any salaries for the selected period. Ensure payroll is generated first.</p>
+                            </div>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="border-b border-neutral-100 bg-neutral-50/30">
-                                        <th className="p-4 px-6 w-10">
+                                    <tr className="bg-neutral-50/50 dark:bg-neutral-800/30 border-b border-neutral-100 dark:border-neutral-800">
+                                        <th className="py-6 px-8 w-16">
                                             <Checkbox 
                                                 checked={selectedSalaries.length === filteredSalaries.length && filteredSalaries.length > 0}
                                                 onCheckedChange={toggleAll}
+                                                className="rounded-md border-2 border-neutral-300 dark:border-neutral-700"
                                             />
                                         </th>
-                                        <th className="p-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Employee</th>
-                                        <th className="p-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Net Salary</th>
-                                        <th className="p-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest text-right">Actions</th>
+                                        <th className="py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] text-neutral-400">Employee Details</th>
+                                        <th className="py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] text-neutral-400 text-right">Net Pay (LKR)</th>
+                                        <th className="py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] text-neutral-400 text-center">Export</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredSalaries.map((s: any) => (
-                                        <tr key={s.id} className="border-b border-neutral-50 hover:bg-neutral-50/50 transition-colors group">
-                                            <td className="p-4 px-6">
+                                        <tr key={s.id} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition-all duration-300 border-b border-neutral-50 dark:border-neutral-800 last:border-0 cursor-pointer" onClick={() => toggleSalarySelection(s.id)}>
+                                            <td className="py-6 px-8" onClick={(e) => e.stopPropagation()}>
                                                 <Checkbox 
                                                     checked={selectedSalaries.includes(s.id)}
                                                     onCheckedChange={() => toggleSalarySelection(s.id)}
+                                                    className="rounded-md border-2 border-neutral-300 dark:border-neutral-700"
                                                 />
                                             </td>
-                                            <td className="p-4">
+                                            <td className="py-6 px-8">
                                                 <div className="flex flex-col">
-                                                    <span className="font-bold text-sm">{s.employee?.fullName}</span>
-                                                    <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-tighter">ID: {s.employee?.employeeNo}</span>
+                                                    <span className="font-black text-sm uppercase tracking-tight text-foreground/90">{s.employee?.fullName}</span>
+                                                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-0.5">STAFF REF: {s.employee?.employeeNo || "---"}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4">
-                                                <span className="font-mono text-xs font-bold">LKR {s.netSalary?.toLocaleString()}</span>
+                                            <td className="py-6 px-8 text-right">
+                                                <span className="font-black text-sm tracking-tight text-foreground">
+                                                    {formatCurrency(s.netSalary)}
+                                                </span>
                                             </td>
-                                            <td className="p-4 text-right">
+                                            <td className="py-6 px-8 text-center" onClick={(e) => e.stopPropagation()}>
                                                 <Button 
                                                     variant="ghost" 
-                                                    className="h-8 w-8 p-0 rounded-lg group-hover:bg-primary group-hover:text-white transition-all shadow-sm"
+                                                    className="h-11 w-11 p-0 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all transform group-hover:scale-110 shadow-lg"
                                                     onClick={() => handlePrintIndividual(s.id)}
                                                 >
-                                                    <IconDownload className="h-4 w-4" />
+                                                    <IconDownload className="h-5 w-5 stroke-[2.5]" />
                                                 </Button>
                                             </td>
                                         </tr>

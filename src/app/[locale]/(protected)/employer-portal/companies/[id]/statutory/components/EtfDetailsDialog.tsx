@@ -21,6 +21,7 @@ import {
     IconTrash,
     IconUsers,
     IconChevronRight,
+    IconCurrencyDollar,
     IconRefresh
 } from "@tabler/icons-react";
 import { SalaryDetailsDialog } from "../../salaries/components/SalaryDetailsDialog";
@@ -144,11 +145,35 @@ export const EtfDetailsDialog = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Summary Section */}
                         <div className="space-y-6">
-                            <div className="p-6 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1">
-                                <span className="text-[10px] font-black uppercase text-primary-foreground/70 tracking-widest italic">Total Contribution</span>
-                                <span className="text-3xl font-black italic tracking-tighter">
+                            <div className="p-6 rounded-3xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 flex flex-col gap-1 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                                    <IconCurrencyDollar className="h-12 w-12 text-primary-foreground" />
+                                </div>
+                                <span className="text-[10px] font-black uppercase text-primary-foreground/70 tracking-widest italic z-10">Total Contribution</span>
+                                <span className="text-3xl font-black italic tracking-tighter z-10">
                                     LKR {record.totalContribution.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </span>
+                                {fullRecord && (
+                                    <div className="mt-3 flex gap-4 pt-3 border-t border-primary-foreground/10 z-10">
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] font-black uppercase text-primary-foreground/60 tracking-widest leading-none">Employer Total (3%)</span>
+                                            <span className="text-xs font-black">
+                                                LKR {fullRecord.salaries?.reduce((sum: number, salary: any) => {
+                                                    const etfComp = (salary.components || []).find((c: any) => c.systemType === 'ETF_EMPLOYER' || (c.name.toLowerCase().includes('etf') && c.employerAmount > 0));
+                                                    return sum + (etfComp?.employerAmount || 0);
+                                                }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                        {record.surcharge > 0 && (
+                                            <div className="flex flex-col border-l pl-4 border-primary-foreground/10">
+                                                <span className="text-[8px] font-black uppercase text-primary-foreground/60 tracking-widest leading-none">Surcharge</span>
+                                                <span className="text-xs font-black text-orange-200">
+                                                    LKR {record.surcharge.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-4">

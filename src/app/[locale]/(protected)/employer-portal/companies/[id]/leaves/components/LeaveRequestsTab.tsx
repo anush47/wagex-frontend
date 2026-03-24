@@ -153,77 +153,90 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     setDetailsOpen(false);
                 }}
             />
-            <Card>
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
                 <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <CardTitle>Leave Requests</CardTitle>
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <IconFileText className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">Leave Requests</CardTitle>
+                                <p className="text-xs font-medium text-muted-foreground">Manage and review employee leave applications.</p>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="rounded-xl h-9"
+                                className={cn(
+                                    "rounded-xl h-10 px-4",
+                                    showFilters && "bg-muted"
+                                )}
                             >
                                 <IconFilter className="h-4 w-4 mr-2" />
                                 Filters
                             </Button>
-                            <Button variant="outline" size="icon" onClick={() => fetchRequests()} disabled={loading} className="rounded-xl shadow-sm h-9 w-9">
+                            <Button variant="outline" size="icon" onClick={() => fetchRequests()} disabled={loading} className="rounded-xl h-10 w-10 hover:bg-muted">
                                 <IconRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             </Button>
                         </div>
                     </div>
                     {showFilters && (
-                        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 pt-2 border-t border-border mt-2">
-                            <SalaryPeriodQuickSelect
-                                companyId={companyId}
-                                onRangeSelect={(start, end) => {
-                                    setStartDate(start);
-                                    setEndDate(end);
-                                }}
-                                currentStart={startDate}
-                                currentEnd={endDate}
-                            />
-                            <div className="flex items-center gap-2 p-1 bg-neutral-100/50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200/50 dark:border-neutral-700/50 shadow-inner">
+                        <div className="flex flex-col md:flex-row items-center gap-3 pt-4 border-t mt-4 overflow-x-auto pb-2 no-scrollbar p-1">
+                            <div className="shrink-0">
+                                <SalaryPeriodQuickSelect
+                                    companyId={companyId}
+                                    onRangeSelect={(start, end) => {
+                                        setStartDate(start);
+                                        setEndDate(end);
+                                    }}
+                                    currentStart={startDate}
+                                    currentEnd={endDate}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 p-1 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-xl border border-neutral-200 dark:border-neutral-800 shrink-0 h-10">
                                 <div className="flex items-center gap-1.5 px-2">
                                     <span className="text-[10px] font-black uppercase text-neutral-400">From</span>
                                     <input
                                         type="date"
                                         value={startDate || ""}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[110px]"
+                                        className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[100px]"
                                     />
                                 </div>
-                                <div className="h-4 w-[1px] bg-neutral-200 dark:bg-neutral-700" />
+                                <div className="h-4 w-[1px] bg-neutral-200 dark:bg-neutral-800" />
                                 <div className="flex items-center gap-1.5 px-2">
                                     <span className="text-[10px] font-black uppercase text-neutral-400">To</span>
                                     <input
                                         type="date"
                                         value={endDate || ""}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[110px]"
+                                        className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 text-neutral-600 dark:text-neutral-300 w-[100px]"
                                     />
                                 </div>
                             </div>
 
-                            <div className="w-full md:w-[200px]">
+                            <div className="w-full md:w-[200px] shrink-0">
                                 <SearchableEmployeeSelect
                                     companyId={companyId}
-                                    value={employeeFilter || undefined} // Pass undefined for "All"
+                                    value={employeeFilter || undefined}
                                     onSelect={(id) => setEmployeeFilter(id)}
-                                    placeholder="Filter by employee"
+                                    placeholder="Employee"
                                 />
                             </div>
 
                             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeaveStatus | "ALL")}>
-                                <SelectTrigger className="w-[180px] rounded-xl h-9">
-                                    <SelectValue placeholder="Filter by status" />
+                                <SelectTrigger className="w-full md:w-[150px] h-10 rounded-xl border-neutral-200 dark:border-neutral-800 font-bold text-xs bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
+                                    <SelectValue placeholder="Status" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All Statuses</SelectItem>
-                                    <SelectItem value="PENDING">Pending</SelectItem>
-                                    <SelectItem value="APPROVED">Approved</SelectItem>
-                                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem value="ALL" className="font-bold text-xs">All Statuses</SelectItem>
+                                    <SelectItem value="PENDING" className="font-bold text-xs">Pending</SelectItem>
+                                    <SelectItem value="APPROVED" className="font-bold text-xs">Approved</SelectItem>
+                                    <SelectItem value="REJECTED" className="font-bold text-xs">Rejected</SelectItem>
+                                    <SelectItem value="CANCELLED" className="font-bold text-xs">Cancelled</SelectItem>
                                 </SelectContent>
                             </Select>
 
@@ -237,7 +250,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                         setStartDate(undefined);
                                         setEndDate(undefined);
                                     }}
-                                    className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0"
+                                    className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl shrink-0"
                                     title="Clear all filters"
                                 >
                                     <IconX className="h-4 w-4" />
@@ -373,7 +386,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                                             `${request.days} ${request.days === 1 ? 'Day' : 'Days'}`
                                                         )}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold">
                                                         {request.type === "SHORT_LEAVE" ? (
                                                             format(new Date(request.startDate), "h:mm a") + " - " + format(new Date(request.endDate), "h:mm a")
                                                         ) : (

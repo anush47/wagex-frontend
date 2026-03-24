@@ -299,14 +299,16 @@ export function PoliciesManagement({ companyId }: PoliciesManagementProps) {
                     </div>
 
                     <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-                        <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-1 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-8">
-                            <TabTrigger value="shifts" icon={<IconClock className="h-4 w-4" />} label="Shifts" isOverridden={overriddenTabs.has('shifts')} />
-                            <TabTrigger value="working-days" icon={<IconCalendarStats className="h-4 w-4" />} label="Calendar" isOverridden={overriddenTabs.has('working-days')} />
-                            <TabTrigger value="salary-components" icon={<IconCoin className="h-4 w-4" />} label="Pay Items" isOverridden={overriddenTabs.has('salary-components')} />
-                            <TabTrigger value="payroll-settings" icon={<IconCalendarTime className="h-4 w-4" />} label="Payroll" isOverridden={overriddenTabs.has('payroll-settings')} />
-                            <TabTrigger value="attendance" icon={<IconCalendarStats className="h-4 w-4" />} label="Attendance" isOverridden={overriddenTabs.has('attendance')} />
-                            <TabTrigger value="leaves" icon={<IconCalendarStar className="h-4 w-4" />} label="Leaves" isOverridden={overriddenTabs.has('leaves')} />
-                        </TabsList>
+                        <div className="overflow-x-auto no-scrollbar pb-2">
+                            <TabsList className="w-full h-12 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl md:grid md:grid-cols-6 md:max-w-4xl flex whitespace-nowrap min-w-max md:min-w-0">
+                                <TabTrigger value="shifts" icon={<IconClock className="h-4 w-4" />} label="Shifts" isOverridden={overriddenTabs.has('shifts')} />
+                                <TabTrigger value="working-days" icon={<IconCalendarStats className="h-4 w-4" />} label="Calendar" isOverridden={overriddenTabs.has('working-days')} />
+                                <TabTrigger value="salary-components" icon={<IconCoin className="h-4 w-4" />} label="Pay Items" isOverridden={overriddenTabs.has('salary-components')} />
+                                <TabTrigger value="payroll-settings" icon={<IconCalendarTime className="h-4 w-4" />} label="Payroll" isOverridden={overriddenTabs.has('payroll-settings')} />
+                                <TabTrigger value="attendance" icon={<IconCalendarStats className="h-4 w-4" />} label="Attendance" isOverridden={overriddenTabs.has('attendance')} />
+                                <TabTrigger value="leaves" icon={<IconCalendarStar className="h-4 w-4" />} label="Leaves" isOverridden={overriddenTabs.has('leaves')} />
+                            </TabsList>
+                        </div>
 
                         {editingSettings && (
                             <div className="min-h-[400px] pb-32">
@@ -427,13 +429,13 @@ function TabTrigger({ value, icon, label, isOverridden }: { value: string, icon:
     return (
         <TabsTrigger
             value={value}
-            className="rounded-lg px-3 py-2 text-xs font-bold data-[state=active]:bg-primary/10 data-[state=active]:text-primary bg-transparent text-muted-foreground whitespace-nowrap relative"
+            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all relative"
         >
             {isOverridden && (
                 <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-orange-500 shadow-sm animate-pulse" />
             )}
-            <span className="mr-2 opacity-70 scale-90">{icon}</span>
-            {label}
+            {icon}
+            <span>{label}</span>
         </TabsTrigger>
     );
 }

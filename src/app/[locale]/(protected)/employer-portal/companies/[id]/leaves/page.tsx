@@ -65,17 +65,19 @@ export default function LeavesPage() {
             </div>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="grid w-full max-w-md grid-cols-2">
-                    <TabsTrigger value="requests" className="flex items-center gap-2">
-                        <IconCalendarTime className="h-4 w-4" />
-                        Requests
-                    </TabsTrigger>
-                    <TabsTrigger value="balances" className="flex items-center gap-2">
-                        <IconChartBar className="h-4 w-4" />
-                        Balances
-                    </TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                <div className="overflow-x-auto no-scrollbar pb-2">
+                    <TabsList className="w-full h-12 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl md:grid md:grid-cols-2 md:max-w-md flex whitespace-nowrap min-w-max md:min-w-0">
+                        <TabsTrigger value="requests" className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all">
+                            <IconCalendarTime className="h-4 w-4" />
+                            <span>Requests</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="balances" className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all">
+                            <IconChartBar className="h-4 w-4" />
+                            <span>Balances</span>
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
                 <TabsContent value="requests" className="mt-6">
                     <LeaveRequestsTab companyId={companyId} />

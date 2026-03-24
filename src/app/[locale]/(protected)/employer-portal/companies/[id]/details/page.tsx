@@ -173,23 +173,25 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                 </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
-                    <TabsTrigger
-                        value="general"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        General
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="files"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        Files ({formData.files?.length || 0})
-                    </TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                <div className="overflow-x-auto no-scrollbar pb-2">
+                    <TabsList className="w-full h-12 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl md:grid md:grid-cols-2 md:max-w-md flex whitespace-nowrap min-w-max md:min-w-0">
+                        <TabsTrigger
+                            value="general"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            General
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="files"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            Files ({formData.files?.length || 0})
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
-                <TabsContent value="general" className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
+                <TabsContent value="general" className="mt-6 space-y-6 animate-in slide-in-from-bottom-2 duration-500">
                     <GeneralTab
                         formData={formData}
                         handleChange={handleChange}
@@ -198,7 +200,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                 </TabsContent>
 
 
-                <TabsContent value="files" className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
+                <TabsContent value="files" className="mt-6 space-y-6 animate-in slide-in-from-bottom-2 duration-500">
                     <FilesTab formData={formData} handleChange={handleChange} />
                 </TabsContent>
             </Tabs>

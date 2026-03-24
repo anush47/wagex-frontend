@@ -186,49 +186,51 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                 </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-                <TabsList className="w-full flex flex-wrap !h-auto gap-2 bg-transparent p-0 justify-start border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4">
-                    <TabsTrigger
-                        value="general"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        <IconUser className="w-4 h-4" />
-                        Identity
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="account"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        <IconUserBolt className="w-4 h-4" />
-                        Account
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="policies"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        <IconSettings className="w-4 h-4" />
-                        Policy Rules
-                        {policySource?.isAssigned && (
-                            <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="files"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg shadow-primary/20 data-[state=active]:border-primary bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500"
-                    >
-                        <IconFiles className="w-4 h-4" />
-                        Documents
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="danger-zone"
-                        className="rounded-xl px-5 py-3 text-xs font-bold transition-all flex items-center gap-2 border border-red-200 dark:border-red-900/50 data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg shadow-red-500/20 data-[state=active]:border-red-600 bg-transparent hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400"
-                    >
-                        <IconAlertTriangle className="w-4 h-4" />
-                        Danger Zone
-                    </TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                <div className="overflow-x-auto no-scrollbar pb-2">
+                    <TabsList className="w-full h-12 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl md:grid md:grid-cols-5 md:max-w-3xl flex whitespace-nowrap min-w-max md:min-w-0">
+                        <TabsTrigger
+                            value="general"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            <IconUser className="w-4 h-4" />
+                            <span>Identity</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="account"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            <IconUserBolt className="w-4 h-4" />
+                            <span>Account</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="policies"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all relative"
+                        >
+                            <IconSettings className="w-4 h-4" />
+                            <span>Policy Rules</span>
+                            {policySource?.isAssigned && (
+                                <div className="ml-2 h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="files"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            <IconFiles className="w-4 h-4" />
+                            <span>Documents</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="danger-zone"
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all text-red-600 dark:text-red-400"
+                        >
+                            <IconAlertTriangle className="w-4 h-4" />
+                            <span>Danger Zone</span>
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
-                <TabsContent value="general" className="mt-0">
+                <TabsContent value="general" className="mt-6">
                     <EmployeeGeneralTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
@@ -248,7 +250,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     />
                 </TabsContent>
 
-                <TabsContent value="account" className="mt-0">
+                <TabsContent value="account" className="mt-6">
                     <EmployeeAccountTab
                         formData={employeeForm}
                         onChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
@@ -257,7 +259,7 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     />
                 </TabsContent>
 
-                <TabsContent value="policies" className="mt-0">
+                <TabsContent value="policies" className="mt-6">
                     <EmployeePoliciesTab
                         companyId={companyId}
                         selectedPolicyId={employeeForm?.policyId || null}
@@ -269,14 +271,14 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
                     />
                 </TabsContent>
 
-                <TabsContent value="files" className="mt-0">
+                <TabsContent value="files" className="mt-6">
                     <EmployeeFilesTab
                         formData={employeeForm}
                         handleChange={(field, value) => setEmployeeForm(prev => prev ? ({ ...prev, [field]: value }) : null)}
                     />
                 </TabsContent>
 
-                <TabsContent value="danger-zone" className="mt-0">
+                <TabsContent value="danger-zone" className="mt-6">
                     <EmployeeDangerZone
                         employee={employeeForm}
                         onEmployeeDeleted={() => {
