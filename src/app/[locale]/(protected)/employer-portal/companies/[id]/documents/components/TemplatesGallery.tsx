@@ -18,7 +18,10 @@ import {
   IconCopy,
   IconDotsVertical,
   IconClockHour4,
-  IconDeviceFloppy
+  IconDeviceFloppy,
+  IconLayoutGrid,
+  IconFiles,
+  IconArrowLeft
 } from "@tabler/icons-react";
 import { 
   DropdownMenu, 
@@ -28,7 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { TemplateEditor } from "./TemplateEditor";
-import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 interface TemplatesGalleryProps {
   companyId: string;
@@ -98,8 +102,11 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
           template={editingTemplate || undefined}
           type={selectedType}
           companyId={companyId}
-          onSave={() => setEditingTemplate(null)}
-          onCancel={() => setEditingTemplate(null)}
+          onSave={async () => {
+            await templatesQuery.refetch();
+            setEditingTemplate(null);
+          }}
+          onBack={() => setEditingTemplate(null)}
         />
       </div>
     );
@@ -107,16 +114,30 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 antialiased">
-      <div className="flex items-end justify-between">
-        <div>
-          <h2 className="text-4xl font-black tracking-tighter uppercase dark:text-neutral-50 shadow-black/5 flex items-center gap-4">
-            Template Hub
-          </h2>
-          <p className="text-neutral-500 dark:text-neutral-400 font-medium mt-1 text-lg">Manage your document layouts and professional styles.</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+        <div className="flex items-center gap-6">
+          <Button 
+              variant="outline" 
+              onClick={() => router.push(`/employer-portal/companies/${companyId}/documents`)}
+              className="h-12 w-12 rounded-2xl border-2 border-neutral-100 dark:border-neutral-800 flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm hover:scale-110 active:scale-95 transition-all"
+          >
+              <IconArrowLeft className="h-5 w-5 text-neutral-400" />
+          </Button>
+          <div className="space-y-1.5 flex-1">
+            <div className="flex items-center gap-3 text-primary mb-1">
+                <div className="h-7 w-7 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <IconLayoutGrid className="h-4 w-4" />
+                </div>
+                <h2 className="text-2xl font-black tracking-tight uppercase italic leading-none">
+                  Hub
+                </h2>
+            </div>
+            <p className="text-neutral-500 font-medium text-[11px] pl-0.5">Manage document styles.</p>
+          </div>
         </div>
         <Button 
           onClick={handleCreateNew}
-          className="h-14 px-8 rounded-2xl font-black bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest"
+          className="h-12 px-8 rounded-2xl font-black bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 shadow-xl hover:scale-[1.05] active:scale-[0.95] transition-all text-xs uppercase tracking-widest border-none"
         >
           <IconPlus className="mr-2 h-5 w-5 stroke-[3]" /> New Template
         </Button>
@@ -127,42 +148,42 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
         onValueChange={handleTabChange}
         className="w-full flex flex-col gap-10"
       >
-        <TabsList className="bg-neutral-100/50 dark:bg-neutral-800/40 p-2 h-16 rounded-[2.5rem] border border-neutral-200/50 dark:border-neutral-700/30 shadow-inner backdrop-blur-sm self-start">
+        <TabsList className="bg-neutral-100 dark:bg-neutral-800 p-1 h-10 rounded-xl border-none shadow-inner self-start gap-1">
           {Object.entries(typeGroups).map(([type, { label, icon }]) => (
             <TabsTrigger 
               key={type} 
               value={type}
-              className="rounded-[2rem] px-10 h-full font-black text-[11px] uppercase tracking-[0.15em] data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-2xl data-[state=active]:text-primary transition-all duration-300 gap-3"
+              className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all duration-200 gap-2"
             >
-              <span className="scale-125">{icon}</span>
+              {icon}
               {label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredTemplates.map((template) => (
             <Card 
               key={template.id} 
-              className={`group relative overflow-hidden rounded-[3rem] border-2 transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] hover:-translate-y-2 ${
+              className={`group relative overflow-hidden rounded-2xl border-2 transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5 ${
                 template.isActive 
-                  ? "border-primary/30 bg-primary/[0.02] dark:bg-primary/[0.03] shadow-xl shadow-primary/5" 
+                  ? "border-primary/30 bg-primary/[0.02] dark:bg-primary/[0.03] shadow-md shadow-primary/5" 
                   : "border-neutral-100 dark:border-neutral-800/50 bg-white dark:bg-neutral-900/40"
               }`}
             >
               {template.isActive && (
-                <div className="absolute top-8 left-8 z-10">
-                  <Badge className="bg-primary text-white px-5 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/30 animate-in zoom-in-50">
-                    <IconCheck className="w-4 h-4 mr-2 stroke-[3]" /> Active Default
+                <div className="absolute top-5 left-5 z-10">
+                  <Badge className="bg-primary text-white px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary/30 animate-in zoom-in-50">
+                    <IconCheck className="w-3 h-3 mr-1.5 stroke-[3]" /> Active
                   </Badge>
                 </div>
               )}
 
-              <div className="absolute top-8 right-8 z-20">
+              <div className="absolute top-3 right-3 z-20">
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full bg-white/60 dark:bg-neutral-800/60 backdrop-blur-xl shadow-xl border border-white/50 dark:border-neutral-700/50 hover:bg-white dark:hover:bg-neutral-800 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                        <IconDotsVertical className="h-5 w-5" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-white/60 dark:bg-neutral-800/60 backdrop-blur-xl shadow-md border border-white/50 dark:border-neutral-700/50 hover:bg-white dark:hover:bg-neutral-800 transition-all opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <IconDotsVertical className="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-2xl shadow-2xl border-neutral-100 dark:border-neutral-800 p-2 min-w-[180px] backdrop-blur-3xl">
@@ -186,44 +207,43 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
                  </DropdownMenu>
               </div>
 
-              <CardHeader className="pt-20 pb-8 px-10">
-                <div className="h-20 w-20 mb-6 rounded-3xl bg-neutral-100 dark:bg-neutral-800/80 flex items-center justify-center text-neutral-400 group-hover:bg-primary/20 group-hover:text-primary transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
-                  {React.cloneElement(typeGroups[template.type].icon as React.ReactElement, { className: "h-8 w-8 stroke-[2.5]" })}
+              <CardHeader className="pt-6 pb-2 px-5 flex flex-col items-start gap-1">
+                <div className="h-9 w-9 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 flex items-center justify-center text-neutral-400 group-hover:bg-primary/20 group-hover:text-primary transition-all duration-500 group-hover:scale-110 mb-2">
+                  {React.cloneElement(typeGroups[template.type].icon as React.ReactElement, { className: "h-4 w-4 stroke-[2.5]" })}
                 </div>
-                <CardTitle className="text-2xl font-black uppercase tracking-tight line-clamp-1 dark:text-neutral-50 group-hover:text-primary transition-colors">{template.name}</CardTitle>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium line-clamp-2 mt-3 leading-relaxed">
-                  {template.description || "A professionalized document layout designed for clarity and compliance."}
+                <CardTitle className="text-base font-black uppercase tracking-tight line-clamp-1 dark:text-neutral-50 group-hover:text-primary transition-colors leading-none">{template.name}</CardTitle>
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium line-clamp-1 mt-1 leading-none italic opacity-80">
+                  {template.description || "No description."}
                 </p>
               </CardHeader>
-
-              <CardContent className="px-10 pb-10">
-                <div className="flex flex-wrap gap-3">
+ 
+              <CardContent className="px-5 pb-4">
+                <div className="flex flex-wrap gap-1.5">
                    {template.isDefault && (
-                    <Badge variant="secondary" className="px-4 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-black uppercase tracking-[0.1em] text-[10px] rounded-xl border-none">
-                      System Standard
+                    <Badge variant="secondary" className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-black uppercase tracking-widest text-[7px] rounded-md border-none">
+                      System
                     </Badge>
                    )}
                    
                    {template.status === TemplateStatus.DRAFT && (
-                    <Badge variant="outline" className="px-4 py-1.5 border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-500 font-black uppercase tracking-[0.1em] text-[10px] rounded-xl bg-neutral-50/50 dark:bg-neutral-800/30">
-                      <IconDeviceFloppy className="h-3 w-3 mr-1.5" /> Draft
+                    <Badge variant="outline" className="px-2 py-0.5 border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-500 font-black uppercase tracking-widest text-[7px] rounded-md bg-neutral-50/50 dark:bg-neutral-800/30">
+                      Draft
                     </Badge>
                    )}
                    
                    {template.status === TemplateStatus.PENDING && (
-                    <Badge variant="outline" className="px-4 py-1.5 border-amber-200 dark:border-amber-800/50 text-amber-600 dark:text-amber-500 font-black uppercase tracking-[0.1em] text-[10px] rounded-xl bg-amber-50/50 dark:bg-amber-950/20">
-                      <IconClockHour4 className="h-3 w-3 mr-1.5 animate-pulse" /> Pending
+                    <Badge variant="outline" className="px-2 py-0.5 border-amber-200 dark:border-amber-800/50 text-amber-600 dark:text-amber-500 font-black uppercase tracking-widest text-[7px] rounded-md bg-amber-50/50 dark:bg-amber-950/20">
+                      Pending
                     </Badge>
                    )}
                 </div>
                 
-                <div className="mt-10">
+                <div className="mt-4">
                    <Button 
-                    variant="ghost" 
-                    className="w-full h-14 rounded-2xl font-black text-xs uppercase tracking-widest border-2 border-transparent hover:border-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm"
+                    className="w-full h-9 rounded-lg font-black text-[10px] uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-900 dark:hover:bg-white hover:text-white dark:hover:text-black transition-all duration-300 shadow-sm border-none"
                     onClick={() => setEditingTemplate(template)}
                    >
-                     Customize Layout
+                     Customize
                    </Button>
                 </div>
               </CardContent>

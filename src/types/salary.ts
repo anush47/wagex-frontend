@@ -174,7 +174,7 @@ export interface SalaryQueryParams {
     employeeId?: string;
     startDate?: string;
     endDate?: string;
-    status?: SalaryStatus;
+    status?: SalaryStatus | SalaryStatus[] | string | string[];
     page?: number;
     limit?: number;
     excludeEpf?: boolean;

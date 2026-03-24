@@ -14,7 +14,13 @@ export class SalaryService {
         if (params.employeeId) searchParams.append('employeeId', params.employeeId);
         if (params.startDate) searchParams.append('startDate', params.startDate);
         if (params.endDate) searchParams.append('endDate', params.endDate);
-        if (params.status) searchParams.append('status', params.status);
+        if (params.status) {
+            if (Array.isArray(params.status)) {
+                searchParams.append('status', params.status.join(','));
+            } else {
+                searchParams.append('status', params.status);
+            }
+        }
         if (params.page) searchParams.append('page', params.page.toString());
         if (params.limit) searchParams.append('limit', params.limit.toString());
         if (params.excludeEpf) searchParams.append('excludeEpf', 'true');

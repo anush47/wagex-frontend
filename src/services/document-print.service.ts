@@ -1,8 +1,16 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export async function printDocument(templateId: string, resourceId: string) {
+export async function printDocument(templateId: string, resourceId: string, options: Record<string, any> = {}) {
   try {
-    const res = await fetch(`${API_URL}/templates/render/${templateId}/${resourceId}`);
+    const query = new URLSearchParams();
+    Object.entries(options).forEach(([key, val]) => {
+      if (val !== undefined && val !== null) {
+        query.append(key, Array.isArray(val) ? val.join(',') : String(val));
+      }
+    });
+
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+    const res = await fetch(`${API_URL}/templates/render/${templateId}/${resourceId}${queryString}`);
     if (!res.ok) throw new Error("Failed to render template");
     
     const { html, css, metadata } = await res.json();

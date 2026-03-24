@@ -8,6 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
+import { useParams } from "next/navigation";
+import { format } from "date-fns";
 
 const monthsNames = [
     "January", "February", "March", "April", "May", "June",
@@ -15,8 +19,11 @@ const monthsNames = [
 ];
 
 export function TaxDocumentsTab() {
-    const [month, setMonth] = React.useState(new Date().getMonth() + 1);
-    const [year, setYear] = React.useState(new Date().getFullYear());
+    const params = useParams();
+    const companyId = params.id as string;
+    const [startDate, setStartDate] = React.useState<string | undefined>();
+    const [endDate, setEndDate] = React.useState<string | undefined>();
+    const [employeeId, setEmployeeId] = React.useState<string | undefined>();
     const [showFilters, setShowFilters] = React.useState(false);
 
     return (
@@ -49,48 +56,49 @@ export function TaxDocumentsTab() {
                 </div>
             </div>
 
-            {showFilters && (
-                <Card className="border-2 border-dashed border-neutral-100 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-950/20 rounded-[2rem] p-8 animate-in slide-in-from-top-4 duration-300 shadow-inner">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Tax Period</Label>
-                            <div className="flex gap-3">
-                                <select 
-                                    value={month}
-                                    onChange={(e) => setMonth(parseInt(e.target.value))}
-                                    className="flex-1 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 text-xs font-black uppercase tracking-wider focus:ring-2 focus:ring-rose-500/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
-                                >
-                                    {monthsNames.map((m, i) => (
-                                        <option key={i + 1} value={i + 1}>{m}</option>
-                                    ))}
-                                </select>
-                                <select 
-                                    value={year}
-                                    onChange={(e) => setYear(parseInt(e.target.value))}
-                                    className="w-32 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 text-xs font-black uppercase tracking-wider focus:ring-2 focus:ring-rose-500/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
-                                >
-                                    {[2024, 2025, 2026].map(y => (
-                                        <option key={y} value={y}>{y}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Search Staff Records</Label>
-                            <div className="relative group">
-                                <IconSearch className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-focus-within:text-rose-500 transition-colors" />
-                                <Input 
-                                    placeholder="Employee name or TIN..." 
-                                    className="pl-12 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-xs font-black uppercase tracking-wide focus:border-rose-500/50 transition-all shadow-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-            )}
 
             <Card className="border border-neutral-200 dark:border-white/10 shadow-sm bg-white dark:bg-neutral-900/40 overflow-hidden rounded-[3rem] ring-1 ring-neutral-100 dark:ring-neutral-800/50">
+                <CardHeader className="border-b border-neutral-100 dark:border-neutral-800/60 bg-neutral-50/30 dark:bg-neutral-950/20 px-8 py-6">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                                    <IconGraph className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg font-black uppercase tracking-tight italic">Compliance Selection</CardTitle>
+                                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Select records for tax certificate generation</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                            <SalaryPeriodQuickSelect 
+                                companyId={companyId}
+                                currentStart={startDate}
+                                currentEnd={endDate}
+                                onRangeSelect={(start, end) => {
+                                    setStartDate(start);
+                                    setEndDate(end);
+                                }}
+                            />
+                            <div className="w-[280px]">
+                                <SearchableEmployeeSelect 
+                                    companyId={companyId}
+                                    value={employeeId}
+                                    onSelect={(id) => {
+                                        setEmployeeId(id);
+                                    }}
+                                    placeholder="All Employees"
+                                />
+                            </div>
+                            {employeeId && (
+                                <Button variant="ghost" size="icon" onClick={() => setEmployeeId(undefined)} className="h-10 w-10 text-neutral-400 hover:text-red-500 rounded-xl">
+                                    <IconX className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </CardHeader>
                 <CardContent className="p-0">
                     <div className="flex flex-col items-center justify-center py-32 text-center gap-8">
                         <div className="relative">
@@ -107,7 +115,7 @@ export function TaxDocumentsTab() {
                                 No Tax Data Found
                             </h3>
                             <p className="text-neutral-400 text-xs max-w-[280px] mx-auto font-bold uppercase tracking-widest leading-relaxed">
-                                Tax records for {monthsNames[month - 1]} {year} have not been generated yet.
+                                Tax records for {startDate ? format(new Date(startDate), 'MMMM yyyy') : 'this period'} have not been generated yet.
                             </p>
                         </div>
 

@@ -20,10 +20,29 @@ export function VariableList({ variables }: { variables: any }) {
     const recurse = (obj: any, path: string = "") => {
       for (const key in obj) {
         const currentPath = path ? `${path}.${key}` : key;
-        if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
-          recurse(obj[key], currentPath);
+        const val = obj[key];
+        
+        if (val && typeof val === "object" && !Array.isArray(val)) {
+          recurse(val, currentPath);
+        } else if (Array.isArray(val)) {
+          // Add the array itself
+          res.push({ 
+            path: currentPath, 
+            description: `List of ${key}`, 
+            example: `Array(${val.length})` 
+          });
+          // Also show the first item's properties if it's an object
+          if (val[0] && typeof val[0] === 'object') {
+             for (const subKey in val[0]) {
+                 res.push({
+                     path: `${currentPath}.[0].${subKey}`,
+                     description: `Value of ${subKey} in the list`,
+                     example: val[0][subKey]
+                 });
+             }
+          }
         } else {
-          res.push({ path: currentPath, example: obj[key] });
+          res.push({ path: currentPath, example: val });
         }
       }
     };
@@ -43,54 +62,91 @@ export function VariableList({ variables }: { variables: any }) {
 
   return (
     <div className="flex flex-col h-full gap-4">
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-[10px] font-black uppercase text-neutral-400 dark:text-neutral-500 tracking-widest italic flex items-center gap-2">
-          <IconVariable className="h-3 w-3" /> Available Variables
+      <div className="flex items-center justify-between px-1 shrink-0">
+        <h3 className="text-[9px] font-black uppercase text-neutral-400 dark:text-neutral-500 tracking-widest italic flex items-center gap-1.5">
+          <IconVariable className="h-2.5 w-2.5" /> Data Fields
         </h3>
-        <Badge variant="secondary" className="bg-primary/10 text-primary dark:bg-primary/20 text-[9px] font-black tracking-widest uppercase py-0.5 px-2 rounded-lg">
-          {filtered.length} Total
+        <Badge variant="secondary" className="bg-primary/5 text-primary text-[8px] font-black tracking-widest uppercase py-0 px-1.5 rounded-md border-none">
+          {filtered.length}
         </Badge>
       </div>
 
-      <div className="relative">
-        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+      <div className="relative shrink-0">
+        <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
         <Input 
-          placeholder="Filter variables..." 
+          placeholder="Search fields..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 pl-9 text-xs font-bold bg-white dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700/50 focus:bg-neutral-50 dark:focus:bg-neutral-800 transition-all rounded-xl dark:text-neutral-200"
+          className="h-7 pl-8 text-[10px] font-bold bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 focus:bg-neutral-50 dark:focus:bg-neutral-800 transition-all rounded-lg dark:text-neutral-200"
         />
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
         {filtered.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-4">
+          <div className="h-full flex flex-col items-center justify-center text-center p-4 bg-white/50 dark:bg-neutral-900/50 rounded-3xl border border-dashed border-neutral-200 dark:border-neutral-800">
             <div className="h-10 w-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-3">
                <IconVariable className="h-5 w-5 text-neutral-300 dark:text-neutral-600" />
             </div>
             <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-widest">
-              {search ? "No matching variables" : "No variables discovered"}
+              {search ? "No matches found" : "Waiting for schema..."}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2.5">
-            {filtered.map((v) => (
-              <div
-                key={v.path}
-                onClick={() => copyToClipboard(v.path)}
-                className="group flex items-center justify-between p-3 rounded-2xl border border-neutral-100 dark:border-neutral-800/50 bg-white dark:bg-neutral-900/50 hover:border-primary/30 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 cursor-pointer transition-all shadow-sm"
-              >
-                <div className="flex flex-col gap-1 overflow-hidden">
-                  <code className="text-[11px] font-bold text-primary group-hover:text-primary transition-colors italic leading-tight">
-                    {`{{${v.path}}}`}
-                  </code>
-                  <span className="text-[9px] text-neutral-400 dark:text-neutral-500 font-medium truncate max-w-[180px]">
-                    Ex: {typeof v.example === 'object' ? JSON.stringify(v.example) : String(v.example)}
-                  </span>
+            <div className="space-y-3">
+                <div className="text-[8px] font-black uppercase text-primary/60 tracking-[0.2em] pl-1">Primary</div>
+                <div className="flex flex-col gap-2">
+                    {filtered.filter(v => !v.path.includes('.')).map((v) => (
+                        <VariableItem key={v.path} v={v} onCopy={() => copyToClipboard(v.path)} />
+                    ))}
                 </div>
-                <IconCopy className="h-3.5 w-3.5 text-neutral-300 dark:text-neutral-600 group-hover:text-primary transition-colors flex-shrink-0" />
-              </div>
-            ))}
+
+                {filtered.some(v => v.path.includes('.')) && (
+                    <>
+                        <div className="text-[8px] font-black uppercase text-primary/60 tracking-[0.2em] pl-1 pt-1">Nested</div>
+                        <div className="flex flex-col gap-2">
+                            {filtered.filter(v => v.path.includes('.')).map((v) => (
+                                <VariableItem key={v.path} v={v} onCopy={() => copyToClipboard(v.path)} />
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                <div className="text-[8px] font-black uppercase text-amber-500/60 tracking-[0.2em] pl-1 pt-2">Calculation Totals</div>
+                <div className="flex flex-col gap-2">
+                    {['basicSalary', 'grossSalary', 'netSalary', 'totalAdditions', 'totalDeductions'].map(f => (
+                        <div 
+                            key={f} 
+                            onClick={() => copyToClipboard(f)}
+                            className="text-[10px] font-black text-amber-700 dark:text-amber-500 bg-amber-500/5 dark:bg-amber-500/10 px-4 py-2.5 rounded-xl border border-amber-500/10 cursor-pointer hover:bg-amber-100/50 transition-all active:scale-95 flex justify-between items-center group"
+                        >
+                            <span>{`{{${f}}}`}</span>
+                            <IconCopy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    ))}
+                </div>
+
+                <div className="text-[8px] font-black uppercase text-indigo-500/60 tracking-[0.2em] pl-1 pt-2">Helpers</div>
+                <div className="flex flex-col gap-2">
+                    {[
+                        { tag: '{{formatCurrency v}}', desc: 'LKR Format' },
+                        { tag: '{{formatDate d}}', desc: 'Date Format' },
+                        { tag: '{{#each arr}}', desc: 'Loop Handler' }
+                    ].map(h => (
+                        <div 
+                            key={h.tag} 
+                            onClick={() => {
+                                navigator.clipboard.writeText(h.tag);
+                                toast.success(`Copied ${h.tag}`);
+                            }}
+                            className="flex justify-between items-center bg-indigo-500/5 dark:bg-indigo-500/10 px-3 py-2.5 rounded-xl border border-indigo-500/10 cursor-pointer hover:bg-indigo-100/50 transition-all"
+                        >
+                            <code className="text-[10px] font-black text-indigo-700">{h.tag}</code>
+                            <span className="text-[8px] font-black text-indigo-400 uppercase shrink-0 pl-2">{h.desc}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
           </div>
         )}
       </div>
@@ -110,6 +166,24 @@ export function VariableList({ variables }: { variables: any }) {
           background: #333;
         }
       `}</style>
+    </div>
+  );
+}
+function VariableItem({ v, onCopy }: { v: Variable; onCopy: () => void }) {
+  return (
+    <div
+      onClick={onCopy}
+      className="group flex items-center justify-between px-2.5 py-2 rounded-lg border border-neutral-100 dark:border-neutral-800/50 bg-white dark:bg-neutral-900/50 hover:border-primary/30 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all shadow-sm"
+    >
+      <div className="flex flex-col gap-0.5 overflow-hidden">
+        <code className="text-[9px] font-black text-primary group-hover:text-primary transition-colors leading-tight">
+          {`{{${v.path}}}`}
+        </code>
+        <span className="text-[8px] text-neutral-400 font-medium truncate max-w-[120px] italic">
+          {typeof v.example === 'object' ? '{...}' : String(v.example || 'Empty')}
+        </span>
+      </div>
+      <IconCopy className="h-2.5 w-2.5 text-neutral-300 group-hover:text-primary transition-colors flex-shrink-0" />
     </div>
   );
 }

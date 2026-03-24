@@ -17,6 +17,10 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatCurrency } from "@/lib/utils";
 
+import { SalariesSelectionTable } from "@/components/payroll/SalariesSelectionTable";
+import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
+
 const monthsNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -27,16 +31,10 @@ export function PayslipsDocumentsTab() {
     const companyId = params.id as string;
     
     // Filters
-    const [month, setMonth] = React.useState(new Date().getMonth() + 1);
-    const [year, setYear] = React.useState(new Date().getFullYear());
-    const [searchTerm, setSearchTerm] = React.useState("");
+    const [startDate, setStartDate] = React.useState<string | undefined>();
+    const [endDate, setEndDate] = React.useState<string | undefined>();
+    const [employeeId, setEmployeeId] = React.useState<string | undefined>();
     const [showFilters, setShowFilters] = React.useState(false);
-
-    const { salariesQuery } = useSalaries({
-        companyId,
-        month,
-        year,
-    });
 
     const { templatesQuery } = useTemplates({ companyId, type: DocumentType.PAYSLIP, isActive: true });
     
@@ -44,40 +42,17 @@ export function PayslipsDocumentsTab() {
     const selectedTemplateName = templatesQuery.data?.[0]?.name || "System Standard";
     const [selectedSalaries, setSelectedSalaries] = React.useState<string[]>([]);
 
-    const handlePrintIndividual = (salaryId: string) => {
-        if (!selectedTemplate) return toast.error("Please select a template first");
-        printDocument(selectedTemplate, salaryId);
-    };
-
     const handleBulkPrint = () => {
         if (!selectedTemplate) return toast.error("Please select a template first");
         if (selectedSalaries.length === 0) return toast.error("Please select at least one employee");
         bulkPrintDocuments(selectedTemplate, selectedSalaries);
     };
 
-    const toggleSalarySelection = (id: string) => {
-        setSelectedSalaries(prev => 
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
-    };
-
-    const toggleAll = () => {
-        const allIds = salariesQuery.data?.items?.map((s: any) => s.id) || [];
-        setSelectedSalaries(selectedSalaries.length === allIds.length ? [] : allIds);
-    };
-
-    const filteredSalaries = (salariesQuery.data?.items || []).filter((s: any) => 
-        s.employee?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.employee?.employeeNo?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const hasActiveFilters = searchTerm !== "" || month !== new Date().getMonth() + 1 || year !== new Date().getFullYear();
-
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
                 <div className="space-y-1.5">
-                    <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90">Employee Payslips</h3>
+                    <h3 className="text-xl font-black tracking-tight uppercase text-foreground/90 italic">Employee Payslips</h3>
                     <p className="text-neutral-500 font-medium text-xs">Generate and distribute monthly payslips to your staff</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -86,168 +61,152 @@ export function PayslipsDocumentsTab() {
                         size="sm"
                         onClick={() => setShowFilters(!showFilters)}
                         className={cn(
-                            "h-10 rounded-xl px-4 font-bold text-xs uppercase transition-all gap-2",
-                            showFilters ? "bg-primary/10 text-primary border-primary/20" : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
+                            "h-11 rounded-2xl px-5 font-bold text-xs uppercase transition-all gap-2 border-2",
+                            showFilters ? "bg-primary/5 text-primary border-primary/20 shadow-inner" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800"
                         )}
                     >
                         <IconFilter className="h-4 w-4" />
-                        <span>Filters</span>
+                        <span>Configuration</span>
                     </Button>
                     {selectedSalaries.length > 0 ? (
                         <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
                              <Button 
-                                variant="outline" 
-                                className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-white text-primary border-2 border-primary/10 hover:bg-primary/5 transition-all"
+                                className="h-11 px-8 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.05] active:scale-[0.95] transition-all bg-primary text-white"
                                 onClick={handleBulkPrint}
                              >
                                 <IconDownload className="mr-2 h-4 w-4 stroke-[3]" />
-                                Bulk Print ({selectedSalaries.length})
+                                Print Batch ({selectedSalaries.length})
                              </Button>
-                             <Button className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary text-white hover:scale-105 transition-all">
-                                <IconMail className="mr-2 h-4 w-4 stroke-[3]" />
+                             <Button variant="outline" className="h-11 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-white dark:bg-neutral-950/20 border-2 border-primary/10 hover:bg-primary/5 transition-all hidden sm:flex items-center gap-2">
+                                <IconMail className="h-4 w-4 text-primary" stroke={3} />
                                 Email Batch
                              </Button>
                         </div>
                     ) : (
-                        <Button className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest opacity-40 cursor-not-allowed bg-neutral-100 dark:bg-neutral-800 text-neutral-400" disabled>
+                        <Button className="h-11 px-8 rounded-2xl font-black text-xs uppercase tracking-widest opacity-40 cursor-not-allowed bg-neutral-100 dark:bg-neutral-800 text-neutral-400" disabled>
                             Select Employees
                         </Button>
                     )}
                 </div>
             </div>
 
-            {showFilters && (
-                <Card className="border-2 border-dashed border-neutral-100 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-950/20 rounded-[2rem] p-8 animate-in slide-in-from-top-4 duration-300 shadow-inner">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Configuration</Label>
-                            <div className="h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 flex items-center justify-between shadow-sm">
-                                <div className="flex items-center gap-3">
-                                    <IconFileInvoice className="h-5 w-5 text-primary" />
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-tight leading-none mb-1">Active Template</span>
-                                        <span className="text-xs font-black uppercase tracking-tight text-foreground">{selectedTemplateName}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-8 space-y-6">
+                    <Card className="border border-neutral-200 dark:border-white/10 shadow-sm bg-white dark:bg-neutral-900/40 overflow-hidden rounded-[2.5rem] ring-1 ring-neutral-100 dark:ring-neutral-800/50">
+                        <CardHeader className="border-b border-neutral-100 dark:border-neutral-800/60 bg-neutral-50/30 dark:bg-neutral-950/20 px-8 py-6">
+                            <div className="flex flex-col gap-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                                            <IconFileInvoice className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-lg font-black uppercase tracking-tight italic">Staff Selection</CardTitle>
+                                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Select employees to generate payslips for</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest h-6 px-3 rounded-lg">Default</Badge>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3 lg:col-span-2">
-                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Period & Search</Label>
-                            <div className="flex flex-col md:flex-row gap-4">
-                                <div className="flex flex-1 gap-3">
-                                    <select 
-                                        value={month}
-                                        onChange={(e) => setMonth(parseInt(e.target.value))}
-                                        className="flex-1 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 text-xs font-black uppercase tracking-wider focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
-                                    >
-                                        {monthsNames.map((m, i) => (
-                                            <option key={i + 1} value={i + 1}>{m}</option>
-                                        ))}
-                                    </select>
-                                    <select 
-                                        value={year}
-                                        onChange={(e) => setYear(parseInt(e.target.value))}
-                                        className="w-32 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-5 text-xs font-black uppercase tracking-wider focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm appearance-none cursor-pointer"
-                                    >
-                                        {[2024, 2025, 2026].map(y => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="relative flex-[1.5] group">
-                                    <IconSearch className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-focus-within:text-primary transition-colors" />
-                                    <Input 
-                                        placeholder="Search by name or ID..." 
-                                        className="pl-12 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-xs font-black uppercase tracking-wide focus:border-primary/50 transition-all shadow-sm"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                    <SalaryPeriodQuickSelect 
+                                        companyId={companyId}
+                                        currentStart={startDate}
+                                        currentEnd={endDate}
+                                        onRangeSelect={(start, end) => {
+                                            setStartDate(start);
+                                            setEndDate(end);
+                                            setSelectedSalaries([]);
+                                        }}
                                     />
-                                    {searchTerm && (
-                                        <button onClick={() => setSearchTerm("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+                                    <div className="w-[280px]">
+                                        <SearchableEmployeeSelect 
+                                            companyId={companyId}
+                                            value={employeeId}
+                                            onSelect={(id) => {
+                                                setEmployeeId(id);
+                                                setSelectedSalaries([]);
+                                            }}
+                                            placeholder="All Employees"
+                                        />
+                                    </div>
+                                    {employeeId && (
+                                        <Button variant="ghost" size="icon" onClick={() => setEmployeeId(undefined)} className="h-10 w-10 text-neutral-400 hover:text-red-500 rounded-xl">
                                             <IconX className="h-4 w-4" />
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </Card>
-            )}
+                        </CardHeader>
+                        <CardContent className="p-8">
+                            <SalariesSelectionTable 
+                                companyId={companyId}
+                                startDate={startDate}
+                                endDate={endDate}
+                                employeeId={employeeId}
+                                selectedIds={selectedSalaries}
+                                onSelectedIdsChange={setSelectedSalaries}
+                                status={['PAID', 'APPROVED']}
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
 
-            <Card className="border border-neutral-200 dark:border-white/10 shadow-sm bg-white dark:bg-neutral-900/40 overflow-hidden rounded-[2.5rem] ring-1 ring-neutral-100 dark:ring-neutral-800/50">
-                <CardContent className="p-0">
-                    {salariesQuery.isLoading ? (
-                        <div className="p-32 flex flex-col items-center justify-center gap-4 animate-pulse">
-                            <IconRefresh className="h-10 w-10 animate-spin text-primary/30" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Syncing Records...</span>
-                        </div>
-                    ) : filteredSalaries.length === 0 ? (
-                        <div className="p-32 flex flex-col items-center justify-center text-center gap-6">
-                            <div className="h-20 w-20 rounded-[2rem] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-2 shadow-inner ring-1 ring-neutral-100 dark:ring-neutral-700">
-                                <IconSearch className="h-10 w-10 text-neutral-300 dark:text-neutral-600" />
-                            </div>
-                            <div className="space-y-1">
-                                <h4 className="font-black uppercase tracking-tight text-neutral-400 dark:text-neutral-500">No staff records found</h4>
-                                <p className="text-[11px] font-medium text-neutral-400 max-w-[240px]">We couldn't find any salaries for the selected period. Ensure payroll is generated first.</p>
+                <div className="lg:col-span-4 space-y-6 sticky top-6">
+                    <Card className="border-2 border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/20 rounded-[2.5rem] p-8 space-y-8 shadow-inner">
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Configuration</Label>
+                            <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-neutral-400 uppercase">Period</span>
+                                    <span className="text-[10px] font-black text-foreground uppercase">{startDate ? format(new Date(startDate), 'MMM yyyy') : 'Current'}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-neutral-400 uppercase">Selection</span>
+                                    <span className="text-[10px] font-black text-primary uppercase">{selectedSalaries.length} Slips</span>
+                                </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-neutral-50/50 dark:bg-neutral-800/30 border-b border-neutral-100 dark:border-neutral-800">
-                                        <th className="py-6 px-8 w-16">
-                                            <Checkbox 
-                                                checked={selectedSalaries.length === filteredSalaries.length && filteredSalaries.length > 0}
-                                                onCheckedChange={toggleAll}
-                                                className="rounded-md border-2 border-neutral-300 dark:border-neutral-700"
-                                            />
-                                        </th>
-                                        <th className="py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] text-neutral-400">Employee Details</th>
-                                        <th className="py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] text-neutral-400 text-right">Net Pay (LKR)</th>
-                                        <th className="py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] text-neutral-400 text-center">Export</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredSalaries.map((s: any) => (
-                                        <tr key={s.id} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition-all duration-300 border-b border-neutral-50 dark:border-neutral-800 last:border-0 cursor-pointer" onClick={() => toggleSalarySelection(s.id)}>
-                                            <td className="py-6 px-8" onClick={(e) => e.stopPropagation()}>
-                                                <Checkbox 
-                                                    checked={selectedSalaries.includes(s.id)}
-                                                    onCheckedChange={() => toggleSalarySelection(s.id)}
-                                                    className="rounded-md border-2 border-neutral-300 dark:border-neutral-700"
-                                                />
-                                            </td>
-                                            <td className="py-6 px-8">
-                                                <div className="flex flex-col">
-                                                    <span className="font-black text-sm uppercase tracking-tight text-foreground/90">{s.employee?.fullName}</span>
-                                                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-0.5">STAFF REF: {s.employee?.employeeNo || "---"}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-6 px-8 text-right">
-                                                <span className="font-black text-sm tracking-tight text-foreground">
-                                                    {formatCurrency(s.netSalary)}
-                                                </span>
-                                            </td>
-                                            <td className="py-6 px-8 text-center" onClick={(e) => e.stopPropagation()}>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    className="h-11 w-11 p-0 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all transform group-hover:scale-110 shadow-lg"
-                                                    onClick={() => handlePrintIndividual(s.id)}
-                                                >
-                                                    <IconDownload className="h-5 w-5 stroke-[2.5]" />
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1">Design Template</Label>
+                            <div className="h-20 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-6 flex items-center justify-between group shadow-sm transition-all hover:border-primary/20">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                                        <IconFileInvoice className="h-5 w-5 text-orange-600" stroke={2.5} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-tight leading-none mb-1">Active Design</span>
+                                        <span className="text-xs font-black uppercase tracking-tight text-foreground truncate max-w-[120px]">{selectedTemplateName}</span>
+                                    </div>
+                                </div>
+                                <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest h-6 px-3 rounded-lg shadow-sm font-black italic">Verified</Badge>
+                            </div>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+
+                        <div className="pt-4 space-y-4">
+                            <div className="p-6 rounded-3xl bg-neutral-900 text-white shadow-2xl flex flex-col gap-2 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-500">
+                                    <IconFileInvoice className="h-16 w-16" />
+                                </div>
+                                <span className="text-[10px] font-black uppercase text-neutral-500 tracking-widest italic relative z-10">Batch Operations</span>
+                                <div className="flex flex-col gap-1 relative z-10">
+                                    <span className="text-3xl font-black italic tracking-tighter text-primary">{selectedSalaries.length}</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-tight opacity-50">Slips in queue</span>
+                                </div>
+                                <Button 
+                                    className="mt-4 w-full h-14 rounded-2xl bg-primary text-white hover:scale-105 font-black text-xs uppercase tracking-[0.2em] shadow-lg relative z-10 transition-all border-none"
+                                    onClick={handleBulkPrint}
+                                    disabled={selectedSalaries.length === 0}
+                                >
+                                    Export Bulk ZIP
+                                </Button>
+                            </div>
+                            <p className="text-[10px] font-bold text-neutral-400 text-center uppercase tracking-widest italic px-1 leading-relaxed">
+                                Batch processing will generate a encrypted ZIP file containing all selected PDF payslips.
+                            </p>
+                        </div>
+                    </Card>
+                </div>
+            </div>
         </div>
     );
 }
