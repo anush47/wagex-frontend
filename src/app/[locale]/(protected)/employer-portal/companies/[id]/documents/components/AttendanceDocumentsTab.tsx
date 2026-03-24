@@ -45,11 +45,7 @@ export function AttendanceDocumentsTab() {
         if (!selectedTemplate) return toast.error("Please select a template first");
         if (selectedSalaryIds.length === 0) return toast.error("Please select at least one employee");
         
-        // Multi-print or single based on service capability
-        // For attendance, we usually print a report for the period.
-        // Assuming composite ID plus selected IDs.
-        const compositeId = `${companyId}_${month}_${year}`;
-        printDocument(selectedTemplate, compositeId, { salaryIds: selectedSalaryIds });
+        printDocument(selectedTemplate, companyId, { salaryIds: selectedSalaryIds, startDate, endDate });
     };
 
     return (

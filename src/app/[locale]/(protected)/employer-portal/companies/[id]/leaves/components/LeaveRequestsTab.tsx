@@ -32,6 +32,7 @@ import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPerio
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format, isSameDay } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface LeaveRequestsTabProps {
     companyId: string;

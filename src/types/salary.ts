@@ -182,6 +182,7 @@ export interface SalaryQueryParams {
     search?: string;
     month?: number;
     year?: number;
+    policyIds?: string;
 }
 
 export interface AdvanceQueryParams {

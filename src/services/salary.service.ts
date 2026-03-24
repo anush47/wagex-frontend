@@ -28,6 +28,7 @@ export class SalaryService {
         if (params.search) searchParams.append('search', params.search);
         if (params.month) searchParams.append('month', params.month.toString());
         if (params.year) searchParams.append('year', params.year.toString());
+        if (params.policyIds) searchParams.append('policyIds', params.policyIds);
 
         return backendApiClient.get<PaginatedResponse<Salary>>(`/salaries?${searchParams.toString()}`);
     }

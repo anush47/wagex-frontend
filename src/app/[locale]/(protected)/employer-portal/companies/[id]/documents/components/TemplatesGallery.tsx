@@ -51,10 +51,12 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
   const { templatesQuery, updateTemplateMutation, deleteTemplateMutation } = useTemplates({ companyId });
   const templates = (templatesQuery.data || []) as DocumentTemplate[];
 
-  const typeGroups = {
-    [DocumentType.PAYSLIP]: { label: "Payslips", icon: <IconFileInvoice className="h-4 w-4" /> },
-    [DocumentType.SALARY_SHEET]: { label: "Salary Sheets", icon: <IconFileSpreadsheet className="h-4 w-4" /> },
-    [DocumentType.ATTENDANCE_REPORT]: { label: "Attendance", icon: <IconClock className="h-4 w-4" /> },
+  const typeGroups: Record<string, { label: string; icon: any }> = {
+    [DocumentType.PAYSLIP]: { label: "Payslips", icon: IconFileInvoice },
+    [DocumentType.SALARY_SHEET]: { label: "Salary Sheets", icon: IconFileSpreadsheet },
+    [DocumentType.ATTENDANCE_REPORT]: { label: "Attendance", icon: IconClock },
+    [DocumentType.EPF_FORM]: { label: "EPF Forms", icon: IconFileInvoice },
+    [DocumentType.ETF_FORM]: { label: "ETF Forms", icon: IconFileInvoice },
   };
 
   const filteredTemplates = templates.filter(t => t.type === selectedType);
@@ -149,13 +151,13 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
         className="w-full flex flex-col gap-10"
       >
         <TabsList className="bg-neutral-100 dark:bg-neutral-800 p-1 h-10 rounded-xl border-none shadow-inner self-start gap-1">
-          {Object.entries(typeGroups).map(([type, { label, icon }]) => (
+          {Object.entries(typeGroups).map(([type, { label, icon: Icon }]) => (
             <TabsTrigger 
               key={type} 
               value={type}
               className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all duration-200 gap-2"
             >
-              {icon}
+              <Icon className="h-4 w-4" />
               {label}
             </TabsTrigger>
           ))}
@@ -209,7 +211,10 @@ export function TemplatesGallery({ companyId }: TemplatesGalleryProps) {
 
               <CardHeader className="pt-6 pb-2 px-5 flex flex-col items-start gap-1">
                 <div className="h-9 w-9 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 flex items-center justify-center text-neutral-400 group-hover:bg-primary/20 group-hover:text-primary transition-all duration-500 group-hover:scale-110 mb-2">
-                  {React.cloneElement(typeGroups[template.type].icon as React.ReactElement, { className: "h-4 w-4 stroke-[2.5]" })}
+                  {(() => {
+                    const Icon = typeGroups[template.type]?.icon || IconFileInvoice;
+                    return <Icon className="h-4 w-4 stroke-[2.5]" />;
+                  })()}
                 </div>
                 <CardTitle className="text-base font-black uppercase tracking-tight line-clamp-1 dark:text-neutral-50 group-hover:text-primary transition-colors leading-none">{template.name}</CardTitle>
                 <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium line-clamp-1 mt-1 leading-none italic opacity-80">

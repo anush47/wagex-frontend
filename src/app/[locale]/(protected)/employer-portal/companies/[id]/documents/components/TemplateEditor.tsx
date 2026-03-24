@@ -31,12 +31,13 @@ import "prismjs/themes/prism.css";
 interface TemplateEditorProps {
   type: DocumentType;
   companyId: string;
-  template?: DocumentTemplate;
+  template?: Partial<DocumentTemplate>;
   onSave?: () => void;
   onBack?: () => void;
+  onCancel?: () => void;
 }
 
-export function TemplateEditor({ type, companyId, template, onSave, onBack }: TemplateEditorProps) {
+export function TemplateEditor({ type, companyId, template, onSave, onBack, onCancel }: TemplateEditorProps) {
   const [name, setName] = React.useState(template?.name || `New ${type.replace('_', ' ')} Template`);
   const [description, setDescription] = React.useState(template?.description || "");
   const [html, setHtml] = React.useState(template?.html || getDefaultHtml(type));
@@ -67,7 +68,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack }: Te
 
         let saveAction;
 
-        if (template) {
+        if (template?.id) {
             // Update: Omit immutable fields (type, companyId) + status/isActive if not publishing
             const { type: _, companyId: __, ...updatePayload } = payload;
             saveAction = updateTemplateMutation.mutateAsync({ id: template.id, data: updatePayload as any });
@@ -77,10 +78,10 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack }: Te
         }
 
         toast.promise(saveAction, {
-            loading: template ? 'Updating layout...' : 'Finalizing designer layout...',
+            loading: template?.id ? 'Updating layout...' : 'Finalizing designer layout...',
             success: () => {
                 onSave?.();
-                return template ? 'Template layout updated' : 'New template layout published';
+                return template?.id ? 'Template layout updated' : 'New template layout published';
             },
             error: (err: any) => {
                 console.error(err);
