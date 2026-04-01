@@ -4,10 +4,6 @@ import { z } from 'zod';
  * Environment variable schema with runtime validation
  */
 const envSchema = z.object({
-  supabase: z.object({
-    url: z.string().url('Invalid Supabase URL'),
-    anonKey: z.string().min(1, 'Supabase anon key is required'),
-  }),
   backend: z.object({
     apiUrl: z.string().url('Invalid backend API URL'),
   }),
@@ -24,10 +20,6 @@ export type EnvConfig = z.infer<typeof envSchema>;
  */
 function parseEnv(): EnvConfig {
   const rawEnv = {
-    supabase: {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    },
     backend: {
       apiUrl: process.env.NEXT_PUBLIC_BACKEND_API_URL || '',
     },

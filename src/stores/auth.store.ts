@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Session } from '@supabase/supabase-js';
 import { authService } from '@/services/auth.service';
 import { logger } from '@/lib/utils/logger';
 import { backendApiClient } from '@/lib/api/client';
@@ -11,7 +10,7 @@ import type { LoginCredentials, UserProfile } from '@/types/user';
  */
 interface AuthState {
     user: UserProfile | null;
-    session: Session | null;
+    session: any | null;
     isLoading: boolean; // Main initialization/auth loading
     isProfileLoading: boolean; // Just for background profile fetching
     isAuthenticated: boolean;
@@ -23,8 +22,9 @@ interface AuthState {
  */
 interface AuthActions {
     signIn: (credentials: LoginCredentials) => Promise<void>;
+    signUp: (credentials: LoginCredentials) => Promise<void>;
     signOut: () => Promise<void>;
-    setSession: (session: Session | null, user: UserProfile | null) => void;
+    setSession: (session: any | null, user: UserProfile | null) => void;
     getAccessToken: () => string | null;
     initialize: () => Promise<void>;
     fetchProfile: () => Promise<void>;
@@ -62,25 +62,28 @@ export const useAuthStore = create<AuthStore>()(
                 // Register global API error interceptor once
                 backendApiClient.addErrorInterceptor(async (error) => {
                     if (error.statusCode === 401) {
-                        if (error.message === 'User inactive') {
+                        // Use case-insensitive check and substring matching for robustness
+                        const msg = error.message?.toLowerCase() || '';
+                        if (msg.includes('inactive') || msg.includes('pending')) {
                             logger.warn('API returned 401 User Inactive, updating store state');
                             const { session, user } = get();
                             if (session && user?.active !== false) {
                                 set({
                                     user: {
                                         ...(user || {}),
-                                        id: session.user.id,
-                                        email: session.user.email || user?.email || '',
+                                        id: session.userId || user?.id || '',
+                                        email: user?.email || session.user?.email || '',
                                         active: false,
-                                        role: user?.role || 'EMPLOYEE' as any
+                                        role: user?.role || 'EMPLOYER' as any
                                     } as UserProfile
                                 });
                             }
                         } else {
-                            // Only sign out if we are not already in the middle of a sign-in or initialized
-                            // and the error is a genuine session expiration
-                            logger.error('API returned 401 Unauthorized, signing out');
-                            get().signOut();
+                            logger.error('API returned 401 Unauthorized, signing out', { message: error.message });
+                            // Avoid signing out if we are just loading
+                            if (!get().isLoading) {
+                                get().signOut();
+                            }
                         }
                     }
                 });
@@ -90,45 +93,47 @@ export const useAuthStore = create<AuthStore>()(
                     const session = await authService.getSession();
 
                     if (session) {
-                        backendApiClient.setAuthToken(session.access_token);
+                        const token = session.token || session.sessionToken;
+                        if (token) {
+                            backendApiClient.setAuthToken(token);
+                        }
 
-                        // Fetch backend profile data
-                        const profileResult = await authService.getProfile();
+                        // Fetch backend profile data (suppress toast)
+                        const profileResult = await authService.getProfile({ suppressToast: true });
 
                         let userProfile: UserProfile | null = null;
 
                         if (profileResult.data) {
                             userProfile = {
                                 ...profileResult.data,
-                                email: profileResult.data.email || session.user.email || ''
+                                email: profileResult.data.email || session.user?.email || ''
                             };
                             logger.info('Auth initialized with existing session and profile');
                         } else if (profileResult.error) {
-                            // Handle inactive user error (401)
-                            if (profileResult.error.statusCode === 401 && profileResult.error.message === 'User inactive') {
-                                logger.warn('Inactive user session detected');
-                                // The backend now allows /users/me for inactive users
-                                const freshProfile = await authService.getProfile();
-                                userProfile = freshProfile.data;
-
-                                // Fallback: if freshProfile failed but we know user is inactive
-                                if (!userProfile) {
+                            // Handle incomplete profile (403)
+                            if (profileResult.error.statusCode === 403 && profileResult.error.message === 'PROFILE_INCOMPLETE') {
+                                logger.info('User authenticated but profile incomplete');
+                                userProfile = null; // Forces AuthGuard to registration step
+                            }
+                            // Handle inactive but complete user (401)
+                            else if (profileResult.error.statusCode === 401) {
+                                const msg = profileResult.error.message?.toLowerCase() || '';
+                                if (msg.includes('inactive')) {
+                                    logger.info('Inactive user session detected during initialization');
                                     userProfile = {
-                                        id: session.user.id,
-                                        email: session.user.email!,
+                                        id: session.userId || session.user?.id || '',
+                                        email: session.user?.email || '',
                                         active: false,
-                                        role: 'EMPLOYEE' as any // Default role, will be corrected on next fetch if possible
+                                        role: 'EMPLOYER' as any
                                     };
                                 }
-                            } else {
-                                logger.error('Failed to fetch profile during store initialization', profileResult.error);
                             }
                         }
 
                         set({
                             session,
                             user: userProfile,
-                            isAuthenticated: !!session,
+                            isAuthenticated: true, // If session exists, we are authenticated
                             isLoading: false,
                             isProfileLoading: false,
                         });
@@ -150,12 +155,9 @@ export const useAuthStore = create<AuthStore>()(
                 try {
                     set({ isLoading: true, error: null });
 
-                    const { user: sbUser, profile, session, error } = await authService.signIn(credentials);
+                    const { user: authUser, profile, session, error } = await authService.signIn(credentials);
 
                     if (error) {
-                        // Check if this is an inactive user who actually got signed in but profile fetch failed with 401
-                        // This case is actually handled inside authService.signIn now, returning error: null and profile.
-                        // But we should double check here.
                         set({
                             error: error.message,
                             isLoading: false,
@@ -164,15 +166,14 @@ export const useAuthStore = create<AuthStore>()(
                         throw error;
                     }
 
-                    // Extra check: if we have a session but profile is still null, it might be an inactive user
+                    // Process profile
                     let finalProfile = profile;
                     if (session && !finalProfile) {
-                         // This shouldn't happen with the new authService but as a failsafe:
                          finalProfile = {
-                             id: session.user.id,
-                             email: session.user.email!,
+                             id: session.userId || authUser?.id,
+                             email: authUser?.email || '',
                              active: false,
-                             role: 'EMPLOYEE' as any
+                             role: 'EMPLOYER' as any
                          };
                     }
 
@@ -185,10 +186,60 @@ export const useAuthStore = create<AuthStore>()(
                     });
 
                     if (session) {
-                        backendApiClient.setAuthToken(session.access_token);
+                        const token = session.token || session.sessionToken;
+                        if (token) {
+                            backendApiClient.setAuthToken(token);
+                        }
                     }
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
+                    set({ error: errorMessage, isLoading: false });
+                    throw error;
+                }
+            },
+
+            /**
+             * Sign up with credentials
+             */
+            signUp: async (credentials: LoginCredentials) => {
+                try {
+                    set({ isLoading: true, error: null });
+
+                    const { user: authUser, session, error } = await authService.signUp(credentials);
+
+                    if (error) {
+                        set({
+                            error: error.message,
+                            isLoading: false,
+                            isAuthenticated: false,
+                        });
+                        throw error;
+                    }
+
+                    // Initial profile state after signup (waiting for step 2)
+                    const initialProfile = {
+                        id: session?.userId || authUser?.id || '',
+                        email: authUser?.email || '',
+                        active: false,
+                        role: 'EMPLOYER' as any
+                    };
+
+                    set({
+                        user: initialProfile,
+                        session,
+                        isAuthenticated: !!session,
+                        isLoading: false,
+                        error: null,
+                    });
+
+                    if (session) {
+                        const token = session.token || session.sessionToken;
+                        if (token) {
+                            backendApiClient.setAuthToken(token);
+                        }
+                    }
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
                     set({ error: errorMessage, isLoading: false });
                     throw error;
                 }
@@ -220,21 +271,19 @@ export const useAuthStore = create<AuthStore>()(
             /**
              * Set session manually (for auth state changes)
              */
-            setSession: (session: Session | null, user: UserProfile | null) => {
+            setSession: (session: any | null, user: UserProfile | null) => {
                 const currentSession = get().session;
-                
-                // If the user changed, we should probably set isProfileLoading if we don't have a profile yet
-                const userChanged = session?.user.id !== currentSession?.user.id;
+                const userChanged = (session?.userId || session?.user?.id) !== (currentSession?.userId || currentSession?.user?.id);
                 
                 set((state) => ({
                     session,
                     user: user || (userChanged ? null : state.user),
                     isAuthenticated: !!session,
-                    // If we have a session but no profile and user changed, it's effectively profile-loading
                     isProfileLoading: !!session && !user && userChanged ? true : state.isProfileLoading,
                 }));
 
-                backendApiClient.setAuthToken(session?.access_token || null);
+                const token = session?.token || session?.sessionToken;
+                backendApiClient.setAuthToken(token || null);
             },
 
             /**
@@ -242,40 +291,46 @@ export const useAuthStore = create<AuthStore>()(
              */
             getAccessToken: () => {
                 const { session } = get();
-                return session?.access_token || null;
+                return session?.token || session?.sessionToken || null;
             },
 
             /**
              * Fetch latest profile from backend
              */
             fetchProfile: async () => {
-                const { session } = get();
+                const { session, user: currentUser } = get();
                 if (!session) return;
 
                 try {
                     set({ isProfileLoading: true });
-                    const profileResult = await authService.getProfile();
+                    const profileResult = await authService.getProfile({ suppressToast: true });
+                    
                     if (profileResult.data) {
                         set({ 
                             user: {
                                 ...profileResult.data,
-                                // Fallback to session email if backend doesn't have it (though it should)
-                                email: profileResult.data.email || session.user.email || ''
+                                email: profileResult.data.email || currentUser?.email || session.user?.email || ''
                             }, 
+                            isAuthenticated: true,
                             isProfileLoading: false 
                         });
                     } else if (profileResult.error) {
                         // Handle inactive user error (401)
-                        if (profileResult.error.statusCode === 401 && profileResult.error.message === 'User inactive') {
+                        const msg = profileResult.error.message?.toLowerCase() || '';
+                        if (profileResult.error.statusCode === 401 && msg.includes('inactive')) {
                             set({
                                 isProfileLoading: false,
+                                isAuthenticated: true,
                                 user: {
-                                    id: session.user.id,
-                                    email: session.user.email!,
+                                    ...(currentUser || {}),
+                                    id: session.userId || session.user?.id || '',
+                                    email: currentUser?.email || session.user?.email || '', 
                                     active: false,
-                                    role: 'EMPLOYEE' as any
-                                }
+                                    role: currentUser?.role || 'EMPLOYER' as any
+                                } as UserProfile
                             });
+                        } else if (profileResult.error.statusCode === 403 && profileResult.error.message === 'PROFILE_INCOMPLETE') {
+                            set({ user: null, isAuthenticated: true, isProfileLoading: false });
                         } else {
                             set({ isProfileLoading: false });
                         }
@@ -291,4 +346,3 @@ export const useAuthStore = create<AuthStore>()(
         { name: 'AuthStore' }
     )
 );
-

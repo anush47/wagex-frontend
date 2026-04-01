@@ -30,15 +30,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
         if (isAuthenticated) {
             const isPendingReviewPage = pathname === '/pending-review' || pathname.startsWith('/pending-review/');
             const isSignOutPage = pathname === '/signout' || pathname.startsWith('/signout/');
+            const isRegisterPage = pathname.startsWith('/register');
 
             // 1. Check for missing profile
+            // If authenticated but user is null, they MUST complete the profile step
             if (!user) {
-                logger.warn("Authenticated user missing profile, redirecting to registration profile step");
-                router.replace("/register?step=profile");
+                if (!isRegisterPage && !isSignOutPage) {
+                    logger.warn("Authenticated user missing profile, redirecting to registration profile step");
+                    router.replace("/register?step=profile");
+                }
                 return;
             }
 
             // 2. Check for inactive account
+            // If user has a profile but is inactive, they MUST go to pending review
             if (user.active === false) {
                 if (!isPendingReviewPage && !isSignOutPage) {
                     logger.warn("Inactive user attempted to access restricted route, redirecting to pending review", { path: pathname });
@@ -48,7 +53,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
             }
 
             // 3. Prevent active users from seeing the pending review page
-            // Logic narrowing: we know user.active is NOT false here
             if (isPendingReviewPage) {
                 logger.info("Active user attempted to access pending review page, redirecting to dashboard");
                 router.replace(user.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
@@ -80,24 +84,26 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     if (!isAuthenticated) return null;
 
-    // Additional Blocking logic
+    // Additional Blocking logic to prevent content flash during transition
     if (isAuthenticated) {
-        if (!user) return null;
-
         const isPendingReviewPage = pathname === '/pending-review' || pathname.startsWith('/pending-review/');
         const isSignOutPage = pathname === '/signout' || pathname.startsWith('/signout/');
         const isEmployerPortal = pathname.startsWith('/employer-portal');
         const isEmployeePortal = pathname.startsWith('/employee-portal');
+        const isRegisterPage = pathname.startsWith('/register');
+
+        // Missing profile: can only see register or signout
+        if (!user && !isRegisterPage && !isSignOutPage) return null;
 
         // Inactive users can only see pending-review and signout
-        if (user.active === false && !isPendingReviewPage && !isSignOutPage) return null;
+        if (user && user.active === false && !isPendingReviewPage && !isSignOutPage) return null;
         
         // Active users cannot see pending-review
-        if (user.active !== false && isPendingReviewPage) return null;
+        if (user && user.active !== false && isPendingReviewPage) return null;
         
         // Portal enforcement
-        if (user.role === 'EMPLOYEE' && isEmployerPortal) return null;
-        if ((user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) return null;
+        if (user && user.role === 'EMPLOYEE' && isEmployerPortal) return null;
+        if (user && (user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) return null;
     }
 
     return <>{children}</>;

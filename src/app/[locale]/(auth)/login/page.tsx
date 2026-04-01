@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { IconLogin, IconLoader2, IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { IconLoader2, IconCheck } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { Link } from "@/i18n/routing";
 import { Role } from "@/types/user";
@@ -19,7 +18,6 @@ export default function LoginPage() {
     const router = useRouter();
     const { signIn, user: storeUser, fetchProfile } = useAuthStore();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [needsRegistration, setNeedsRegistration] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -32,28 +30,22 @@ export default function LoginPage() {
         fullName: "",
         address: "",
         phone: "",
-        role: Role.EMPLOYER,
+        // Role is forced to EMPLOYER by backend
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
 
         try {
             await signIn(formData);
-
-            // Get the user from the store *after* successful sign in
-            // Wait, we can also get it from the store state if we use a selector or just the reactive hook
-            // But since we are in an async handler, we might need the latest state.
-            // Actually, in Zustand, we can just use the storeUser from the hook if it's reactive.
         } catch (signInError: any) {
             if (signInError.message === "REGISTRATION_REQUIRED") {
                 setNeedsRegistration(true);
                 setLoading(false);
                 return;
             }
-            setError(signInError.message || "Failed to sign in");
+            // Error is already toasted by authService
             setLoading(false);
             return;
         } finally {
@@ -61,19 +53,15 @@ export default function LoginPage() {
         }
     };
 
-    // We no longer need the local redirection Effect here as GuestGuard and AuthGuard 
-    // provide the centralized and robust routing once the session/user is set in store.
-
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
 
         try {
             const { success, error: registerError } = await authService.register(profileData);
 
             if (registerError || !success) {
-                setError(registerError?.message || "Failed to create profile");
+                // Error is already toasted by authService
                 return;
             }
 
@@ -87,7 +75,7 @@ export default function LoginPage() {
                 router.push(user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
             }
         } catch (err: any) {
-            setError(err.message || "An unexpected error occurred");
+            // Handled
         } finally {
             setLoading(false);
         }
@@ -125,14 +113,6 @@ export default function LoginPage() {
                             </p>
                         </div>
                     </div>
-
-                    {/* Error Alert */}
-                    {error && (
-                        <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-start gap-3">
-                            <IconAlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-                            <p className="text-sm font-medium text-destructive">{error}</p>
-                        </div>
-                    )}
 
                     {/* Login Form */}
                     {!needsRegistration && (
@@ -212,35 +192,16 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
-                                        Phone Number
-                                    </Label>
-                                    <Input
-                                        placeholder="+94 77 XXX XXXX"
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
-                                        value={profileData.phone}
-                                        onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
-                                        Role
-                                    </Label>
-                                    <Select
-                                        value={profileData.role}
-                                        onValueChange={(v) => setProfileData({ ...profileData, role: v as Role })}
-                                    >
-                                        <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl">
-                                            <SelectItem value={Role.EMPLOYER}>Employer</SelectItem>
-                                            <SelectItem value={Role.EMPLOYEE}>Employee</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
+                                    Phone Number
+                                </Label>
+                                <Input
+                                    placeholder="+94 77 XXX XXXX"
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    value={profileData.phone}
+                                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                                />
                             </div>
 
                             <div className="space-y-2">

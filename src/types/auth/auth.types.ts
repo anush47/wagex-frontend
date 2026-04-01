@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
 
 /**
  * Login credentials schema
@@ -33,8 +32,8 @@ export type SignupCredentials = z.infer<typeof signupCredentialsSchema>;
  * Authentication state interface
  */
 export interface AuthState {
-    user: SupabaseUser | null;
-    session: SupabaseSession | null;
+    user: any | null;
+    session: any | null;
     isLoading: boolean;
     isAuthenticated: boolean;
 }

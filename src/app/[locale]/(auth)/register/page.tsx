@@ -8,22 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { IconUserPlus, IconLoader2, IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { IconLoader2, IconCheck } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/stores/auth.store";
 import { logger } from "@/lib/utils/logger";
 import { Link } from "@/i18n/routing";
 import { Role } from "@/types/user";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentStep = (searchParams.get("step") as "auth" | "profile") || "auth";
-    const { fetchProfile } = useAuthStore();
+    const { fetchProfile, signUp: storeSignUp } = useAuthStore();
 
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [checkingSession, setCheckingSession] = useState(true);
 
     const [authData, setAuthData] = useState({
@@ -37,7 +36,7 @@ export default function RegisterPage() {
         fullName: "",
         address: "",
         phone: "",
-        role: Role.EMPLOYER, // Default role
+        // Role is handled by backend (EMPLOYER by default)
     });
 
     // Check for existing session on mount
@@ -54,8 +53,19 @@ export default function RegisterPage() {
                 }
 
                 if (session) {
-                    // User is already authenticated (signed up via Supabase)
-                    // Redirect to profile step if not already there
+                    // Check if profile is already complete
+                    const profile = await authService.getProfile({ suppressToast: true });
+                    if (profile.data && profile.data.fullName) {
+                        // Profile complete, let AuthGuard handle the rest (dashboard or pending-review)
+                        if (profile.data.active === false) {
+                            router.replace("/pending-review");
+                        } else {
+                            router.replace(profile.data.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
+                        }
+                        return;
+                    }
+
+                    // User is authenticated but profile incomplete, redirect to profile step if not already there
                     if (currentStep !== "profile") {
                         router.replace("/register?step=profile");
                     }
@@ -72,31 +82,23 @@ export default function RegisterPage() {
     const handleAuthSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
 
         if (authData.password !== authData.confirmPassword) {
-            setError("Passwords do not match");
+            toast.error("Passwords do not match");
             setLoading(false);
             return;
         }
 
         try {
-            const { user, session, error: signUpError } = await authService.signUp({
+            await storeSignUp({
                 email: authData.email,
                 password: authData.password,
             });
 
-            if (signUpError) {
-                setError(signUpError.message || "Failed to create account");
-                return;
-            }
-
-            if (user && session) {
-                // Move to profile step via URL
-                router.push("/register?step=profile");
-            }
+            // Move to profile step via URL
+            router.push("/register?step=profile");
         } catch (err: any) {
-            setError(err.message || "An unexpected error occurred");
+            // Already handled by AuthStore and AuthService
         } finally {
             setLoading(false);
         }
@@ -105,13 +107,12 @@ export default function RegisterPage() {
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
 
         try {
             const { success, error: registerError } = await authService.register(profileData);
 
             if (registerError || !success) {
-                setError(registerError?.message || "Failed to create profile");
+                // Error is already toasted by authService
                 return;
             }
 
@@ -119,13 +120,15 @@ export default function RegisterPage() {
             await fetchProfile();
             const user = useAuthStore.getState().user;
 
+            // Since all new registrations are forced to inactive/employer by backend:
             if (user?.active === false) {
                 router.push("/pending-review");
             } else {
+                // This branch usually won't be hit immediately after registration due to forced inactivity
                 router.push(user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
             }
         } catch (err: any) {
-            setError(err.message || "An unexpected error occurred");
+            // Error is likely already toasted
         } finally {
             setLoading(false);
         }
@@ -177,14 +180,6 @@ export default function RegisterPage() {
                         <div className={`flex-1 h-2 rounded-full ${currentStep === "auth" ? "bg-primary" : "bg-emerald-500"}`} />
                         <div className={`flex-1 h-2 rounded-full ${currentStep === "profile" ? "bg-primary" : "bg-neutral-200 dark:bg-neutral-800"}`} />
                     </div>
-
-                    {/* Error Alert */}
-                    {error && (
-                        <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-start gap-3">
-                            <IconAlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-                            <p className="text-sm font-medium text-destructive">{error}</p>
-                        </div>
-                    )}
 
                     {/* Step 1: Auth */}
                     {currentStep === "auth" && (
@@ -279,24 +274,16 @@ export default function RegisterPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
-                                        Role
-                                    </Label>
-                                    <Select
-                                        value={profileData.role}
-                                        onValueChange={(v) => setProfileData({ ...profileData, role: v as Role })}
-                                    >
-                                        <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl">
-                                            <SelectItem value={Role.EMPLOYER}>Employer</SelectItem>
-                                            <SelectItem value={Role.EMPLOYEE}>Employee</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold text-neutral-500 ml-1 uppercase tracking-wider">
+                                    Phone Number
+                                </Label>
+                                <Input
+                                    placeholder="+94 77 XXX XXXX"
+                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    value={profileData.phone}
+                                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                                />
                             </div>
 
                             <div className="space-y-2">
@@ -312,13 +299,6 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="flex gap-4">
-                                {/* Only show Back button if NOT auto-redirected from session? 
-                                    Actually, if they have a session, going back to auth makes no sense.
-                                    So we can keep Back button but if they have session it might redirect them back to profile.
-                                    We can check logic: if session exists, Back should be disabled or hidden.
-                                    But for now, simpler to just allow it, redirect will catch them if they try to submit auth again.
-                                    Or explicit hide:
-                                */}
                                 <Button
                                     type="button"
                                     variant="ghost"
