@@ -36,6 +36,7 @@ export default function NewTemplatePage() {
             type={type}
             companyId={companyId}
             onSave={() => router.push(`/employer-portal/companies/${companyId}/documents/templates?tab=${type}`)}
+            onBack={() => router.back()}
             onCancel={() => router.back()}
         />
     </div>

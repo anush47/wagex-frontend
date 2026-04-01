@@ -17,35 +17,44 @@ export function VariableList({ variables }: { variables: any }) {
     if (!variables || Object.keys(variables).length === 0) return [];
     
     const res: Variable[] = [];
-    const recurse = (obj: any, path: string = "") => {
+    const visited = new Set();
+
+    const recurse = (obj: any, path: string = "", depth = 0) => {
+      // Safety break for extremely deep objects
+      if (depth > 10) return;
+      if (obj === null || obj === undefined) return;
+      
+      // Tracking visited objects to prevent infinite loops if circular
+      if (typeof obj === 'object' && obj !== null) {
+          if (visited.has(obj)) return;
+          visited.add(obj);
+      }
+
       for (const key in obj) {
         const currentPath = path ? `${path}.${key}` : key;
         const val = obj[key];
         
-        if (val && typeof val === "object" && !Array.isArray(val)) {
-          recurse(val, currentPath);
-        } else if (Array.isArray(val)) {
-          // Add the array itself
-          res.push({ 
-            path: currentPath, 
-            description: `List of ${key}`, 
-            example: `Array(${val.length})` 
-          });
-          // Also show the first item's properties if it's an object
-          if (val[0] && typeof val[0] === 'object') {
-             for (const subKey in val[0]) {
-                 res.push({
-                     path: `${currentPath}.[0].${subKey}`,
-                     description: `Value of ${subKey} in the list`,
-                     example: val[0][subKey]
-                 });
-             }
-          }
+        if (Array.isArray(val)) {
+            // Add array itself
+            res.push({ 
+                path: currentPath, 
+                description: `List (${val.length} items)`, 
+                example: `Array` 
+            });
+            // recurse into the first item of the array if it exists as an example of structure
+            if (val.length > 0) {
+               recurse(val[0], `${currentPath}.[0]`, depth + 1);
+            }
+        } else if (val && typeof val === "object" && !(val instanceof Date)) {
+            // Recurse into objects
+            recurse(val, currentPath, depth + 1);
         } else {
-          res.push({ path: currentPath, example: val });
+            // Leaf node
+            res.push({ path: currentPath, example: val });
         }
       }
     };
+
     recurse(variables);
     return res;
   }, [variables]);

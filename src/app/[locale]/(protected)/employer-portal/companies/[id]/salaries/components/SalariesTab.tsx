@@ -21,7 +21,26 @@ import {
 } from "@/components/ui/select";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { SettlePaymentsDialog } from "./SettlePaymentsDialog";
-import { IconSeparator, IconTrash, IconCheck, IconFilter, IconChevronRight, IconChevronLeft, IconX, IconRefresh, IconWallet, IconCash, IconPlus, IconCalendarTime, IconSearch } from "@tabler/icons-react";
+import { toast } from "sonner";
+import { printDocument } from "@/services/document-print.service";
+import { useTemplates } from "@/hooks/use-templates";
+import { DocumentType } from "@/types/template";
+import {
+    IconSeparator,
+    IconTrash,
+    IconCheck,
+    IconFilter,
+    IconChevronRight,
+    IconChevronLeft,
+    IconX,
+    IconRefresh,
+    IconWallet,
+    IconCash,
+    IconPlus,
+    IconCalendarTime,
+    IconSearch,
+    IconFileSpreadsheet
+} from "@tabler/icons-react";
 import { Input } from "@/components/ui/input";
 import { useSalaries } from "@/hooks/use-salaries";
 import { usePayments } from "@/hooks/use-payments";
@@ -103,6 +122,20 @@ export function SalariesTab({
     const salaries = (salariesQuery.data as any)?.items || [];
     const meta = salariesQuery.data as any;
     const lastPage = meta?.lastPage || (meta?.total ? Math.ceil(meta.total / (meta.limit || 20)) : 1);
+
+    const { templatesQuery } = useTemplates({ companyId, type: DocumentType.SALARY_SHEET, isActive: true });
+    const activeSheetTemplate = templatesQuery.data?.[0];
+
+    const handlePrintSheet = () => {
+        if (!activeSheetTemplate) {
+            toast.error("No active salary sheet template found. Please create and approve one in Documents.");
+            return;
+        }
+        
+        // Resource ID for SALARY_SHEET is companyId_month_year
+        const resourceId = `${companyId}_${filters.month || new Date().getMonth() + 1}_${filters.year || new Date().getFullYear()}`;
+        printDocument(activeSheetTemplate.id, resourceId, { ids: selectedIds });
+    };
 
     const toggleSelectAll = () => {
         if (selectedIds.length === salaries.length) {
@@ -487,7 +520,17 @@ export function SalariesTab({
                                                     <div className="flex items-center gap-1 mt-0.5">
                                                         <span className="text-[9px] font-black text-primary uppercase">Tot. Earn.:</span>
                                                         <span className="text-[9px] font-bold text-primary">
-                                                            {(() => {
+                                    <div className="w-[1px] h-4 bg-primary/20" />
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm border-primary/20 text-primary hover:bg-primary/5"
+                                        onClick={handlePrintSheet}
+                                    >
+                                        <IconFileSpreadsheet className="h-3 w-3 mr-1" /> Print Sheet
+                                    </Button>
+
+                                    {(() => {
                                                                 const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
                                                                 if (epfComp && epfComp.value > 0) {
                                                                     // Back-calculate from EPF component to get the exact base used by backend

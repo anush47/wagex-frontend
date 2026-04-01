@@ -95,7 +95,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
       {/* Header - Designer UI */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800 mb-2">
         <div className="flex items-center gap-6 flex-1">
-          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all">
+          <Button variant="ghost" size="icon" onClick={onBack || onCancel} className="rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all">
             <IconArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex flex-col gap-1.5">
@@ -194,7 +194,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                     </TabsList>
                     
                     <div className="mt-3 flex-1 flex flex-col min-h-0 overflow-hidden border border-neutral-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 shadow-sm relative">
-                        <TabsContent value="html" className="flex-1 mt-0 outline-none flex flex-col min-h-0 overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40">
+                        <TabsContent value="html" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40">
                             <Editor
                                 value={html}
                                 onValueChange={code => setHtml(code)}
@@ -207,7 +207,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                 }}
                             />
                         </TabsContent>
-                        <TabsContent value="css" className="flex-1 mt-0 outline-none flex flex-col min-h-0 overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40">
+                        <TabsContent value="css" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40">
                             <Editor
                                 value={css}
                                 onValueChange={code => setCss(code)}
@@ -310,68 +310,227 @@ function getDefaultHtml(type: DocumentType): string {
     return `
 <div class="payslip-wrapper">
   <div class="header">
-    <h1>PAYSLIP</h1>
-    <p>{{employee.company.name}}</p>
+    <div class="company-info">
+      <h1>PAYSLIP</h1>
+      <h2>{{company.name}}</h2>
+      <p>{{company.address}}</p>
+    </div>
   </div>
   
   <div class="employee-info">
-    <div><strong>Employee:</strong> {{employee.fullName}}</div>
-    <div><strong>ID:</strong> {{employee.employeeNo}}</div>
-    <div><strong>Designation:</strong> {{employee.designation}}</div>
-    <div><strong>Period:</strong> {{formatDate periodStartDate}} to {{formatDate periodEndDate}}</div>
+    <div class="info-group">
+      <div><strong>Employee:</strong> {{employee.fullName}}</div>
+      <div><strong>ID / Member No:</strong> {{employee.employeeNo}}</div>
+      <div><strong>NIC:</strong> {{employee.nic}}</div>
+      <div><strong>EPF No:</strong> {{employee.epfNo}}</div>
+    </div>
+    <div class="info-group">
+      <div><strong>Period:</strong> {{formatDate periodStartDate}} - {{formatDate periodEndDate}}</div>
+      <div><strong>Designation:</strong> {{employee.designation}}</div>
+      <div><strong>Department:</strong> {{employee.department.name}}</div>
+      <div><strong>Pay Date:</strong> {{formatDate payDate}}</div>
+    </div>
   </div>
 
-  <table class="salary-table">
+  <div class="salary-details">
+    <div class="earnings">
+      <h3>EARNINGS</h3>
+      <table class="salary-table">
+        <tr>
+          <td>Basic Salary</td>
+          <td>{{formatCurrency basicSalary}}</td>
+        </tr>
+        {{#if otPay}}
+        <tr>
+          <td>Overtime Pay</td>
+          <td>{{formatCurrency otPay}}</td>
+        </tr>
+        {{/if}}
+        {{#if holidayPay}}
+        <tr>
+          <td>Holiday Pay</td>
+          <td>{{formatCurrency holidayPay}}</td>
+        </tr>
+        {{/if}}
+        {{#each additions}}
+        <tr>
+          <td>{{name}}</td>
+          <td>{{formatCurrency amount}}</td>
+        </tr>
+        {{/each}}
+        <tr class="total-row">
+          <td><strong>Gross Earnings</strong></td>
+          <td><strong>{{formatCurrency grossSalary}}</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="deductions">
+      <h3>DEDUCTIONS</h3>
+      <table class="salary-table">
+        <tr>
+          <td>EPF (Employee 8%)</td>
+          <td>{{formatCurrency epfEmployee}}</td>
+        </tr>
+        {{#if advanceDeduction}}
+        <tr>
+          <td>Advance Recovery</td>
+          <td>{{formatCurrency advanceDeduction}}</td>
+        </tr>
+        {{/if}}
+        {{#if noPay}}
+        <tr>
+          <td>No Pay Deduction</td>
+          <td>{{formatCurrency noPay}}</td>
+        </tr>
+        {{/if}}
+        {{#if lateDeduction}}
+        <tr>
+          <td>Late Deduction</td>
+          <td>{{formatCurrency lateDeduction}}</td>
+        </tr>
+        {{/if}}
+        {{#if taxAmount}}
+        <tr>
+          <td>Payee Tax</td>
+          <td>{{formatCurrency taxAmount}}</td>
+        </tr>
+        {{/if}}
+        {{#each deductions}}
+        <tr>
+          <td>{{name}}</td>
+          <td>{{formatCurrency amount}}</td>
+        </tr>
+        {{/each}}
+        <tr class="total-row">
+          <td><strong>Total Deductions</strong></td>
+          <td><strong>{{formatCurrency totalDeductions}}</strong></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="net-pay-box">
+      <span class="label">NET SALARY</span>
+      <span class="amount">{{formatCurrency netSalary}}</span>
+    </div>
+    
+    <div class="statutory-info">
+      <p>Employer EPF (12%): {{formatCurrency epfEmployer}} | Employer ETF (3%): {{formatCurrency etfEmployer}}</p>
+    </div>
+    
+    <div class="signatures">
+      <div class="sig">Employer Signature</div>
+      <div class="sig">Employee Signature</div>
+    </div>
+  </div>
+</div>`;
+  }
+  
+  if (type === DocumentType.SALARY_SHEET) {
+    return `
+<div class="salary-sheet">
+  <div class="header">
+    <h1>SALARY SHEET - {{month}}/{{year}}</h1>
+    <h2>{{company.name}}</h2>
+  </div>
+
+  <table class="sheet-table">
     <thead>
       <tr>
-        <th>Earnings</th>
-        <th>Amount</th>
+        <th>Employee</th>
+        <th>Basic</th>
+        <th>OT</th>
+        <th>Holiday</th>
+        {{#each additionColumns}}
+        <th>{{this}}</th>
+        {{/each}}
+        <th class="gross-col">Gross</th>
+        <th>EPF 8%</th>
+        <th>Tax</th>
+        <th>Other Ded.</th>
+        <th>Net Salary</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>Basic Salary</td>
+      {{#each salaries}}
+      <tr class="employee-row">
+        <td class="name-cell">{{employee.memberNo}} - {{employee.fullName}}</td>
         <td>{{formatCurrency basicSalary}}</td>
+        <td>{{formatCurrency otPay}}</td>
+        <td>{{formatCurrency holidayPay}}</td>
+        {{#each ../additionColumns}}
+        <td>{{formatCurrency (getAmount ../additions this)}}</td>
+        {{/each}}
+        <td class="gross-col">{{formatCurrency grossSalary}}</td>
+        <td>{{formatCurrency epfEmployee}}</td>
+        <td>{{formatCurrency taxAmount}}</td>
+        <td>{{formatCurrency totalDeductions}}</td>
+        <td class="net-col">{{formatCurrency netSalary}}</td>
       </tr>
-      {{#each components}}
-      {{#if (eq category 'ADDITION')}}
-      <tr>
-        <td>{{name}}</td>
-        <td>{{formatCurrency amount}}</td>
-      </tr>
-      {{/if}}
       {{/each}}
+      
+      <tr class="totals-row">
+        <td>GRAND TOTAL</td>
+        <td>{{formatCurrency totals.basicSalary}}</td>
+        <td>{{formatCurrency totals.otPay}}</td>
+        <td>{{formatCurrency totals.holidayPay}}</td>
+        {{#each additionColumns}}
+        <td>{{formatCurrency (getCustomTotal ../totals.customAdditions this)}}</td>
+        {{/each}}
+        <td class="gross-col">{{formatCurrency totals.grossSalary}}</td>
+        <td>{{formatCurrency totals.epfEmployee}}</td>
+        <td>{{formatCurrency totals.taxAmount}}</td>
+        <td>{{formatCurrency totals.totalDeductions}}</td>
+        <td class="net-col">{{formatCurrency totals.netSalary}}</td>
+      </tr>
     </tbody>
   </table>
-
-  <div class="footer">
-     <div class="net-pay">NET PAY: {{formatCurrency netSalary}}</div>
-  </div>
 </div>`;
+
   }
   return '<div class="document"><h1>New Document</h1></div>';
 }
 
 function getDefaultCss(): string {
   return `
+/* PAYSLIP STYLES */
 .payslip-wrapper {
-  font-family: 'Inter', 'Helvetica', sans-serif;
+  padding: 40px;
+  font-family: sans-serif;
   color: #333;
-  padding: 60px;
-  background: white;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
 }
-.header { text-align: right; border-bottom: 2px solid #333; padding-bottom: 10px; }
-.header h1 { font-size: 24px; margin: 0; color: #000; }
-.employee-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; font-size: 14px; }
-.salary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.salary-table th { background: #f5f5f5; text-align: left; padding: 10px; border: 1px solid #ddd; font-size: 12px; }
-.salary-table td { padding: 10px; border: 1px solid #ddd; font-size: 13px; }
-.footer { margin-top: auto; padding-top: 50px; text-align: right; }
-.net-pay { font-size: 20px; font-weight: bold; background: #000; color: #fff; padding: 15px 30px; display: inline-block; }
+.header { border-bottom: 2px solid #000; margin-bottom: 20px; }
+.header h1 { margin: 0; color: #000; font-size: 24px; }
+.employee-info { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 13px; line-height: 1.6; }
+.salary-details { display: flex; gap: 40px; }
+.earnings, .deductions { flex: 1; }
+.salary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.salary-table td { padding: 8px 0; border-bottom: 1px solid #eee; }
+.salary-table td:last-child { text-align: right; }
+.total-row td { border-top: 1px solid #000; padding-top: 10px; font-size: 14px; }
+.net-pay-box { background: #f8f8f8; padding: 20px; text-align: center; border: 1px solid #ddd; margin: 30px 0; }
+.net-pay-box .label { display: block; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
+.net-pay-box .amount { font-size: 24px; font-weight: bold; color: #000; }
+.statutory-info { font-size: 11px; color: #777; text-align: center; font-style: italic; }
+.signatures { display: flex; justify-content: space-between; margin-top: 60px; }
+.sig { border-top: 1px solid #ccc; width: 200px; text-align: center; padding-top: 5px; font-size: 12px; }
+
+/* SALARY SHEET STYLES */
+.salary-sheet { padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; background: #fff; }
+.salary-sheet .header h1 { margin: 0; color: #000; }
+.salary-sheet .header h2 { margin: 0; color: #666; font-size: 14px; }
+.sheet-table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; color: #000; }
+.sheet-table th, .sheet-table td { border: 1px solid #ccc; padding: 6px 4px; text-align: right; overflow: hidden; color: #000; }
+.sheet-table th { background: #f0f0f0; font-weight: bold; }
+.sheet-table td.name-cell { text-align: left; font-weight: 500; }
+.gross-col, .net-col { background: #f9f9f9; font-weight: bold; }
+.totals-row td { background: #333; color: #fff; font-weight: bold; border-color: #333; }
+.page-break { page-break-after: always; }
+.page-footer { text-align: center; font-size: 9px; margin-top: 10px; color: #666; }
+thead { display: table-header-group; }
+tr.employee-row { page-break-inside: avoid; }
 `;
 }
+
