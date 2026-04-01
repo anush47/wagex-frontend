@@ -26,6 +26,7 @@ import { highlight, languages } from "prismjs";
 import "prismjs/components/prism-markup";
 import "prismjs/components/prism-css";
 import "prismjs/components/prism-json";
+import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism.css";
 
 interface TemplateEditorProps {
@@ -43,9 +44,33 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
   const [html, setHtml] = React.useState(template?.html || getDefaultHtml(type));
   const [css, setCss] = React.useState(template?.css || getDefaultCss());
   const [config, setConfig] = React.useState(template?.config || { paperSize: "A4", orientation: "portrait" });
-  
+  const [dataJson, setDataJson] = React.useState("");
+  const [dataError, setDataError] = React.useState<string | null>(null);
+  const [dataSeedDone, setDataSeedDone] = React.useState(false);
+
   const { createTemplateMutation, updateTemplateMutation } = useTemplates();
   const { data: sampleData, isLoading: isLoadingVariables } = useTemplateVariables(type);
+
+  // Seed the JSON editor once when sampleData first loads
+  React.useEffect(() => {
+    if (sampleData && !dataSeedDone) {
+      setDataJson(JSON.stringify(sampleData, null, 2));
+      setDataSeedDone(true);
+    }
+  }, [sampleData, dataSeedDone]);
+
+  // Parse the user's JSON, falling back to raw sampleData on error
+  const templateData = React.useMemo(() => {
+    if (!dataJson) return sampleData || {};
+    try {
+      const parsed = JSON.parse(dataJson);
+      setDataError(null);
+      return parsed;
+    } catch (e: any) {
+      setDataError(e.message);
+      return sampleData || {};
+    }
+  }, [dataJson, sampleData]);
 
   const isApproved = template?.status === TemplateStatus.APPROVED;
 
@@ -173,7 +198,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden gap-6">
         {/* Row 1: Preview (Full Width) */}
         <div className="h-[75vh] min-h-[600px] flex flex-col min-h-0 overflow-hidden border border-neutral-200 dark:border-neutral-800 rounded-[2rem] bg-white dark:bg-neutral-950 shadow-sm relative shrink-0">
-            <LivePreview html={html} css={css} data={sampleData || {}} config={config} />
+            <LivePreview html={html} css={css} data={templateData} config={config} />
         </div>
 
         {/* Row 2: Editor (2/3) & Variables (1/3) */}
@@ -187,6 +212,10 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                         </TabsTrigger>
                         <TabsTrigger value="css" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">
                             CSS
+                        </TabsTrigger>
+                        <TabsTrigger value="data" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all flex items-center gap-1.5">
+                            Data
+                            {dataError && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
                         </TabsTrigger>
                         <TabsTrigger value="config" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">
                             Canvas
@@ -218,6 +247,22 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                     fontFamily: '"Fira Code", "Fira Mono", monospace',
                                     outline: 'none',
                                 }}
+                            />
+                        </TabsContent>
+                        <TabsContent value="data" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40 relative">
+                            {dataError && (
+                                <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                    JSON Error — {dataError}
+                                </div>
+                            )}
+                            <Editor
+                                value={dataJson}
+                                onValueChange={(code) => setDataJson(code)}
+                                highlight={code => highlight(code, languages.json, 'json')}
+                                padding={20}
+                                className="font-mono text-[11px] leading-relaxed min-h-full dark:text-neutral-300"
+                                style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
                             />
                         </TabsContent>
                         <TabsContent value="config" className="flex-1 mt-0 outline-none p-6 space-y-6 overflow-y-auto custom-scrollbar bg-neutral-50/30 dark:bg-transparent">
@@ -275,7 +320,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
 
             {/* Right: Variables (1/3) */}
             <div className="w-full lg:flex-1 flex flex-col gap-3 min-h-0 overflow-hidden bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm relative">
-                <VariableList variables={sampleData || {}} />
+                <VariableList variables={templateData} />
                 {isLoadingVariables && (
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-300 dark:text-neutral-600 animate-pulse">
                         <div className="h-4 w-4 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
