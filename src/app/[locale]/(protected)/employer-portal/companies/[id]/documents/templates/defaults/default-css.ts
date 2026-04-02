@@ -3,10 +3,14 @@ import { DocumentType } from '@/types/template';
 export function getPayslipCss(): string {
   return `/* --- PAYSLIP --- */
 .payslip { padding: 24px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #111; background: #fff; max-width: 800px; margin: 0 auto; }
-.payslip .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
+.payslip .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
+.payslip .logo-section { display: flex; align-items: flex-start; gap: 12px; }
+.payslip .company-logo { height: 40px; width: auto; object-fit: contain; }
 .payslip .header h1 { margin: 0; font-size: 18px; }
-.payslip .header h2 { margin: 0; color: #444; font-size: 14px; }
+.payslip .header p { margin: 0; font-size: 11px; color: #666; }
+.payslip .doc-title-section { display: flex; align-items: center; gap: 16px; }
 .payslip .doc-title { text-align: right; }
+.payslip .employee-photo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
 .payslip .employee-info { display: flex; gap: 40px; margin-bottom: 20px; font-size: 12px; }
 .payslip .info-group { flex: 1; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
 .payslip .label { color: #666; font-weight: 600; white-space: nowrap; }
@@ -29,6 +33,8 @@ export function getSalarySheetCss(): string {
   return `/* --- SALARY SHEET --- */
 .salary-sheet { padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; background: #fff; }
 .salary-sheet .header { margin-bottom: 16px; }
+.salary-sheet .header-logo { display: flex; align-items: center; gap: 16px; }
+.salary-sheet .company-logo { height: 32px; width: auto; object-fit: contain; }
 .salary-sheet .header h1 { margin: 0; font-size: 16px; }
 .salary-sheet .header h2 { margin: 0; font-size: 12px; color: #444; }
 .salary-sheet .header p { margin: 2px 0 0; font-size: 10px; color: #777; }
@@ -47,9 +53,13 @@ export function getAttendanceReportCss(): string {
   return `/* --- ATTENDANCE REPORT --- */
 .attendance-report { padding: 24px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #111; background: #fff; }
 .attendance-report .header { border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 14px; }
+.attendance-report .logo-section { display: flex; align-items: center; gap: 16px; }
+.attendance-report .company-logo { height: 36px; width: auto; object-fit: contain; }
 .attendance-report .header h1 { margin: 0; font-size: 16px; }
 .attendance-report .header h2 { margin: 0; font-size: 12px; color: #444; }
-.attendance-report .employee-info { display: flex; gap: 24px; margin-bottom: 14px; font-size: 12px; }
+.attendance-report .emp-header { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.attendance-report .employee-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
+.attendance-report .employee-info { display: flex; gap: 24px; font-size: 12px; }
 .attendance-report .employee-info span { color: #555; }
 .att-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
 .att-table th, .att-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }

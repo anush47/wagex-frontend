@@ -8,7 +8,9 @@ import {
   IconVariable,
   IconDeviceFloppy,
   IconCheck,
-  IconArrowLeft
+  IconArrowLeft,
+  IconChevronUp,
+  IconChevronDown
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,42 +77,43 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
     }
   };
 
-  // Scroll to first match whenever search changes
+  // Seed sample data from backend once on mount
   React.useEffect(() => {
-    setDataMatchIdx(0);
-    setTimeout(() => {
-      dataMatchRefs.current[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 50);
-  }, [dataSearch]);
-
-  // Scroll to current match index
-  React.useEffect(() => {
-    dataMatchRefs.current[dataMatchIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [dataMatchIdx]);
-
-  // Build sample data locally from the real DB field structure
-  const sampleData = React.useMemo(() => {
-    return getSampleData(type);
-  }, [type]);
-
-  // Seed the JSON editor once on mount
-  React.useEffect(() => {
-    setDataJson(JSON.stringify(sampleData, null, 2));
+    getSampleData(type).then(data => {
+        setDataJson(JSON.stringify(data, null, 2));
+    }).catch(err => {
+        toast.error("Failed to fetch template variables from backend.");
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Parse the user's JSON, falling back to raw sampleData on error
+  // Parse the user's JSON for preview
   const templateData = React.useMemo(() => {
-    if (!dataJson) return sampleData || {};
+    if (!dataJson) return {};
     try {
       const parsed = JSON.parse(dataJson);
       setDataError(null);
       return parsed;
     } catch (e: any) {
       setDataError(e.message);
-      return sampleData || {};
+      return {};
     }
-  }, [dataJson, sampleData]);
+  }, [dataJson]);
+
+  // Scroll to first match whenever search changes
+  React.useEffect(() => {
+    setDataMatchIdx(0);
+    if (dataSearch) {
+      setTimeout(() => {
+        dataMatchRefs.current[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+  }, [dataSearch]);
+
+  // Scroll to current match index
+  React.useEffect(() => {
+    dataMatchRefs.current[dataMatchIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [dataMatchIdx]);
 
   const isApproved = template?.status === TemplateStatus.APPROVED;
 
@@ -300,83 +303,86 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                 style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
                             />
                         </TabsContent>
-                        <TabsContent value="data" className="flex-1 mt-0 outline-none flex flex-col overflow-hidden bg-neutral-50 dark:bg-neutral-900/40 relative">
-                            {/* Sticky toolbar */}
-                            <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 backdrop-blur-md shrink-0">
-                                <div className="relative flex-1">
-                                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" /></svg>
-                                    <input
-                                        type="text"
-                                        value={dataSearch}
-                                        onChange={e => setDataSearch(e.target.value)}
-                                        placeholder="Search fields..."
-                                        className="w-full h-7 pl-7 pr-3 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-[10px] font-mono text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-400 outline-none focus:border-primary transition-all"
-                                    />
+                        <TabsContent value="data" className="flex-1 mt-0 outline-none flex flex-col min-h-0 bg-neutral-50 dark:bg-neutral-950">
+                             <div className="flex items-center justify-between gap-4 px-6 py-3 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+                                <div className="flex items-center gap-3 grow max-w-2xl">
+                                     <div className="relative grow">
+                                        <IconVariable className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500" />
+                                        <input 
+                                            placeholder="SEARCH SCHEMA FIELDS..."
+                                            value={dataSearch}
+                                            onChange={e => setDataSearch(e.target.value.toUpperCase())}
+                                            className="w-full h-8 pl-9 pr-3 bg-neutral-100 dark:bg-white/5 rounded-lg text-[10px] font-mono tracking-widest outline-none border border-neutral-200 dark:border-neutral-800 focus:border-primary/50 transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600 text-neutral-900 dark:text-neutral-100"
+                                        />
+                                     </div>
+                                     {dataSearch && (() => {
+                                        const json = dataJson;
+                                        const lines = json.split('\n');
+                                        let matchCount = 0;
+                                        lines.forEach(l => { if (l.toUpperCase().includes(dataSearch)) matchCount++; });
+
+                                        return (
+                                            <div className="flex items-center gap-2 shrink-0 px-2 bg-neutral-50 dark:bg-white/5 rounded-md border border-neutral-200 dark:border-neutral-800 h-8">
+                                                <span className="text-[9px] font-black text-neutral-400 dark:text-neutral-500 tabular-nums uppercase tracking-widest">
+                                                    {matchCount > 0 ? dataMatchIdx + 1 : 0} / {matchCount}
+                                                </span>
+                                                <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-1 ml-1">
+                                                    <button 
+                                                        onClick={() => setDataMatchIdx(prev => (prev - 1 + matchCount) % matchCount)}
+                                                        className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-primary transition-colors disabled:opacity-20"
+                                                        disabled={matchCount === 0}
+                                                    >
+                                                        <IconChevronUp className="h-3.5 w-3.5" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setDataMatchIdx(prev => (prev + 1) % matchCount)}
+                                                        className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-primary transition-colors disabled:opacity-20"
+                                                        disabled={matchCount === 0}
+                                                    >
+                                                        <IconChevronDown className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
-                                {dataSearch && (() => {
-                                    const total = dataJson.split('\n').filter(l => l.toLowerCase().includes(dataSearch.toLowerCase())).length;
-                                    return (
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => setDataMatchIdx(i => Math.max(0, i - 1))}
-                                                disabled={dataMatchIdx === 0}
-                                                className="h-5 w-5 flex items-center justify-center rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-400 disabled:opacity-30 transition-all"
-                                            >&#8593;</button>
-                                            <span className="text-[9px] font-black text-neutral-500 tabular-nums whitespace-nowrap">
-                                                {total === 0 ? 'no matches' : `${dataMatchIdx + 1} of ${total}`}
-                                            </span>
-                                            <button
-                                                onClick={() => setDataMatchIdx(i => Math.min(total - 1, i + 1))}
-                                                disabled={dataMatchIdx >= total - 1}
-                                                className="h-5 w-5 flex items-center justify-center rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-400 disabled:opacity-30 transition-all"
-                                            >&#8595;</button>
-                                        </div>
-                                    );
-                                })()}
                                 {dataSearch && (
-                                    <button onClick={() => setDataSearch('')} className="text-[9px] font-black text-neutral-400 hover:text-rose-500 transition-all uppercase tracking-widest">✕</button>
+                                    <button onClick={() => setDataSearch('')} className="text-[10px] font-black text-neutral-400 dark:text-neutral-500 hover:text-rose-500 transition-all uppercase tracking-widest pl-2">Reset</button>
                                 )}
-                                <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800 mx-1" />
-                                <div className="flex items-center gap-1.5 flex-row-reverse">
-                                    <button 
-                                        onClick={handleFetchLive}
-                                        className="h-7 px-2.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black text-[9px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all whitespace-nowrap"
-                                    >
-                                        Load Live
-                                    </button>
-                                    <input
-                                        type="text"
-                                        placeholder={type === DocumentType.PAYSLIP ? "Salary ID..." : "Ref ID..."}
-                                        value={liveResourceId}
-                                        onChange={e => setLiveResourceId(e.target.value)}
-                                        className="h-7 w-32 px-2.5 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-[10px] font-mono text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-500 outline-none focus:border-primary transition-all"
-                                    />
+                                <div className="flex items-center gap-4">
+                                    <Badge variant="outline" className="text-[9px] font-black border-neutral-200 dark:border-neutral-800 text-neutral-400 dark:text-neutral-500 tracking-[0.2em]">SCHEMA VIEW</Badge>
                                 </div>
                             </div>
                             {dataError && (
-                                <div className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest leading-none shrink-0">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                    JSON Error — {dataError}
+                                <div className="flex items-center gap-2 px-6 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em] leading-none shrink-0">
+                                    <span>FATAL JSON ERROR: {dataError}</span>
                                 </div>
                             )}
-                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-0 bg-white dark:bg-[#0d1117]">
                                 {dataSearch ? (() => {
-                                    // Build context-aware filtered view:
-                                    // For each matching line, walk backwards to find its ancestor keys
-                                    const lines = dataJson.split('\n');
-                                    const lowerSearch = dataSearch.toLowerCase();
-                                    const getIndent = (l: string) => l.match(/^(\s*)/)?.[1].length ?? 0;
-
+                                    const json = dataJson;
+                                    const lines = json.split('\n');
                                     const matchIndices = new Set<number>();
-                                    lines.forEach((l, i) => { if (l.toLowerCase().includes(lowerSearch)) matchIndices.add(i); });
-
                                     const contextIndices = new Set<number>();
-                                    matchIndices.forEach(matchIdx => {
-                                        contextIndices.add(matchIdx);
-                                        const matchIndent = getIndent(lines[matchIdx]);
-                                        const needed = new Set(Array.from({ length: matchIndent }, (_, n) => n));
-                                        for (let i = matchIdx - 1; i >= 0 && needed.size > 0; i--) {
-                                            const ind = getIndent(lines[i]);
+
+                                    lines.forEach((line, i) => {
+                                        if (line.toUpperCase().includes(dataSearch)) {
+                                            matchIndices.add(i);
+                                        }
+                                    });
+
+                                    matchIndices.forEach(ind => {
+                                        const line = lines[ind];
+                                        const indent = line.search(/\S/); 
+                                        contextIndices.add(ind);
+
+                                        const needed = new Set<number>();
+                                        for (let i = 0; i < indent; i += 2) needed.add(i);
+
+                                        for (let i = ind - 1; i >= 0; i--) {
+                                            if (needed.size === 0) break;
+                                            const l = lines[i];
+                                            const ind = l.search(/\S/);
                                             if (needed.has(ind) && lines[i].trim()) {
                                                 contextIndices.add(i);
                                                 needed.delete(ind);
@@ -387,9 +393,8 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                     const visible = Array.from(contextIndices).sort((a, b) => a - b);
                                     let matchCount = -1;
                                     dataMatchRefs.current = [];
-                                    const total = matchIndices.size;
 
-                                    if (total === 0) return (
+                                    if (matchIndices.size === 0) return (
                                         <div className="flex items-center justify-center h-32 text-[10px] font-black uppercase text-neutral-400 tracking-widest">No matches</div>
                                     );
 
@@ -411,7 +416,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                                         <div
                                                             ref={isMatch ? el => { dataMatchRefs.current[matchCount] = el; } : undefined}
                                                             className={isCurrent
-                                                                ? 'bg-amber-300/80 dark:bg-amber-500/30 -mx-5 px-5 rounded-sm ring-1 ring-amber-400 dark:ring-amber-500/50'
+                                                                ? 'bg-amber-300/80 dark:bg-amber-500/30 -mx-5 px-5 rounded-sm ring-1 ring-amber-400 dark:ring-amber-500/50 transition-all'
                                                                 : isMatch
                                                                     ? 'bg-amber-100/60 dark:bg-amber-500/10 -mx-5 px-5 rounded-sm'
                                                                     : 'text-neutral-400 dark:text-neutral-600'}

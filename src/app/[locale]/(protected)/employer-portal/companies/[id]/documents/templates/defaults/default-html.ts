@@ -3,13 +3,19 @@ import { DocumentType } from '@/types/template';
 export function getPayslipHtml(): string {
   return `<div class="payslip">
   <div class="header">
-    <div class="company-info">
-      <h1>{{company.name}}</h1>
-      <p>{{company.address}}</p>
+    <div class="logo-section">
+      {{#if company.logo}}<img src="{{company.logo}}" class="company-logo" alt="logo" />{{/if}}
+      <div class="company-info">
+        <h1>{{company.name}}</h1>
+        <p>{{company.address}}</p>
+      </div>
     </div>
-    <div class="doc-title">
-      <h2>PAY SLIP</h2>
-      <p>{{month}}/{{year}}</p>
+    <div class="doc-title-section">
+      <div class="doc-title">
+        <h2>PAY SLIP</h2>
+        <p>{{month}}/{{year}}</p>
+      </div>
+      {{#if employee.photo}}<img src="{{employee.photo}}" class="employee-photo" alt="profile" />{{/if}}
     </div>
   </div>
 
@@ -73,9 +79,14 @@ export function getPayslipHtml(): string {
 export function getSalarySheetHtml(): string {
   return `<div class="salary-sheet">
   <div class="header">
-    <h1>{{company.name}}</h1>
-    <h2>Salary Sheet — {{month}}/{{year}}</h2>
-    <p>Period: {{periodStartDate}} to {{periodEndDate}}</p>
+    <div class="header-logo">
+      {{#if company.logo}}<img src="{{company.logo}}" class="company-logo" alt="logo" />{{/if}}
+      <div class="header-text">
+        <h1>{{company.name}}</h1>
+        <h2>Salary Sheet — {{month}}/{{year}}</h2>
+        <p>Period: {{periodStartDate}} to {{periodEndDate}}</p>
+      </div>
+    </div>
   </div>
 
   <table class="sheet-table">
@@ -131,14 +142,22 @@ export function getSalarySheetHtml(): string {
 export function getAttendanceReportHtml(): string {
   return `<div class="attendance-report">
   <div class="header">
-    <h1>{{company.name}}</h1>
-    <h2>Attendance Report — {{month}}/{{year}}</h2>
+    <div class="logo-section">
+      {{#if company.logo}}<img src="{{company.logo}}" class="company-logo" alt="logo" />{{/if}}
+      <div class="company-text">
+        <h1>{{company.name}}</h1>
+        <h2>Attendance Report — {{month}}/{{year}}</h2>
+      </div>
+    </div>
   </div>
-
-  <div class="employee-info">
-    <span>Employee: <strong>{{employee.fullName}}</strong></span>
-    <span>Emp No: {{employee.employeeNo}}</span>
-    <span>Designation: {{employee.designation}}</span>
+  
+  <div class="emp-header">
+    {{#if employee.photo}}<img src="{{employee.photo}}" class="employee-photo" alt="profile" />{{/if}}
+    <div class="employee-info">
+      <span>Employee: <strong>{{employee.fullName}}</strong></span>
+      <span>Emp No: {{employee.employeeNo}}</span>
+      <span>Designation: {{employee.designation}}</span>
+    </div>
   </div>
 
   <table class="att-table">
