@@ -21,6 +21,7 @@ export interface DocumentTemplate {
   type: DocumentType;
   html: string;
   css?: string | null;
+  helpers?: string | null;
   config?: any;
   isActive: boolean;
   isDefault: boolean;

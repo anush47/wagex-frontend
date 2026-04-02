@@ -20,7 +20,6 @@ import { useTemplates, useTemplateVariables } from "@/hooks/use-templates";
 import { DocumentType, DocumentTemplate, TemplateStatus } from "@/types/template";
 import { toast } from "sonner";
 import { LivePreview } from "./LivePreview";
-import { VariableList } from "./VariableList";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs";
 import "prismjs/components/prism-markup";
@@ -43,6 +42,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
   const [description, setDescription] = React.useState(template?.description || "");
   const [html, setHtml] = React.useState(template?.html || getDefaultHtml(type));
   const [css, setCss] = React.useState(template?.css || getDefaultCss());
+  const [helpers, setHelpers] = React.useState(template?.helpers || getDefaultHelpers());
   const [config, setConfig] = React.useState(template?.config || { paperSize: "A4", orientation: "portrait" });
   const [dataJson, setDataJson] = React.useState("");
   const [dataError, setDataError] = React.useState<string | null>(null);
@@ -86,6 +86,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
             type,
             html,
             css,
+            helpers,
             config,
             status: publish ? TemplateStatus.PENDING : (template?.status || TemplateStatus.DRAFT),
         };
@@ -201,10 +202,8 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
             <LivePreview html={html} css={css} data={templateData} config={config} />
         </div>
 
-        {/* Row 2: Editor (2/3) & Variables (1/3) */}
-        <div className="w-full flex flex-col lg:flex-row gap-8 items-stretch h-screen max-h-[100vh] min-h-[800px]">
-            {/* Left: Editor (2/3) */}
-            <div className="w-full lg:w-[68%] flex flex-col">
+        {/* Row 2: Tabs (Full Width) */}
+        <div className="w-full flex-1 flex flex-col min-h-0 overflow-hidden">
                 <Tabs defaultValue="html" className="flex-1 flex flex-col min-h-0 overflow-hidden">
                     <TabsList className="bg-neutral-100 dark:bg-neutral-800 p-1 h-9 rounded-xl w-max border-none shadow-inner">
                         <TabsTrigger value="html" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">
@@ -212,6 +211,10 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                         </TabsTrigger>
                         <TabsTrigger value="css" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">
                             CSS
+                        </TabsTrigger>
+                        <TabsTrigger value="helpers" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all flex items-center gap-1.5">
+                            <IconVariable className="h-3.5 w-3.5" />
+                            Functions
                         </TabsTrigger>
                         <TabsTrigger value="data" className="rounded-lg px-6 h-full font-bold text-[10px] uppercase tracking-wide data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all flex items-center gap-1.5">
                             Data
@@ -230,10 +233,7 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                 highlight={code => highlight(code, languages.markup, 'markup')}
                                 padding={20}
                                 className="font-mono text-[11px] leading-relaxed min-h-full dark:text-neutral-300"
-                                style={{
-                                    fontFamily: '"Fira Code", "Fira Mono", monospace',
-                                    outline: 'none',
-                                }}
+                                style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
                             />
                         </TabsContent>
                         <TabsContent value="css" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40">
@@ -243,15 +243,26 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                 highlight={code => highlight(code, languages.css, 'css')}
                                 padding={20}
                                 className="font-mono text-[11px] leading-relaxed min-h-full dark:text-neutral-300"
-                                style={{
-                                    fontFamily: '"Fira Code", "Fira Mono", monospace',
-                                    outline: 'none',
-                                }}
+                                style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
+                            />
+                        </TabsContent>
+                        <TabsContent value="helpers" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40 relative">
+                             <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-neutral-900/10 border-b border-neutral-200 dark:border-neutral-800 backdrop-blur-md">
+                                <span className="text-[10px] font-black uppercase text-neutral-400 tracking-widest leading-none">Javascript (Handlebars Helpers)</span>
+                                <Badge variant="secondary" className="text-[9px] font-bold">Safe Runtime</Badge>
+                             </div>
+                             <Editor
+                                value={helpers}
+                                onValueChange={code => setHelpers(code)}
+                                highlight={code => highlight(code, languages.javascript, 'javascript')}
+                                padding={20}
+                                className="font-mono text-[11px] leading-relaxed min-h-full dark:text-neutral-300"
+                                style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
                             />
                         </TabsContent>
                         <TabsContent value="data" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40 relative">
                             {dataError && (
-                                <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest">
+                                <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest leading-none">
                                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                                     JSON Error — {dataError}
                                 </div>
@@ -312,22 +323,10 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                         </div>
                                     </div>
                                 )}
-                            </div>
+                             </div>
                         </TabsContent>
                     </div>
                 </Tabs>
-            </div>
-
-            {/* Right: Variables (1/3) */}
-            <div className="w-full lg:flex-1 flex flex-col gap-3 min-h-0 overflow-hidden bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm relative">
-                <VariableList variables={templateData} />
-                {isLoadingVariables && (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-300 dark:text-neutral-600 animate-pulse">
-                        <div className="h-4 w-4 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-                        Analyzing Structure...
-                    </div>
-                )}
-            </div>
         </div>
       </div>
       
@@ -579,3 +578,58 @@ tr.employee-row { page-break-inside: avoid; }
 `;
 }
 
+
+function getDefaultHelpers(): string {
+  return `/**
+ * WageX Standard & Custom Helpers
+ * All template logic is defined here.
+ */
+
+// 1. Currency & Numbers
+Handlebars.registerHelper('formatCurrency', (value) => {
+  if (typeof value !== 'number') return value;
+  return new Intl.NumberFormat('en-LK', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+});
+
+Handlebars.registerHelper('add', (a, b) => (a || 0) + (b || 0));
+
+// 2. Dates
+Handlebars.registerHelper('formatDate', (date, formatStr) => {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString();
+});
+
+// 3. Logic & Arrays
+Handlebars.registerHelper('eq', (a, b) => a === b);
+
+Handlebars.registerHelper('chunk', (arr, size) => {
+  if (!Array.isArray(arr)) return [];
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+});
+
+// 4. Data Extraction
+Handlebars.registerHelper('getAmount', (list, name) => {
+  if (!Array.isArray(list)) return 0;
+  const item = list.find((i) => i.name === name);
+  return item ? item.amount : 0;
+});
+
+Handlebars.registerHelper('getCustomTotal', (totalsObj, name) => {
+  if (!totalsObj) return 0;
+  return totalsObj[name] || 0;
+});
+
+// 5. Custom Utility Examples
+Handlebars.registerHelper('uppercase', (str) => {
+  if (typeof str !== 'string') return str;
+  return str.toUpperCase();
+});
+`;
+}
