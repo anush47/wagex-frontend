@@ -38,4 +38,9 @@ export class TemplateService {
     static async getTemplateVariables(type: DocumentType): Promise<ApiResponse<any>> {
         return backendApiClient.get<any>(`/templates/variables/${type}`);
     }
+
+    static async getTemplateLiveData(type: DocumentType, resourceId?: string): Promise<ApiResponse<any>> {
+        const params = resourceId ? { resourceId } : {};
+        return backendApiClient.get<any>(`/templates/live-data/${type}`, { params });
+    }
 }

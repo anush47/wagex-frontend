@@ -16,7 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useTemplates, useTemplateVariables } from "@/hooks/use-templates";
+import { useTemplates, useTemplateLiveData } from "@/hooks/use-templates";
+import { getDefaultHtml } from "../templates/defaults/default-html";
+import { getDefaultCss } from "../templates/defaults/default-css";
+import { getDefaultHelpers } from "../templates/defaults/default-helpers";
+import { getDefaultConfig } from "../templates/defaults/default-config";
+import { getSampleData } from "../templates/defaults/sample-data";
 import { DocumentType, DocumentTemplate, TemplateStatus } from "@/types/template";
 import { toast } from "sonner";
 import { LivePreview } from "./LivePreview";
@@ -41,23 +46,58 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
   const [name, setName] = React.useState(template?.name || `New ${type.replace('_', ' ')} Template`);
   const [description, setDescription] = React.useState(template?.description || "");
   const [html, setHtml] = React.useState(template?.html || getDefaultHtml(type));
-  const [css, setCss] = React.useState(template?.css || getDefaultCss());
+  const [css, setCss] = React.useState(template?.css || getDefaultCss(type));
   const [helpers, setHelpers] = React.useState(template?.helpers || getDefaultHelpers());
-  const [config, setConfig] = React.useState(template?.config || { paperSize: "A4", orientation: "portrait" });
+  const [config, setConfig] = React.useState(template?.config || getDefaultConfig(type));
   const [dataJson, setDataJson] = React.useState("");
   const [dataError, setDataError] = React.useState<string | null>(null);
-  const [dataSeedDone, setDataSeedDone] = React.useState(false);
+  const [dataSearch, setDataSearch] = React.useState("");
+  const [dataMatchIdx, setDataMatchIdx] = React.useState(0);
+  const dataMatchRefs = React.useRef<(HTMLDivElement | null)[]>([]);
+  const [liveResourceId, setLiveResourceId] = React.useState("");
 
   const { createTemplateMutation, updateTemplateMutation } = useTemplates();
-  const { data: sampleData, isLoading: isLoadingVariables } = useTemplateVariables(type);
+  const { refetch: fetchLive } = useTemplateLiveData(type, liveResourceId);
 
-  // Seed the JSON editor once when sampleData first loads
-  React.useEffect(() => {
-    if (sampleData && !dataSeedDone) {
-      setDataJson(JSON.stringify(sampleData, null, 2));
-      setDataSeedDone(true);
+  const handleFetchLive = async () => {
+    if (!liveResourceId.trim()) {
+        toast.error("Please enter a resource ID (e.g. Salary ID)");
+        return;
     }
-  }, [sampleData, dataSeedDone]);
+    try {
+        const { data } = await fetchLive();
+        if (data) {
+            setDataJson(JSON.stringify(data, null, 2));
+            toast.success("Live data loaded from server");
+        }
+    } catch (e: any) {
+        toast.error(e.message || "Failed to fetch live data");
+    }
+  };
+
+  // Scroll to first match whenever search changes
+  React.useEffect(() => {
+    setDataMatchIdx(0);
+    setTimeout(() => {
+      dataMatchRefs.current[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  }, [dataSearch]);
+
+  // Scroll to current match index
+  React.useEffect(() => {
+    dataMatchRefs.current[dataMatchIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [dataMatchIdx]);
+
+  // Build sample data locally from the real DB field structure
+  const sampleData = React.useMemo(() => {
+    return getSampleData(type);
+  }, [type]);
+
+  // Seed the JSON editor once on mount
+  React.useEffect(() => {
+    setDataJson(JSON.stringify(sampleData, null, 2));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Parse the user's JSON, falling back to raw sampleData on error
   const templateData = React.useMemo(() => {
@@ -260,21 +300,142 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
                                 style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
                             />
                         </TabsContent>
-                        <TabsContent value="data" className="flex-1 mt-0 outline-none overflow-y-auto custom-scrollbar bg-neutral-50 dark:bg-neutral-900/40 relative">
+                        <TabsContent value="data" className="flex-1 mt-0 outline-none flex flex-col overflow-hidden bg-neutral-50 dark:bg-neutral-900/40 relative">
+                            {/* Sticky toolbar */}
+                            <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 backdrop-blur-md shrink-0">
+                                <div className="relative flex-1">
+                                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" /></svg>
+                                    <input
+                                        type="text"
+                                        value={dataSearch}
+                                        onChange={e => setDataSearch(e.target.value)}
+                                        placeholder="Search fields..."
+                                        className="w-full h-7 pl-7 pr-3 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-[10px] font-mono text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-400 outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
+                                {dataSearch && (() => {
+                                    const total = dataJson.split('\n').filter(l => l.toLowerCase().includes(dataSearch.toLowerCase())).length;
+                                    return (
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => setDataMatchIdx(i => Math.max(0, i - 1))}
+                                                disabled={dataMatchIdx === 0}
+                                                className="h-5 w-5 flex items-center justify-center rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-400 disabled:opacity-30 transition-all"
+                                            >&#8593;</button>
+                                            <span className="text-[9px] font-black text-neutral-500 tabular-nums whitespace-nowrap">
+                                                {total === 0 ? 'no matches' : `${dataMatchIdx + 1} of ${total}`}
+                                            </span>
+                                            <button
+                                                onClick={() => setDataMatchIdx(i => Math.min(total - 1, i + 1))}
+                                                disabled={dataMatchIdx >= total - 1}
+                                                className="h-5 w-5 flex items-center justify-center rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-400 disabled:opacity-30 transition-all"
+                                            >&#8595;</button>
+                                        </div>
+                                    );
+                                })()}
+                                {dataSearch && (
+                                    <button onClick={() => setDataSearch('')} className="text-[9px] font-black text-neutral-400 hover:text-rose-500 transition-all uppercase tracking-widest">✕</button>
+                                )}
+                                <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800 mx-1" />
+                                <div className="flex items-center gap-1.5 flex-row-reverse">
+                                    <button 
+                                        onClick={handleFetchLive}
+                                        className="h-7 px-2.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black text-[9px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all whitespace-nowrap"
+                                    >
+                                        Load Live
+                                    </button>
+                                    <input
+                                        type="text"
+                                        placeholder={type === DocumentType.PAYSLIP ? "Salary ID..." : "Ref ID..."}
+                                        value={liveResourceId}
+                                        onChange={e => setLiveResourceId(e.target.value)}
+                                        className="h-7 w-32 px-2.5 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-[10px] font-mono text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-500 outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
+                            </div>
                             {dataError && (
-                                <div className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest leading-none">
+                                <div className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border-b border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest leading-none shrink-0">
                                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                                     JSON Error — {dataError}
                                 </div>
                             )}
-                            <Editor
-                                value={dataJson}
-                                onValueChange={(code) => setDataJson(code)}
-                                highlight={code => highlight(code, languages.json, 'json')}
-                                padding={20}
-                                className="font-mono text-[11px] leading-relaxed min-h-full dark:text-neutral-300"
-                                style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
-                            />
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                {dataSearch ? (() => {
+                                    // Build context-aware filtered view:
+                                    // For each matching line, walk backwards to find its ancestor keys
+                                    const lines = dataJson.split('\n');
+                                    const lowerSearch = dataSearch.toLowerCase();
+                                    const getIndent = (l: string) => l.match(/^(\s*)/)?.[1].length ?? 0;
+
+                                    const matchIndices = new Set<number>();
+                                    lines.forEach((l, i) => { if (l.toLowerCase().includes(lowerSearch)) matchIndices.add(i); });
+
+                                    const contextIndices = new Set<number>();
+                                    matchIndices.forEach(matchIdx => {
+                                        contextIndices.add(matchIdx);
+                                        const matchIndent = getIndent(lines[matchIdx]);
+                                        const needed = new Set(Array.from({ length: matchIndent }, (_, n) => n));
+                                        for (let i = matchIdx - 1; i >= 0 && needed.size > 0; i--) {
+                                            const ind = getIndent(lines[i]);
+                                            if (needed.has(ind) && lines[i].trim()) {
+                                                contextIndices.add(i);
+                                                needed.delete(ind);
+                                            }
+                                        }
+                                    });
+
+                                    const visible = Array.from(contextIndices).sort((a, b) => a - b);
+                                    let matchCount = -1;
+                                    dataMatchRefs.current = [];
+                                    const total = matchIndices.size;
+
+                                    if (total === 0) return (
+                                        <div className="flex items-center justify-center h-32 text-[10px] font-black uppercase text-neutral-400 tracking-widest">No matches</div>
+                                    );
+
+                                    let prevIdx = -1;
+                                    return (
+                                        <div className="font-mono text-[11px] leading-relaxed p-5" style={{ fontFamily: '"Fira Code", "Fira Mono", monospace' }}>
+                                            {visible.map((idx) => {
+                                                const line = lines[idx];
+                                                const isMatch = matchIndices.has(idx);
+                                                if (isMatch) matchCount++;
+                                                const isCurrent = isMatch && matchCount === dataMatchIdx;
+                                                const showEllipsis = prevIdx !== -1 && idx > prevIdx + 1 && !isMatch;
+                                                prevIdx = idx;
+                                                return (
+                                                    <React.Fragment key={idx}>
+                                                        {showEllipsis && (
+                                                            <div className="text-neutral-300 dark:text-neutral-700 select-none py-0.5 pl-1">⋯</div>
+                                                        )}
+                                                        <div
+                                                            ref={isMatch ? el => { dataMatchRefs.current[matchCount] = el; } : undefined}
+                                                            className={isCurrent
+                                                                ? 'bg-amber-300/80 dark:bg-amber-500/30 -mx-5 px-5 rounded-sm ring-1 ring-amber-400 dark:ring-amber-500/50'
+                                                                : isMatch
+                                                                    ? 'bg-amber-100/60 dark:bg-amber-500/10 -mx-5 px-5 rounded-sm'
+                                                                    : 'text-neutral-400 dark:text-neutral-600'}
+                                                        >
+                                                            <span className={isMatch ? 'text-neutral-900 dark:text-neutral-100 font-semibold' : ''}>
+                                                                {line || ' '}
+                                                            </span>
+                                                        </div>
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })() : (
+                                    <Editor
+                                        value={dataJson}
+                                        onValueChange={(code) => setDataJson(code)}
+                                        highlight={code => highlight(code, languages.json, 'json')}
+                                        padding={20}
+                                        className="font-mono text-[11px] leading-relaxed min-h-full dark:text-neutral-300"
+                                        style={{ fontFamily: '"Fira Code", "Fira Mono", monospace', outline: 'none' }}
+                                    />
+                                )}
+                            </div>
                         </TabsContent>
                         <TabsContent value="config" className="flex-1 mt-0 outline-none p-6 space-y-6 overflow-y-auto custom-scrollbar bg-neutral-50/30 dark:bg-transparent">
                              <div className="grid grid-cols-2 gap-4">
@@ -347,289 +508,4 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
       `}</style>
     </div>
   );
-}
-
-function getDefaultHtml(type: DocumentType): string {
-  if (type === DocumentType.PAYSLIP) {
-    return `
-<div class="payslip-wrapper">
-  <div class="header">
-    <div class="company-info">
-      <h1>PAYSLIP</h1>
-      <h2>{{company.name}}</h2>
-      <p>{{company.address}}</p>
-    </div>
-  </div>
-  
-  <div class="employee-info">
-    <div class="info-group">
-      <div><strong>Employee:</strong> {{employee.fullName}}</div>
-      <div><strong>ID / Member No:</strong> {{employee.employeeNo}}</div>
-      <div><strong>NIC:</strong> {{employee.nic}}</div>
-      <div><strong>EPF No:</strong> {{employee.epfNo}}</div>
-    </div>
-    <div class="info-group">
-      <div><strong>Period:</strong> {{formatDate periodStartDate}} - {{formatDate periodEndDate}}</div>
-      <div><strong>Designation:</strong> {{employee.designation}}</div>
-      <div><strong>Department:</strong> {{employee.department.name}}</div>
-      <div><strong>Pay Date:</strong> {{formatDate payDate}}</div>
-    </div>
-  </div>
-
-  <div class="salary-details">
-    <div class="earnings">
-      <h3>EARNINGS</h3>
-      <table class="salary-table">
-        <tr>
-          <td>Basic Salary</td>
-          <td>{{formatCurrency basicSalary}}</td>
-        </tr>
-        {{#if otPay}}
-        <tr>
-          <td>Overtime Pay</td>
-          <td>{{formatCurrency otPay}}</td>
-        </tr>
-        {{/if}}
-        {{#if holidayPay}}
-        <tr>
-          <td>Holiday Pay</td>
-          <td>{{formatCurrency holidayPay}}</td>
-        </tr>
-        {{/if}}
-        {{#each additions}}
-        <tr>
-          <td>{{name}}</td>
-          <td>{{formatCurrency amount}}</td>
-        </tr>
-        {{/each}}
-        <tr class="total-row">
-          <td><strong>Gross Earnings</strong></td>
-          <td><strong>{{formatCurrency grossSalary}}</strong></td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="deductions">
-      <h3>DEDUCTIONS</h3>
-      <table class="salary-table">
-        <tr>
-          <td>EPF (Employee 8%)</td>
-          <td>{{formatCurrency epfEmployee}}</td>
-        </tr>
-        {{#if advanceDeduction}}
-        <tr>
-          <td>Advance Recovery</td>
-          <td>{{formatCurrency advanceDeduction}}</td>
-        </tr>
-        {{/if}}
-        {{#if noPay}}
-        <tr>
-          <td>No Pay Deduction</td>
-          <td>{{formatCurrency noPay}}</td>
-        </tr>
-        {{/if}}
-        {{#if lateDeduction}}
-        <tr>
-          <td>Late Deduction</td>
-          <td>{{formatCurrency lateDeduction}}</td>
-        </tr>
-        {{/if}}
-        {{#if taxAmount}}
-        <tr>
-          <td>Payee Tax</td>
-          <td>{{formatCurrency taxAmount}}</td>
-        </tr>
-        {{/if}}
-        {{#each deductions}}
-        <tr>
-          <td>{{name}}</td>
-          <td>{{formatCurrency amount}}</td>
-        </tr>
-        {{/each}}
-        <tr class="total-row">
-          <td><strong>Total Deductions</strong></td>
-          <td><strong>{{formatCurrency totalDeductions}}</strong></td>
-        </tr>
-      </table>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div class="net-pay-box">
-      <span class="label">NET SALARY</span>
-      <span class="amount">{{formatCurrency netSalary}}</span>
-    </div>
-    
-    <div class="statutory-info">
-      <p>Employer EPF (12%): {{formatCurrency epfEmployer}} | Employer ETF (3%): {{formatCurrency etfEmployer}}</p>
-    </div>
-    
-    <div class="signatures">
-      <div class="sig">Employer Signature</div>
-      <div class="sig">Employee Signature</div>
-    </div>
-  </div>
-</div>`;
-  }
-  
-  if (type === DocumentType.SALARY_SHEET) {
-    return `
-<div class="salary-sheet">
-  <div class="header">
-    <h1>SALARY SHEET - {{month}}/{{year}}</h1>
-    <h2>{{company.name}}</h2>
-  </div>
-
-  <table class="sheet-table">
-    <thead>
-      <tr>
-        <th>Employee</th>
-        <th>Basic</th>
-        <th>OT</th>
-        <th>Holiday</th>
-        {{#each additionColumns}}
-        <th>{{this}}</th>
-        {{/each}}
-        <th class="gross-col">Gross</th>
-        <th>EPF 8%</th>
-        <th>Tax</th>
-        <th>Other Ded.</th>
-        <th>Net Salary</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each salaries}}
-      <tr class="employee-row">
-        <td class="name-cell">{{employee.memberNo}} - {{employee.fullName}}</td>
-        <td>{{formatCurrency basicSalary}}</td>
-        <td>{{formatCurrency otPay}}</td>
-        <td>{{formatCurrency holidayPay}}</td>
-        {{#each ../additionColumns}}
-        <td>{{formatCurrency (getAmount ../additions this)}}</td>
-        {{/each}}
-        <td class="gross-col">{{formatCurrency grossSalary}}</td>
-        <td>{{formatCurrency epfEmployee}}</td>
-        <td>{{formatCurrency taxAmount}}</td>
-        <td>{{formatCurrency totalDeductions}}</td>
-        <td class="net-col">{{formatCurrency netSalary}}</td>
-      </tr>
-      {{/each}}
-      
-      <tr class="totals-row">
-        <td>GRAND TOTAL</td>
-        <td>{{formatCurrency totals.basicSalary}}</td>
-        <td>{{formatCurrency totals.otPay}}</td>
-        <td>{{formatCurrency totals.holidayPay}}</td>
-        {{#each additionColumns}}
-        <td>{{formatCurrency (getCustomTotal ../totals.customAdditions this)}}</td>
-        {{/each}}
-        <td class="gross-col">{{formatCurrency totals.grossSalary}}</td>
-        <td>{{formatCurrency totals.epfEmployee}}</td>
-        <td>{{formatCurrency totals.taxAmount}}</td>
-        <td>{{formatCurrency totals.totalDeductions}}</td>
-        <td class="net-col">{{formatCurrency totals.netSalary}}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>`;
-
-  }
-  return '<div class="document"><h1>New Document</h1></div>';
-}
-
-function getDefaultCss(): string {
-  return `
-/* PAYSLIP STYLES */
-.payslip-wrapper {
-  padding: 40px;
-  font-family: sans-serif;
-  color: #333;
-}
-.header { border-bottom: 2px solid #000; margin-bottom: 20px; }
-.header h1 { margin: 0; color: #000; font-size: 24px; }
-.employee-info { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 13px; line-height: 1.6; }
-.salary-details { display: flex; gap: 40px; }
-.earnings, .deductions { flex: 1; }
-.salary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.salary-table td { padding: 8px 0; border-bottom: 1px solid #eee; }
-.salary-table td:last-child { text-align: right; }
-.total-row td { border-top: 1px solid #000; padding-top: 10px; font-size: 14px; }
-.net-pay-box { background: #f8f8f8; padding: 20px; text-align: center; border: 1px solid #ddd; margin: 30px 0; }
-.net-pay-box .label { display: block; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
-.net-pay-box .amount { font-size: 24px; font-weight: bold; color: #000; }
-.statutory-info { font-size: 11px; color: #777; text-align: center; font-style: italic; }
-.signatures { display: flex; justify-content: space-between; margin-top: 60px; }
-.sig { border-top: 1px solid #ccc; width: 200px; text-align: center; padding-top: 5px; font-size: 12px; }
-
-/* SALARY SHEET STYLES */
-.salary-sheet { padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; background: #fff; }
-.salary-sheet .header h1 { margin: 0; color: #000; }
-.salary-sheet .header h2 { margin: 0; color: #666; font-size: 14px; }
-.sheet-table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; color: #000; }
-.sheet-table th, .sheet-table td { border: 1px solid #ccc; padding: 6px 4px; text-align: right; overflow: hidden; color: #000; }
-.sheet-table th { background: #f0f0f0; font-weight: bold; }
-.sheet-table td.name-cell { text-align: left; font-weight: 500; }
-.gross-col, .net-col { background: #f9f9f9; font-weight: bold; }
-.totals-row td { background: #333; color: #fff; font-weight: bold; border-color: #333; }
-.page-break { page-break-after: always; }
-.page-footer { text-align: center; font-size: 9px; margin-top: 10px; color: #666; }
-thead { display: table-header-group; }
-tr.employee-row { page-break-inside: avoid; }
-`;
-}
-
-
-function getDefaultHelpers(): string {
-  return `/**
- * WageX Standard & Custom Helpers
- * All template logic is defined here.
- */
-
-// 1. Currency & Numbers
-Handlebars.registerHelper('formatCurrency', (value) => {
-  if (typeof value !== 'number') return value;
-  return new Intl.NumberFormat('en-LK', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-});
-
-Handlebars.registerHelper('add', (a, b) => (a || 0) + (b || 0));
-
-// 2. Dates
-Handlebars.registerHelper('formatDate', (date, formatStr) => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString();
-});
-
-// 3. Logic & Arrays
-Handlebars.registerHelper('eq', (a, b) => a === b);
-
-Handlebars.registerHelper('chunk', (arr, size) => {
-  if (!Array.isArray(arr)) return [];
-  const chunks = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
-});
-
-// 4. Data Extraction
-Handlebars.registerHelper('getAmount', (list, name) => {
-  if (!Array.isArray(list)) return 0;
-  const item = list.find((i) => i.name === name);
-  return item ? item.amount : 0;
-});
-
-Handlebars.registerHelper('getCustomTotal', (totalsObj, name) => {
-  if (!totalsObj) return 0;
-  return totalsObj[name] || 0;
-});
-
-// 5. Custom Utility Examples
-Handlebars.registerHelper('uppercase', (str) => {
-  if (typeof str !== 'string') return str;
-  return str.toUpperCase();
-});
-`;
 }

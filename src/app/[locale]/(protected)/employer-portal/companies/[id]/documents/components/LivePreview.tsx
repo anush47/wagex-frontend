@@ -110,7 +110,6 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
       setRendered(result);
       setError(null);
     } catch (e: any) {
-      console.error('Designer Logic Fault:', e);
       setError(e.message || 'Layout Fault');
     }
   }, [html, data]);

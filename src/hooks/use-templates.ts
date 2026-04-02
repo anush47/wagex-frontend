@@ -67,3 +67,16 @@ export function useTemplateVariables(type?: DocumentType) {
     enabled: !!type,
   });
 }
+
+export function useTemplateLiveData(type?: DocumentType, resourceId?: string) {
+  return useQuery({
+    queryKey: ["template-live-data", type, resourceId],
+    queryFn: async () => {
+      if (!type) return null;
+      const response = await TemplateService.getTemplateLiveData(type, resourceId);
+      if (response.error) throw new Error(response.error.message);
+      return response.data;
+    },
+    enabled: !!type,
+  });
+}
