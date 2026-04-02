@@ -80,11 +80,10 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
             return;
         }
 
-        const payload = {
+        const basePayload = {
             name,
             description,
             type,
-            companyId,
             html,
             css,
             config,
@@ -95,11 +94,12 @@ export function TemplateEditor({ type, companyId, template, onSave, onBack, onCa
 
         if (template?.id) {
             // Update: Omit immutable fields (type, companyId) + status/isActive if not publishing
-            const { type: _, companyId: __, ...updatePayload } = payload;
+            const { type: _, ...updatePayload } = basePayload;
             saveAction = updateTemplateMutation.mutateAsync({ id: template.id, data: updatePayload as any });
         } else {
             // Create: Include basics, status will be handled by logic above
-            saveAction = createTemplateMutation.mutateAsync(payload);
+            // Backend will infer companyId for Employers with a single membership
+            saveAction = createTemplateMutation.mutateAsync(basePayload as any);
         }
 
         toast.promise(saveAction, {
