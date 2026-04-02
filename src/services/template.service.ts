@@ -40,7 +40,8 @@ export class TemplateService {
     }
 
     static async getTemplateLiveData(type: DocumentType, resourceId?: string): Promise<ApiResponse<any>> {
-        const params = resourceId ? { resourceId } : {};
+        const params: Record<string, string> = {};
+        if (resourceId) params.resourceId = resourceId;
         return backendApiClient.get<any>(`/templates/live-data/${type}`, { params });
     }
 }
