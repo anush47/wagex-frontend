@@ -71,6 +71,112 @@ export function getAttendanceReportCss(): string {
 .summary-item strong { font-size: 18px; }`;
 }
 
+export function getStatutoryFormCss(): string {
+  return `/* --- STATUTORY FORM (EPF / ETF) --- */
+.statutory-form {
+  padding: 28px 32px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #000;
+  background: #fff;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Compact Letterhead — text only, centered */
+.form-letterhead {
+  text-align: center;
+  border-bottom: 1px solid #000;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+.form-company { font-size: 14px; font-weight: 900; text-transform: uppercase; }
+.form-company-meta { font-size: 9px; color: #555; font-weight: 500; margin-top: 2px; }
+
+/* Title row */
+.form-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  justify-content: center;
+  border-bottom: 1px solid #000;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+.form-title { font-size: 12px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+.form-period { font-size: 9px; font-weight: 600; color: #555; }
+
+/* Meta grid (bank details) */
+.form-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid #000;
+  margin-bottom: 16px;
+}
+.meta-item {
+  padding: 8px 10px;
+  border-right: 1px solid #000;
+}
+.meta-item:last-child { border-right: none; }
+.meta-item span { display: block; font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.meta-item strong { font-size: 11px; font-weight: 800; }
+
+/* Table */
+.form-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  border: 1px solid #000;
+  margin-bottom: 20px;
+}
+.form-table th {
+  background: #000;
+  color: #fff;
+  padding: 9px 8px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: right;
+  border-right: 1px solid #333;
+}
+.form-table th.name-cell { text-align: left; }
+.form-table th:last-child { border-right: none; }
+.form-table td {
+  padding: 8px;
+  text-align: right;
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+}
+.form-table td.td-num { text-align: center; color: #888; }
+.form-table td.name-cell { text-align: left; font-weight: 700; }
+.form-table td:last-child { border-right: none; }
+.bold { font-weight: 800; }
+.totals-row td {
+  background: #000;
+  color: #fff;
+  font-weight: 900;
+  border-right: 1px solid #333;
+  border-bottom: none;
+}
+
+/* Summary footer */
+.form-summary {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.summary-box {
+  border: 1px solid #000;
+  padding: 10px 16px;
+  text-align: right;
+  min-width: 200px;
+}
+.summary-box span { display: block; font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.summary-box strong { font-size: 14px; font-weight: 900; }
+.summary-box.highlight { background: #000; color: #fff; }
+.summary-box.highlight span { color: #ccc; }`;
+}
+
 export function getDefaultCss(type?: DocumentType): string {
   if (!type) {
     return getPayslipCss();
@@ -82,6 +188,10 @@ export function getDefaultCss(type?: DocumentType): string {
       return getSalarySheetCss();
     case DocumentType.ATTENDANCE_REPORT:
       return getAttendanceReportCss();
+    case DocumentType.EPF_FORM:
+      return getStatutoryFormCss();
+    case DocumentType.ETF_FORM:
+      return getStatutoryFormCss();
     default:
       return '';
   }

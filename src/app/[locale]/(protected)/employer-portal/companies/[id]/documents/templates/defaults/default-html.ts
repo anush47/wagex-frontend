@@ -200,6 +200,140 @@ export function getAttendanceReportHtml(): string {
 </div>`;
 }
 
+export function getEpfFormHtml(): string {
+  return `<div class="statutory-form">
+
+  <div class="form-letterhead">
+    <div class="form-company">{{company.name}}</div>
+    <div class="form-company-meta">{{company.address}} &bull; Employer No: {{company.employerNumber}}</div>
+  </div>
+
+  <div class="form-title-row">
+    <span class="form-title">EPF CONTRIBUTION SCHEDULE</span>
+    <span class="form-period">{{periodStartDate}} &ndash; {{periodEndDate}}</span>
+  </div>
+
+  <div class="form-meta-grid">
+    <div class="meta-item"><span>Reference No</span><strong>{{epfRecord.referenceNo}}</strong></div>
+    <div class="meta-item"><span>Bank</span><strong>{{epfRecord.bankName}}</strong></div>
+    <div class="meta-item"><span>Branch</span><strong>{{epfRecord.bankBranch}}</strong></div>
+    <div class="meta-item"><span>Bank Code</span><strong>{{epfRecord.bankCode}}</strong></div>
+    <div class="meta-item"><span>Branch Code</span><strong>{{epfRecord.branchCode}}</strong></div>
+  </div>
+
+  <table class="form-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th class="name-cell">EMPLOYEE NAME</th>
+        <th>EMP NO</th>
+        <th>MEMBER NO</th>
+        <th>GROSS EARNINGS</th>
+        <th>EMPLOYEE (8%)</th>
+        <th>EMPLOYER (12%)</th>
+        <th>TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each salaries as |row idx|}}
+      <tr>
+        <td class="td-num">{{add idx 1}}</td>
+        <td class="name-cell">{{row.employee.fullName}}</td>
+        <td>{{row.employee.employeeNo}}</td>
+        <td>{{row.employee.memberNo}}</td>
+        <td>{{formatCurrency row.grossEarnings}}</td>
+        <td>{{formatCurrency row.epfEmployee}}</td>
+        <td>{{formatCurrency row.epfEmployer}}</td>
+        <td class="bold">{{formatCurrency (add row.epfEmployee row.epfEmployer)}}</td>
+      </tr>
+      {{/each}}
+      <tr class="totals-row">
+        <td colspan="4">TOTALS</td>
+        <td></td>
+        <td>{{formatCurrency totals.totalEmployeeContribution}}</td>
+        <td>{{formatCurrency totals.totalEmployerContribution}}</td>
+        <td>{{formatCurrency totals.totalContribution}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="form-summary">
+    <div class="summary-box">
+      <span>Total Employee Contribution (8%)</span>
+      <strong>{{formatCurrency totals.totalEmployeeContribution}}</strong>
+    </div>
+    <div class="summary-box">
+      <span>Total Employer Contribution (12%)</span>
+      <strong>{{formatCurrency totals.totalEmployerContribution}}</strong>
+    </div>
+    <div class="summary-box highlight">
+      <span>TOTAL EPF PAYABLE</span>
+      <strong>{{formatCurrency totals.totalContribution}}</strong>
+    </div>
+  </div>
+
+</div>`;
+}
+
+export function getEtfFormHtml(): string {
+  return `<div class="statutory-form">
+
+  <div class="form-letterhead">
+    <div class="form-company">{{company.name}}</div>
+    <div class="form-company-meta">{{company.address}} &bull; Employer No: {{company.employerNumber}}</div>
+  </div>
+
+  <div class="form-title-row">
+    <span class="form-title">ETF CONTRIBUTION SCHEDULE</span>
+    <span class="form-period">{{periodStartDate}} &ndash; {{periodEndDate}}</span>
+  </div>
+
+  <div class="form-meta-grid">
+    <div class="meta-item"><span>Bank</span><strong>{{etfRecord.bankName}}</strong></div>
+    <div class="meta-item"><span>Branch</span><strong>{{etfRecord.bankBranch}}</strong></div>
+    <div class="meta-item"><span>Bank Code</span><strong>{{etfRecord.bankCode}}</strong></div>
+    <div class="meta-item"><span>Branch Code</span><strong>{{etfRecord.branchCode}}</strong></div>
+  </div>
+
+  <table class="form-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th class="name-cell">EMPLOYEE NAME</th>
+        <th>EMP NO</th>
+        <th>MEMBER NO</th>
+        <th>GROSS EARNINGS</th>
+        <th>EMPLOYER CONTRIBUTION (3%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each salaries as |row idx|}}
+      <tr>
+        <td class="td-num">{{add idx 1}}</td>
+        <td class="name-cell">{{row.employee.fullName}}</td>
+        <td>{{row.employee.employeeNo}}</td>
+        <td>{{row.employee.memberNo}}</td>
+        <td>{{formatCurrency row.grossEarnings}}</td>
+        <td class="bold">{{formatCurrency row.etfEmployer}}</td>
+      </tr>
+      {{/each}}
+      <tr class="totals-row">
+        <td colspan="5">TOTALS</td>
+        <td>{{formatCurrency totals.totalContribution}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="form-summary">
+    <div class="summary-box highlight">
+      <span>TOTAL ETF PAYABLE (Employer 3%)</span>
+      <strong>{{formatCurrency totals.totalContribution}}</strong>
+    </div>
+  </div>
+
+</div>`;
+}
+
 export function getDefaultHtml(type: DocumentType): string {
   switch (type) {
     case DocumentType.PAYSLIP:
@@ -208,6 +342,10 @@ export function getDefaultHtml(type: DocumentType): string {
       return getSalarySheetHtml();
     case DocumentType.ATTENDANCE_REPORT:
       return getAttendanceReportHtml();
+    case DocumentType.EPF_FORM:
+      return getEpfFormHtml();
+    case DocumentType.ETF_FORM:
+      return getEtfFormHtml();
     default:
       return '<div class="template"><h1>{{company.name}}</h1></div>';
   }
