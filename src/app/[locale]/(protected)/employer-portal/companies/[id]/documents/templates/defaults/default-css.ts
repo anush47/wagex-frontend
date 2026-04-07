@@ -15,7 +15,7 @@ export function getGeneralPrintCss(): string {
   background: #fff;
   page-break-after: always;
   box-sizing: border-box;
-  min-height: 297mm; /* Full A4 height to force footer to bottom */
+  min-height: 100%; /* Full height to force footer to bottom */
 }
 .print-page-footer {
   position: absolute;
@@ -44,17 +44,14 @@ export function getGeneralPrintCss(): string {
   .report-page {
     padding: 20mm 15mm !important;
     margin: 0 !important;
-    width: 210mm !important;
-    height: 297mm !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
     page-break-after: always !important;
     overflow: hidden;
     position: relative;
     box-shadow: none !important;
     border: none !important;
-  }
-  .report-page.landscape {
-    width: 297mm !important;
-    height: 210mm !important;
   }
   .print-page-footer {
     display: block !important;
@@ -99,14 +96,15 @@ export function getPayslipCss(): string {
 export function getSalarySheetCss(): string {
   return `${getGeneralPrintCss()}
 /* --- SALARY SHEET --- */
-.report-page.landscape { width: 297mm; height: 210mm; padding: 10mm 15mm; }
-@media print { .report-page { width: 297mm; height: 209mm; } .report-page.landscape { width: 297mm; } }
+.report-page.landscape { width: 100%; height: 100%; padding: 10mm 15mm; }
+@media print { .report-page { width: 100% !important; height: 100% !important; } }
 
-.header { margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-.header-logo { display: flex; align-items: center; gap: 16px; }
-.company-logo { height: 32px; width: auto; object-fit: contain; }
-.header h1 { margin: 0; font-size: 16px; font-weight: 950; }
-.header h2 { margin: 0; font-size: 12px; font-weight: 800; color: #444; text-transform: uppercase; letter-spacing: 0.1em; }
+.header { margin-bottom: 24px; border-bottom: 3px solid #000; padding-bottom: 12px; }
+.header-logo { display: flex; align-items: flex-start; gap: 20px; }
+.company-logo { height: 48px; width: auto; max-width: 180px; object-fit: contain; }
+.header h1 { margin: 0; font-size: 20px; font-weight: 950; line-height: 1.1; }
+.header h2 { margin: 4px 0 0 0; font-size: 13px; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: 0.05em; }
+.header p { margin: 6px 0 0 0; font-size: 11px; font-weight: 700; color: #444; }
 .sheet-table { width: 100%; border-collapse: collapse; font-size: 10px; }
 .sheet-table th, .sheet-table td { border: 1px solid #ddd; padding: 6px 4px; text-align: right; }
 .sheet-table th { background: #000; color: #fff; font-weight: 900; font-size: 8px; text-transform: uppercase; border: 1px solid #333; }

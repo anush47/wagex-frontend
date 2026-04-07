@@ -195,9 +195,10 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
 
         /* Portrait/Landscape handled by paper config inside the template css but we ensure preview matches */
         .preview-content-wrapper .report-page {
-            max-width: ${paperConfig.widthPx}px;
-            width: ${paperConfig.widthPx}px;
-            height: ${paperConfig.heightPx}px;
+            max-width: ${paperConfig.widthPx}px !important;
+            width: ${paperConfig.widthPx}px !important;
+            height: ${paperConfig.heightPx}px !important;
+            min-height: ${paperConfig.heightPx}px !important;
             overflow: hidden;
         }
       `}</style>

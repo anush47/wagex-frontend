@@ -20,6 +20,17 @@ export async function printDocument(templateId: string, resourceId: string, opti
       return;
     }
 
+    const paperSizes: Record<string, { w: number, h: number }> = {
+      'A4': { w: 210, h: 297 },
+      'A5': { w: 148, h: 210 },
+      'A3': { w: 297, h: 420 },
+      'LETTER': { w: 216, h: 279 },
+    };
+    const size = paperSizes[metadata.config?.paperSize || 'A4'] || paperSizes['A4'];
+    const isLandscape = metadata.config?.orientation === 'landscape';
+    const pageWidth = isLandscape ? size.h : size.w;
+    const pageHeight = isLandscape ? size.w : size.h;
+
     printWindow.document.write(`
       <html>
         <head>
@@ -27,8 +38,29 @@ export async function printDocument(templateId: string, resourceId: string, opti
           <style>
             ${css}
             @media print {
-              body { margin: 0; padding: 0; }
-              @page { margin: 0; size: auto; }
+              html, body { 
+                margin: 0; 
+                padding: 0; 
+                height: ${pageHeight}mm; 
+                width: ${pageWidth}mm; 
+              }
+              body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+              }
+              @page { 
+                margin: 0; 
+                size: ${metadata.config?.paperSize || 'A4'} ${metadata.config?.orientation || 'portrait'}; 
+              }
+              .report-page {
+                width: ${pageWidth}mm !important;
+                height: ${pageHeight}mm !important;
+                min-height: ${pageHeight}mm !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+              }
             }
           </style>
         </head>
@@ -97,6 +129,17 @@ export async function bulkPrintDocuments(templateId: string, resourceIds: string
   
       const combinedCss = results[0]?.css || "";
   
+      const paperSizes: Record<string, { w: number, h: number }> = {
+        'A4': { w: 210, h: 297 },
+        'A5': { w: 148, h: 210 },
+        'A3': { w: 297, h: 420 },
+        'LETTER': { w: 216, h: 279 },
+      };
+      const size = paperSizes[results[0]?.metadata?.config?.paperSize || 'A4'] || paperSizes['A4'];
+      const isLandscape = results[0]?.metadata?.config?.orientation === 'landscape';
+      const pageWidth = isLandscape ? size.h : size.w;
+      const pageHeight = isLandscape ? size.w : size.h;
+
       printWindow.document.write(`
         <html>
           <head>
@@ -104,8 +147,30 @@ export async function bulkPrintDocuments(templateId: string, resourceIds: string
             <style>
               ${combinedCss}
               @media print {
-                body { margin: 0; padding: 0; }
-                @page { margin: 0; size: auto; }
+                html, body { 
+                  margin: 0; 
+                  padding: 0; 
+                  height: ${pageHeight}mm; 
+                  width: ${pageWidth}mm; 
+                }
+                body { 
+                  -webkit-print-color-adjust: exact; 
+                  print-color-adjust: exact;
+                }
+                @page { 
+                  margin: 0; 
+                  size: ${results[0]?.metadata?.config?.paperSize || 'A4'} ${results[0]?.metadata?.config?.orientation || 'portrait'}; 
+                }
+                .report-page {
+                    width: ${pageWidth}mm !important;
+                    height: ${pageHeight}mm !important;
+                    min-height: ${pageHeight}mm !important;
+                    page-break-after: always !important;
+                    break-after: page !important;
+                    overflow: hidden !important;
+                    box-sizing: border-box !important;
+                    display: block !important;
+                }
                 .page-break { page-break-after: always; break-after: page; }
                 
                 .print-grid {

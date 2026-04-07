@@ -23,6 +23,7 @@ interface SalariesSelectionTableProps {
     status?: string | string[];
     employeeId?: string;
     policyIds?: string[];
+    autoSelectAll?: boolean;
 }
 
 export function SalariesSelectionTable({
@@ -37,7 +38,8 @@ export function SalariesSelectionTable({
     excludeEtf,
     status,
     employeeId,
-    policyIds
+    policyIds,
+    autoSelectAll = false
 }: SalariesSelectionTableProps) {
     const [search, setSearch] = React.useState("");
 
@@ -64,7 +66,6 @@ export function SalariesSelectionTable({
                 policyIds: (policyIds?.includes(null as any) || policyIds?.includes('null' as any)) ? undefined : policyIds?.join(',')
             };
 
-            console.log('[SalariesSelectionTable] Fetching with params:', params);
             const response = await SalaryService.getSalaries(params);
 
             if (response.error) throw new Error(response.error.message);
@@ -76,10 +77,17 @@ export function SalariesSelectionTable({
 
     const salaries = (salariesQuery.data || []) as any[];
     
-    const filteredSalaries = salaries.filter(s => 
+    const filteredSalaries = React.useMemo(() => salaries.filter(s => 
         s.employee?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-        s.employee?.employeeNo?.toLowerCase().includes(search.toLowerCase())
-    );
+        s.employee?.employeeNo?.toString().toLowerCase().includes(search.toLowerCase())
+    ), [salaries, search]);
+
+    // Auto-select all when data changes if enabled
+    React.useEffect(() => {
+        if (autoSelectAll && salaries.length > 0) {
+            onSelectedIdsChange(salaries.map(s => s.id));
+        }
+    }, [salaries, autoSelectAll, onSelectedIdsChange]);
 
     const toggleSelectAll = () => {
         if (selectedIds.length === filteredSalaries.length) {

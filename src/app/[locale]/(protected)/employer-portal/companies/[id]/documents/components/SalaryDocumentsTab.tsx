@@ -132,8 +132,16 @@ export function SalaryDocumentsTab() {
         if (!selectedTemplate) return toast.error("Please select a template first");
         if (selectedSalaryIds.length === 0) return toast.error("Please select at least one salary record");
         
-        // Pass IDs directly. 
-        printDocument(selectedTemplate, companyId, { salaryIds: selectedSalaryIds, startDate, endDate });
+        // Extract month and year from the selected period
+        const dateObj = startDate ? new Date(startDate) : new Date();
+        const month = dateObj.getUTCMonth() + 1;
+        const year = dateObj.getUTCFullYear();
+        
+        // Construct composite ID expected by backend for Salary Sheets
+        const compositeResourceId = `${companyId}_${month}_${year}`;
+
+        // Pass IDs clearly in the 'ids' parameter as expected by the TemplatesDataService
+        printDocument(selectedTemplate, compositeResourceId, { ids: selectedSalaryIds, startDate, endDate });
     };
 
     return (
@@ -190,7 +198,6 @@ export function SalaryDocumentsTab() {
                                             value={selectedGroupKey || ''} 
                                             onChange={(e) => {
                                                 setSelectedGroupKey(e.target.value);
-                                                setSelectedSalaryIds([]);
                                             }}
                                             className="h-10 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[11px] font-black uppercase tracking-tight px-3 dark:text-neutral-100 focus:ring-1 focus:ring-primary outline-none shadow-sm"
                                         >
@@ -207,7 +214,6 @@ export function SalaryDocumentsTab() {
                                             onRangeSelect={(start, end) => {
                                                 setStartDate(start);
                                                 setEndDate(end);
-                                                setSelectedSalaryIds([]);
                                             }}
                                         />
                                     </div>
@@ -220,7 +226,6 @@ export function SalaryDocumentsTab() {
                                                     value={employeeId}
                                                     onSelect={(id) => {
                                                         setEmployeeId(id);
-                                                        setSelectedSalaryIds([]);
                                                     }}
                                                     placeholder="All Employees"
                                                 />
@@ -245,6 +250,7 @@ export function SalaryDocumentsTab() {
                                 onSelectedIdsChange={setSelectedSalaryIds}
                                 status={['PAID', 'APPROVED', 'DRAFT']}
                                 policyIds={activeGroup?.policyIds}
+                                autoSelectAll={true}
                             />
                         </CardContent>
                     </Card>
