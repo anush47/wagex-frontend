@@ -180,7 +180,7 @@ export interface SalaryQueryParams {
     excludeEpf?: boolean;
     excludeEtf?: boolean;
     search?: string;
-    month?: number;
+    month?: number | string;
     year?: number;
     policyIds?: string;
 }

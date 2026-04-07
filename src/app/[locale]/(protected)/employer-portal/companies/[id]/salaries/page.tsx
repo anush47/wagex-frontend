@@ -41,7 +41,7 @@ export default function SalariesPage() {
             if (!month || !year) {
                 const now = new Date();
                 const params = new URLSearchParams(searchParams.toString());
-                if (!month) params.set("month", (now.getMonth() + 1).toString());
+                if (!month) params.set("month", "ALL");
                 if (!year) params.set("year", now.getFullYear().toString());
                 router.replace(`${window.location.pathname}?${params.toString()}`);
             }

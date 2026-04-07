@@ -132,8 +132,9 @@ export function SalariesTab({
             return;
         }
         
-        // Resource ID for SALARY_SHEET is companyId_month_year
-        const resourceId = `${companyId}_${filters.month || new Date().getMonth() + 1}_${filters.year || new Date().getFullYear()}`;
+        const monthVal = (filters.month && filters.month !== "ALL") ? filters.month : (new Date().getMonth() + 1).toString();
+        const yearVal = filters.year || new Date().getFullYear().toString();
+        const resourceId = `${companyId}_${monthVal}_${yearVal}`;
         printDocument(activeSheetTemplate.id, resourceId, { ids: selectedIds });
     };
 
@@ -261,6 +262,16 @@ export function SalariesTab({
                                     >
                                         <IconTrash className="h-3 w-3 mr-1" /> Delete
                                     </Button>
+
+                                    <div className="w-[1px] h-4 bg-primary/20" />
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm border-primary/20 text-primary hover:bg-primary/5"
+                                        onClick={handlePrintSheet}
+                                    >
+                                        <IconFileSpreadsheet className="h-3 w-3 mr-1" /> Print Sheet
+                                    </Button>
                                 </div>
                             )}
 
@@ -334,7 +345,7 @@ export function SalariesTab({
                                         setLocalMonth(v);
                                         if (!localYear) setLocalYear(targetYear);
                                         onFilterChange({ 
-                                            month: v === "ALL" ? undefined : v, 
+                                            month: v, 
                                             year: targetYear,
                                             startDate: undefined,
                                             endDate: undefined
@@ -373,7 +384,7 @@ export function SalariesTab({
                                     />
                                 </div>
 
-                                {(filters.employeeId || filters.status || filters.search || (filters.month && filters.month !== "ALL") || filters.year) && (
+                                {(filters.employeeId || filters.status || filters.search || (filters.month && filters.month !== "ALL") || (filters.year && filters.year !== new Date().getFullYear().toString())) && (
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -408,11 +419,11 @@ export function SalariesTab({
                                         <TableHead className="w-[50px]"><div className="h-4 w-4 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableHead>
                                         <TableHead>Employee</TableHead>
                                         <TableHead>Period</TableHead>
-                                        <TableHead>Gross</TableHead>
-                                        <TableHead>OT</TableHead>
-                                        <TableHead className="text-right">No Pay</TableHead>
+                                        <TableHead className="text-right">Tot. Earnings</TableHead>
+                                        <TableHead className="text-right">Additions</TableHead>
+                                        <TableHead className="text-right">OT</TableHead>
                                         <TableHead className="text-right">Deductions</TableHead>
-                                        <TableHead className="text-right">Net Salary</TableHead>
+                                        <TableHead className="text-right whitespace-nowrap">Net Pay</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
@@ -428,8 +439,8 @@ export function SalariesTab({
                                                 </div>
                                             </TableCell>
                                             <TableCell><div className="h-4 w-24 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
-                                            <TableCell><div className="h-4 w-20 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
-                                            <TableCell><div className="h-4 w-12 bg-neutral-100 dark:bg-neutral-800 rounded" /></TableCell>
+                                            <TableCell><div className="h-4 w-12 bg-neutral-100 dark:bg-neutral-800 rounded ml-auto" /></TableCell>
+                                            <TableCell><div className="h-4 w-12 bg-neutral-100 dark:bg-neutral-800 rounded ml-auto" /></TableCell>
                                             <TableCell><div className="h-4 w-12 bg-neutral-100 dark:bg-neutral-800 rounded ml-auto" /></TableCell>
                                             <TableCell><div className="h-4 w-12 bg-neutral-100 dark:bg-neutral-800 rounded ml-auto" /></TableCell>
                                             <TableCell><div className="h-4 w-16 bg-neutral-100 dark:bg-neutral-800 rounded ml-auto" /></TableCell>
@@ -454,13 +465,11 @@ export function SalariesTab({
                                             />
                                         </TableHead>
                                         <TableHead>Employee</TableHead>
-                                        <TableHead>Cycle</TableHead>
                                         <TableHead>Period</TableHead>
-                                        <TableHead className="text-right">Monthly Ref.</TableHead>
-                                        <TableHead className="text-right">Period Basic</TableHead>
-                                        <TableHead className="text-right">Gross</TableHead>
+                                        <TableHead className="text-right">Tot. Earnings</TableHead>
+                                        <TableHead className="text-right">Additions</TableHead>
+                                        <TableHead className="text-right">OT</TableHead>
                                         <TableHead className="text-right">Deductions</TableHead>
-                                        <TableHead className="text-right">Advance</TableHead>
                                         <TableHead className="text-right whitespace-nowrap">Net Pay</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
@@ -481,16 +490,19 @@ export function SalariesTab({
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-sm">{salary.employee?.fullName}</span>
-                                                    <span className="text-xs text-muted-foreground font-mono">
-                                                        {salary.employee?.employeeNo && `(${salary.employee.employeeNo})`}
-                                                    </span>
+                                                    <span className="font-bold text-sm text-foreground">{salary.employee?.fullName}</span>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className="text-[10px] text-muted-foreground font-mono bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
+                                                            {salary.employee?.employeeNo || 'N/A'}
+                                                        </span>
+                                                        <Badge variant="secondary" className="text-[8px] h-4 px-1 font-black uppercase bg-accent-foreground/5 text-accent-foreground/60 border-none">
+                                                            {salary.employee?.policy?.settings?.payrollConfiguration?.frequency || 'MONTHLY'}
+                                                        </Badge>
+                                                        <span className="text-[10px] font-bold text-neutral-400 italic">
+                                                            Ref: {formatCurrency(salary.employee?.basicSalary || 0)}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="secondary" className="text-[9px] font-black uppercase bg-accent/30 text-accent-foreground border-accent/20">
-                                                    {salary.employee?.policy?.settings?.payrollConfiguration?.frequency || 'MONTHLY'}
-                                                </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col text-xs space-y-0.5">
@@ -502,49 +514,52 @@ export function SalariesTab({
                                                             Pay: {format(new Date(salary.payDate), "MMM d")}
                                                         </span>
                                                         {new Date(salary.payDate) < new Date() && salary.status !== 'PAID' && (
-                                                            <span className="text-[8px] font-black uppercase bg-red-50 text-red-500 px-1 rounded shadow-sm border border-red-100">Overdue</span>
+                                                            <span className="text-[8px] font-black uppercase bg-red-50 text-red-500 px-1 rounded shadow-sm border border-red-100 italic">Overdue</span>
                                                         )}
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <span className="text-xs font-bold text-neutral-400 italic">
-                                                    {formatCurrency(salary.employee?.basicSalary || 0)}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="font-medium text-sm">
-                                                        {formatCurrency(salary.basicSalary)}
+                                                    <span className="font-black text-sm text-foreground">
+                                                        {(() => {
+                                                            const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
+                                                            if (epfComp && epfComp.value > 0) {
+                                                                return formatCurrency(epfComp.amount / (epfComp.value / 100));
+                                                            }
+                                                            return formatCurrency(salary.basicSalary);
+                                                        })()}
                                                     </span>
-                                                    <div className="flex items-center gap-1 mt-0.5">
-                                                        <span className="text-[9px] font-black text-primary uppercase">Tot. Earn.:</span>
-                                                        <span className="text-[9px] font-bold text-primary">
-                                    <div className="w-[1px] h-4 bg-primary/20" />
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-7 px-3 font-black text-[10px] uppercase rounded-lg shadow-sm border-primary/20 text-primary hover:bg-primary/5"
-                                        onClick={handlePrintSheet}
-                                    >
-                                        <IconFileSpreadsheet className="h-3 w-3 mr-1" /> Print Sheet
-                                    </Button>
-
-                                    {(() => {
-                                                                const epfComp = (salary.components || []).find((c: any) => c.systemType === 'EPF_EMPLOYEE');
-                                                                if (epfComp && epfComp.value > 0) {
-                                                                    // Back-calculate from EPF component to get the exact base used by backend
-                                                                    return formatCurrency(epfComp.amount / (epfComp.value / 100));
-                                                                }
-                                                                // Fallback: If no EPF component, show Basic as the likely base
-                                                                return formatCurrency(salary.basicSalary);
-                                                            })()}
-                                                        </span>
-                                                    </div>
+                                                    {salary.employee?.policy?.settings?.payrollConfiguration?.frequency !== 'MONTHLY' && (
+                                                        <div className="flex flex-col items-end mt-0.5">
+                                                            <span className="text-[9px] font-medium text-muted-foreground bg-neutral-50 dark:bg-neutral-800/50 px-1 rounded">
+                                                                Period: {formatCurrency(salary.basicSalary)}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right text-foreground font-bold">
-                                                {formatCurrency(salary.basicSalary + salary.otAmount + (salary.components || []).filter(c => c.category === 'ADDITION').reduce((acc, c) => acc + c.amount, 0))}
+                                            <TableCell className="text-right">
+                                                {(() => {
+                                                    const additions = (salary.components || [])
+                                                        .filter(c => c.category === 'ADDITION')
+                                                        .reduce((acc, c) => acc + c.amount, 0);
+                                                    return additions > 0 ? (
+                                                        <span className="font-bold text-sm text-green-600">{formatCurrency(additions)}</span>
+                                                    ) : <span className="text-neutral-300">---</span>;
+                                                })()}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {salary.otAmount > 0 ? (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="font-bold text-sm text-foreground">{formatCurrency(salary.otAmount)}</span>
+                                                        {salary.otBreakdown && salary.otBreakdown.length > 0 && (
+                                                            <span className="text-[9px] font-bold text-neutral-400 uppercase">
+                                                                {salary.otBreakdown.reduce((sum: number, b: any) => sum + b.hours, 0)} hrs
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : <span className="text-neutral-300">---</span>}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
@@ -560,28 +575,53 @@ export function SalariesTab({
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {salary.advanceDeduction > 0 ? (
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="font-bold text-sm text-orange-600">
-                                                            {formatCurrency(salary.advanceDeduction)}
-                                                        </span>
-                                                        <span className="text-[9px] font-black text-orange-600/50 uppercase">Recovery</span>
-                                                    </div>
-                                                ) : <span className="text-neutral-300">---</span>}
-                                            </TableCell>
-                                            <TableCell className="text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-black text-sm text-foreground">
-                                                        {formatCurrency(salary.netSalary)}
+                                                        {(() => {
+                                                            const additions = (salary.components || [])
+                                                                .filter(c => c.category === 'ADDITION')
+                                                                .reduce((acc, c) => acc + c.amount, 0);
+                                                            const deductions = (salary.components || [])
+                                                                .filter(c => c.category === 'DEDUCTION')
+                                                                .reduce((acc, c) => acc + c.amount, 0) + salary.noPayAmount + salary.taxAmount;
+                                                            
+                                                            const gross = salary.basicSalary + salary.otAmount + additions;
+                                                            const net = gross - deductions - salary.advanceDeduction;
+                                                            
+                                                            const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
+                                                            return formatCurrency(net - paid);
+                                                        })()}
                                                     </span>
-                                                    {(salary.status === 'APPROVED' || salary.status === 'PARTIALLY_PAID') && (
-                                                        <span className={`text-[10px] font-black mt-0.5 ${new Date(salary.payDate) < new Date() ? 'text-red-500' : 'text-primary'}`}>
-                                                            DUE: {(() => {
-                                                                const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
-                                                                return formatCurrency(salary.netSalary - paid);
-                                                            })()}
-                                                        </span>
-                                                    )}
+                                                    <div className="flex flex-col items-end mt-1 space-y-0.5">
+                                                        {(() => {
+                                                            const additions = (salary.components || [])
+                                                                .filter(c => c.category === 'ADDITION')
+                                                                .reduce((acc, c) => acc + c.amount, 0);
+                                                            const deductions = (salary.components || [])
+                                                                .filter(c => c.category === 'DEDUCTION')
+                                                                .reduce((acc, c) => acc + c.amount, 0) + salary.noPayAmount + salary.taxAmount;
+                                                            
+                                                            const gross = salary.basicSalary + salary.otAmount + additions;
+                                                            const net = gross - deductions - salary.advanceDeduction;
+                                                            const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
+
+                                                            return (
+                                                                <>
+                                                                    {paid > 0 && (
+                                                                        <span className="text-[10px] font-bold text-neutral-400">
+                                                                            Tot: {formatCurrency(net)}
+                                                                        </span>
+                                                                    )}
+                                                                    {salary.advanceDeduction > 0 && (
+                                                                        <div className="flex items-center gap-1 mt-0.5">
+                                                                            <span className="text-[9px] font-black text-orange-600/60 uppercase">Advance:</span>
+                                                                            <span className="text-[10px] font-black text-orange-600">{formatCurrency(salary.advanceDeduction)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>

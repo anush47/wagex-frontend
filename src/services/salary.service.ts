@@ -26,7 +26,7 @@ export class SalaryService {
         if (params.excludeEpf) searchParams.append('excludeEpf', 'true');
         if (params.excludeEtf) searchParams.append('excludeEtf', 'true');
         if (params.search) searchParams.append('search', params.search);
-        if (params.month) searchParams.append('month', params.month.toString());
+        if (params.month && params.month !== 'ALL') searchParams.append('month', params.month.toString());
         if (params.year) searchParams.append('year', params.year.toString());
         if (params.policyIds) searchParams.append('policyIds', params.policyIds);
 
