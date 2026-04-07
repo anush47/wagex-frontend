@@ -50,11 +50,7 @@ export function SalaryDocumentsTab() {
             policy: any
         }>();
 
-        const policiesToProcess = allPolicies ? [...allPolicies] : [];
-        if (defaultPolicy && !policiesToProcess.find(p => p.id === defaultPolicy.id)) {
-            policiesToProcess.push(defaultPolicy);
-        }
-
+        // Incorporate policies into groupsMap
         const getDisplayFrequency = (f: string) => {
             const map: any = { 'MONTHLY': 'Monthly', 'WEEKLY': 'Weekly', 'BI_WEEKLY': 'Bi-Weekly', 'SEMI_MONTHLY': 'Semi-Monthly', 'DAILY': 'Daily' };
             return map[f] || f;
@@ -65,8 +61,13 @@ export function SalaryDocumentsTab() {
             return `Day ${d}`;
         };
 
-        policiesToProcess.forEach(p => {
-            const config = p.settings?.payrollConfiguration || { frequency: 'MONTHLY', runDay: 'LAST' };
+        const policiesToProcess = allPolicies ? [...allPolicies] : [];
+        if (defaultPolicy && !policiesToProcess.find((p: any) => p.id === defaultPolicy.id)) {
+            policiesToProcess.push(defaultPolicy);
+        }
+
+        policiesToProcess.forEach((p: any) => {
+            const config = p.settings?.payrollConfiguration || { frequency: 'MONTHLY', runDay: 'LAST', cutoffDaysBeforePayDay: 0 };
             const configKey = `${config.frequency}_${config.runDay}`;
             if (!groupsMap.has(configKey)) {
                 groupsMap.set(configKey, {
@@ -80,17 +81,36 @@ export function SalaryDocumentsTab() {
             }
         });
 
-        // Ensure at least one group
-        if (groupsMap.size === 0) {
-            groupsMap.set('default', {
-                config: { frequency: 'MONTHLY', runDay: 'LAST' },
-                policyIds: ['__none__'],
-                name: 'Standard Period',
-                policy: defaultPolicy || null
-            });
+        // If there are employees without an assigned policy, they should be included in their default cycle group
+        // If that's the standard Monthly/Last Day cycle, we add null to those group policyIds
+        const orphanedEmployees = employees.some((e: any) => !e.policy && !e.policyId);
+        if (orphanedEmployees) {
+            const defaultKey = 'MONTHLY_LAST';
+            if (groupsMap.has(defaultKey)) {
+                groupsMap.get(defaultKey)!.policyIds.push(null as any);
+            } else {
+                groupsMap.set(defaultKey, {
+                    config: { frequency: 'MONTHLY', runDay: 'LAST' },
+                    policyIds: [null] as any,
+                    name: 'Monthly (Last Day)',
+                    policy: defaultPolicy || null
+                });
+            }
         }
 
-        return Array.from(groupsMap.entries()).map(([key, group]) => ({ key, ...group }));
+        // Final group list construction
+        const groups = Array.from(groupsMap.entries()).map(([key, group]) => ({ key, ...group }));
+        
+        return [
+            {
+                key: 'all',
+                config: { frequency: 'ALL', runDay: 'N/A' },
+                policyIds: undefined,
+                name: 'All Policies',
+                policy: null
+            },
+            ...groups
+        ];
     }, [allPolicies, defaultPolicy, employees]);
 
     const activeGroup = React.useMemo(() => {
@@ -223,7 +243,7 @@ export function SalaryDocumentsTab() {
                                 employeeId={employeeId}
                                 selectedIds={selectedSalaryIds}
                                 onSelectedIdsChange={setSelectedSalaryIds}
-                                status={['PAID', 'APPROVED']}
+                                status={['PAID', 'APPROVED', 'DRAFT']}
                                 policyIds={activeGroup?.policyIds}
                             />
                         </CardContent>

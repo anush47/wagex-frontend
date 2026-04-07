@@ -53,7 +53,7 @@ export function SalariesSelectionTable({
                 end = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
             }
 
-            const response = await SalaryService.getSalaries({
+            const params = {
                 companyId,
                 startDate: start,
                 endDate: end,
@@ -61,8 +61,11 @@ export function SalariesSelectionTable({
                 excludeEtf,
                 status: status as any,
                 employeeId,
-                policyIds: policyIds?.join(',')
-            });
+                policyIds: (policyIds?.includes(null as any) || policyIds?.includes('null' as any)) ? undefined : policyIds?.join(',')
+            };
+
+            console.log('[SalariesSelectionTable] Fetching with params:', params);
+            const response = await SalaryService.getSalaries(params);
 
             if (response.error) throw new Error(response.error.message);
             const items = (response.data as any)?.data?.items || response.data?.items || [];

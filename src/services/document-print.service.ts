@@ -1,19 +1,18 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { backendApiClient } from '@/lib/api/client';
 
 export async function printDocument(templateId: string, resourceId: string, options: Record<string, any> = {}) {
   try {
-    const query = new URLSearchParams();
+    const params: Record<string, string> = {};
     Object.entries(options).forEach(([key, val]) => {
       if (val !== undefined && val !== null) {
-        query.append(key, Array.isArray(val) ? val.join(',') : String(val));
+        params[key] = Array.isArray(val) ? val.join(',') : String(val);
       }
     });
 
-    const queryString = query.toString() ? `?${query.toString()}` : '';
-    const res = await fetch(`${API_URL}/templates/render/${templateId}/${resourceId}${queryString}`);
-    if (!res.ok) throw new Error("Failed to render template");
+    const res = await backendApiClient.get<any>(`/templates/render/${templateId}/${resourceId}`, { params });
     
-    const { html, css, metadata } = await res.json();
+    if (res.error) throw new Error(res.error.message || "Failed to render template");
+    const { html, css, metadata } = res.data;
     
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -38,26 +37,28 @@ export async function printDocument(templateId: string, resourceId: string, opti
           <script>
             window.onload = () => {
               window.print();
-              setTimeout(() => {
-                // Optional: window.close();
-              }, 500);
             };
           </script>
         </body>
       </html>
     `);
     printWindow.document.close();
-  } catch (e) {
+  } catch (e: any) {
     console.error("Print Error:", e);
-    alert("An error occurred while preparing the document for print.");
+    alert(`An error occurred while preparing the document for print: ${e.message || 'Unknown error'}`);
   }
 }
 
 export async function bulkPrintDocuments(templateId: string, resourceIds: string[]) {
     try {
-      const results = await Promise.all(
-        resourceIds.map(id => fetch(`${API_URL}/templates/render/${templateId}/${id}`).then(r => r.json()))
-      );
+      const results: any[] = [];
+      
+      for (const id of resourceIds) {
+        const res = await backendApiClient.get<any>(`/templates/render/${templateId}/${id}`);
+        if (res.data) {
+          results.push(res.data);
+        }
+      }
   
       if (results.length === 0) return;
 
@@ -151,4 +152,4 @@ export async function bulkPrintDocuments(templateId: string, resourceIds: string
       console.error("Bulk Print Error:", e);
       alert("An error occurred while preparing bulk documents.");
     }
-  }
+}
