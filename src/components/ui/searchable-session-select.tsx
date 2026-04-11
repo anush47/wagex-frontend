@@ -66,15 +66,25 @@ export function SearchableSessionSelect({
     }, { enabled: prefetchedSessions === undefined && !loading });
 
     // Use prefetched sessions if available, otherwise use query data
-    const sessions = prefetchedSessions
-        ? prefetchedSessions.filter(s =>
-            s.date >= startDate &&
-            s.date <= endDate
-        )
-        : ((sessionsData as any)?.items || []);
+    let sessions = prefetchedSessions
+        ? prefetchedSessions.filter(s => {
+            const sDate = s.date.split('T')[0];
+            return sDate >= startDate && sDate <= endDate;
+        })
+        : ((sessionsData as any)?.items || []) as AttendanceSession[];
+
+    // Ensure currently selected session is included even if filtered out
+    if (value && prefetchedSessions && !sessions.some(s => s.id === value)) {
+        const currentSession = prefetchedSessions.find(s => s.id === value);
+        if (currentSession) sessions = [...sessions, currentSession];
+    }
 
     const isLoading = loading || (prefetchedSessions === undefined && queryLoading);
-    const selectedSession = sessions.find((s: AttendanceSession) => s.id === value);
+
+    // Look for selected session in the derived list, or in the raw prefetched list as a fallback
+    const selectedSession = sessions.find((s: AttendanceSession) => s.id === value) ||
+        prefetchedSessions?.find((s: AttendanceSession) => s.id === value);
+
 
     const getSessionLabel = (session: AttendanceSession) => {
         const day = format(new Date(session.date), "MMM d");
