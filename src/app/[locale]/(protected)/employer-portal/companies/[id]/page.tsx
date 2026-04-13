@@ -103,7 +103,7 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
 
         const absentCount = Math.max(0, totalCount - presentTodayIds.size - leaveIds.size);
 
-        const pendingAttendance = sessions.filter((s: AttendanceSession) => 
+        const pendingAttendance = sessions.filter((s: AttendanceSession) =>
             s.inApprovalStatus === 'PENDING' || s.outApprovalStatus === 'PENDING'
         ).length;
 
@@ -124,31 +124,31 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
         return <div className="p-10 space-y-4 animate-pulse">
             <div className="h-40 w-full bg-neutral-100 dark:bg-neutral-800 rounded-2xl" />
             <div className="grid grid-cols-4 gap-4">
-                {[1,2,3,4].map(i => <div key={i} className="h-32 bg-neutral-100 dark:bg-neutral-800 rounded-2xl" />)}
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-neutral-100 dark:bg-neutral-800 rounded-2xl" />)}
             </div>
         </div>;
     }
 
     return (
         <div className="w-full max-w-7xl mx-auto py-4 space-y-8 animate-in fade-in duration-500 pb-20">
-            
+
             {/* COMPANY IDENTITY HEADER (MAINTAINING ALL INFO) */}
             <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-[2.5rem] shadow-sm overflow-hidden">
                 <div className="p-8 px-10 relative">
                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/[0.02] via-transparent to-blue-500/[0.02] pointer-events-none" />
-                    
+
                     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-10 relative z-10">
                         <div className="flex items-start md:items-center gap-10">
                             <div className="h-24 w-24 md:h-32 md:w-32 rounded-[2rem] bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 p-4 flex items-center justify-center shrink-0 shadow-2xl shadow-neutral-200/50 dark:shadow-none overflow-hidden">
                                 <StorageImage storageKey={company?.logo} alt={company?.name} className="h-full w-full object-contain" fallback={<IconBuildingSkyscraper className="h-12 w-12 text-neutral-200" />} />
                             </div>
-                            
+
                             <div className="space-y-4">
                                 <div className="flex flex-wrap items-center gap-4">
                                     <h1 className="text-3xl md:text-5xl font-black tracking-tight text-foreground">{company?.name}</h1>
                                     <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] rounded-lg">Operational</Badge>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3">
                                     <InfoLabel icon={<IconMapPin className="text-primary" />} label="Address" value={company?.address || 'N/A'} />
                                     <InfoLabel icon={<IconId className="text-blue-500" />} label="Employer No" value={company?.employerNumber || 'N/A'} />
@@ -169,43 +169,43 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
 
             {/* ATTENDANCE PAGE INSPIRED STATS SECTION */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatusCard 
-                    label="Present Now" 
-                    value={stats.presentNow} 
-                    icon={IconLogin} 
-                    color="text-emerald-600" 
-                    bg="bg-emerald-500/10" 
-                    border="border-emerald-500/20" 
+                <StatusCard
+                    label="Present Now"
+                    value={stats.presentNow}
+                    icon={IconLogin}
+                    color="text-emerald-600"
+                    bg="bg-emerald-500/10"
+                    border="border-emerald-500/20"
                     isLive
                 />
-                <StatusCard 
-                    label="On Leave" 
-                    value={stats.onLeave} 
-                    icon={IconBeach} 
-                    color="text-blue-600" 
-                    bg="bg-blue-500/10" 
-                    border="border-blue-500/20" 
+                <StatusCard
+                    label="On Leave"
+                    value={stats.onLeave}
+                    icon={IconBeach}
+                    color="text-blue-600"
+                    bg="bg-blue-500/10"
+                    border="border-blue-500/20"
                 />
-                <StatusCard 
-                    label="Absent Today" 
-                    value={stats.absent} 
-                    icon={IconAlertCircle} 
-                    color="text-rose-600" 
-                    bg="bg-rose-500/10" 
-                    border="border-rose-500/20" 
+                <StatusCard
+                    label="Absent Today"
+                    value={stats.absent}
+                    icon={IconAlertCircle}
+                    color="text-rose-600"
+                    bg="bg-rose-500/10"
+                    border="border-rose-500/20"
                 />
-                <StatusCard 
-                    label="Completed" 
-                    value={stats.completed} 
-                    icon={IconClockStop} 
-                    color="text-orange-600" 
-                    bg="bg-orange-500/10" 
-                    border="border-orange-500/20" 
+                <StatusCard
+                    label="Completed"
+                    value={stats.completed}
+                    icon={IconClockStop}
+                    color="text-orange-600"
+                    bg="bg-orange-500/10"
+                    border="border-orange-500/20"
                 />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 {/* ACTIVE LIST (MIRRORING LIST STYLE FROM ATTENDANCE STATS) */}
                 <Card className="lg:col-span-8 p-6 md:p-8 rounded-[2rem] border bg-card/50 shadow-sm flex flex-col min-h-[500px]">
                     <div className="flex items-center justify-between mb-8">
@@ -219,7 +219,7 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
                         </div>
                         <Badge variant="outline" className="font-black text-[10px] uppercase border-emerald-500/20 text-emerald-600 bg-emerald-500/5 px-2 py-0.5 rounded-md">Live Stream</Badge>
                     </div>
-                    
+
                     <div className="space-y-3 flex-1">
                         {stats.clockedInRecords.length > 0 ? (
                             stats.clockedInRecords.map((session: AttendanceSession) => {
@@ -227,7 +227,7 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
                                 const minsWorked = differenceInMinutes(currentTime, clockIn);
                                 const hours = Math.floor(minsWorked / 60);
                                 const mins = Math.max(0, minsWorked % 60);
-                                
+
                                 return (
                                     <div key={session.id} className="group flex items-center justify-between p-4 px-6 rounded-[1.5rem] border border-border/80 bg-card hover:border-emerald-500/40 hover:shadow-md transition-all cursor-pointer">
                                         <div className="flex items-center gap-4">
@@ -272,7 +272,7 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
 
                 {/* VISUAL ANALYTICS (MIRRORING CIRCULAR CHART FROM ATTENDANCE STATS) */}
                 <div className="lg:col-span-4 space-y-6">
-                    
+
                     {/* ATTENDANCE SPLIT CHART */}
                     <Card className="p-8 rounded-[2.5rem] border bg-card/40 shadow-sm flex flex-col items-center justify-center text-center">
                         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-8">Workforce Split</h3>
@@ -310,7 +310,7 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
                                 <span className="text-[10px] font-black text-rose-600 uppercase">Attention</span>
                             </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                             {stats.pendingAttendance > 0 && (
                                 <Link href={`/employer-portal/companies/${id}/attendance`}>
@@ -350,20 +350,21 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
 function StatusCard({ label, value, icon: Icon, color, bg, border, isLive }: { label: string, value: number, icon: any, color: string, bg: string, border: string, isLive?: boolean }) {
     return (
         <Card className={cn(
-            "p-5 px-6 rounded-[1.5rem] border bg-card transition-all duration-300 hover:shadow-lg border-transparent hover:border-primary/20 flex flex-col justify-between h-40",
-            bg
+            "p-5 px-6 rounded-[1.5rem] border bg-card transition-all duration-300 hover:shadow-lg border-transparent hover:border-primary/40 flex flex-col justify-between h-40",
+            bg,
+            "dark:bg-neutral-900"
         )}>
             <div className="flex items-center justify-between">
-                <div className={cn("p-2.5 rounded-xl border", border, color, "bg-white dark:bg-neutral-900 shadow-sm")}>
+                <div className={cn("p-2.5 rounded-xl border shadow-sm", border, color, "bg-white dark:bg-black")}>
                     <Icon className="w-5 h-5" />
                 </div>
                 {isLive && (
-                    <Badge variant="outline" className="font-black text-[9px] uppercase border-emerald-500/30 text-emerald-600 bg-white dark:bg-neutral-900 rounded-md">Live</Badge>
+                    <Badge variant="outline" className="font-black text-[9px] uppercase border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-black rounded-md">Live</Badge>
                 )}
             </div>
             <div>
-                <div className="text-3xl font-black tracking-tight mb-0.5">{value}</div>
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">{label}</div>
+                <div className="text-3xl font-black tracking-tight mb-0.5 text-neutral-900 dark:text-white uppercase">{value}</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">{label}</div>
             </div>
         </Card>
     );
