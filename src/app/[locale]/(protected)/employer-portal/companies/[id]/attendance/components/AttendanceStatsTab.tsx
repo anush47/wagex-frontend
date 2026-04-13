@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import type { AttendanceSession } from "@/types/attendance";
 import type { LeaveRequest } from "@/types/leave";
 import { LeaveRequestType } from "@/types/leave";
-import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatInTimeZone } from "date-fns-tz";

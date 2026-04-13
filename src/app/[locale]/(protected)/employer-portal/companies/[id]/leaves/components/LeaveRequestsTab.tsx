@@ -28,7 +28,7 @@ import { useLeaveRequests, useLeaveMutations } from "@/hooks/use-leaves";
 import { useCompanyPolicy } from "@/hooks/use-policies";
 import { useAuth } from "@/hooks/useAuth";
 import { LeaveRequestDetailsDialog } from "./LeaveRequestDetailsDialog";
-import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format, isSameDay } from "date-fns";
 import { toast } from "sonner";

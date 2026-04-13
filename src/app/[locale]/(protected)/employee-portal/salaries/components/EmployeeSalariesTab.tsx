@@ -20,6 +20,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     IconCalendar,
     IconReceipt,
     IconEye,
@@ -33,9 +40,15 @@ import { Salary, SalaryStatus } from "@/types/salary";
 import { EmployeeSalaryDetailsDialog } from "./EmployeeSalaryDetailsDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { useAuth } from "@/hooks/useAuth";
+import { useMe } from "@/hooks/use-employees";
+
 export default function EmployeeSalariesTab() {
+    const { user } = useAuth();
+    const { data: employee } = useMe();
     const [page, setPage] = React.useState(1);
     const [year, setYear] = React.useState(new Date().getFullYear());
+    const [month, setMonth] = React.useState<string>("ALL");
     const [selectedSalary, setSelectedSalary] = React.useState<Salary | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
 
@@ -43,11 +56,28 @@ export default function EmployeeSalariesTab() {
         page,
         limit: 10,
         year,
+        month: month === "ALL" ? undefined : month,
     });
 
     const salaries = salariesQuery.data?.items || [];
     const meta = salariesQuery.data?.total || 0;
     const totalPages = Math.ceil(meta / 10);
+
+    const months = [
+        { value: "ALL", label: "All Months" },
+        { value: "1", label: "January" },
+        { value: "2", label: "February" },
+        { value: "3", label: "March" },
+        { value: "4", label: "April" },
+        { value: "5", label: "May" },
+        { value: "6", label: "June" },
+        { value: "7", label: "July" },
+        { value: "8", label: "August" },
+        { value: "9", label: "September" },
+        { value: "10", label: "October" },
+        { value: "11", label: "November" },
+        { value: "12", label: "December" },
+    ];
 
     const getStatusBadge = (status: SalaryStatus) => {
         const styles: Record<string, string> = {
@@ -70,51 +100,59 @@ export default function EmployeeSalariesTab() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-700">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-background/60 backdrop-blur-sm border-none shadow-sm rounded-3xl overflow-hidden">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                            <IconCalendar className="w-3.5 h-3.5" /> Filter Year
-                        </CardDescription>
-                        <div className="flex items-center gap-4 mt-1">
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
+                <CardHeader className="p-8 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <IconReceipt className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+                                Salary History
+                            </CardTitle>
+                            <CardDescription className="text-xs font-medium text-muted-foreground">
+                                View and download your monthly salary records
+                            </CardDescription>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Select value={month} onValueChange={(v) => { setMonth(v); setPage(1); }}>
+                            <SelectTrigger className="w-full md:w-[140px] h-10 rounded-xl border-neutral-200 dark:border-white/10 font-bold text-xs bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
+                                <SelectValue placeholder="Month" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                {months.map((m) => (
+                                    <SelectItem key={m.value} value={m.value} className="font-bold text-xs">
+                                        {m.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-2 bg-neutral-50/50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-white/10 rounded-xl px-2 h-10">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-muted"
-                                onClick={() => setYear(year - 1)}
+                                className="h-7 w-7 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-white/5"
+                                onClick={() => { setYear(year - 1); setPage(1); }}
                             >
                                 <IconChevronLeft className="h-4 w-4" />
                             </Button>
-                            <span className="text-xl font-black">{year}</span>
+                            <span className="text-xs font-black min-w-[40px] text-center">{year}</span>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-muted"
-                                onClick={() => setYear(year + 1)}
+                                className="h-7 w-7 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-white/5"
+                                onClick={() => { setYear(year + 1); setPage(1); }}
                             >
                                 <IconChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
-                    </CardHeader>
-                </Card>
-            </div>
-
-            <Card className="bg-background/60 backdrop-blur-sm border-none shadow-xl shadow-neutral-200/50 rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="p-8 pb-0 flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                                <IconReceipt className="w-5 h-5" />
-                            </div>
-                            Salary History
-                        </CardTitle>
-                        <CardDescription className="mt-1 font-medium">
-                            View and download your monthly salary records
-                        </CardDescription>
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-8 pt-6">
+                <CardContent className="p-8 pt-0">
                     {salariesQuery.isLoading ? (
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
@@ -128,15 +166,15 @@ export default function EmployeeSalariesTab() {
                             </div>
                             <h3 className="text-lg font-bold">No salary records found</h3>
                             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                                You don't have any approved salary records for the year {year} yet.
+                                No approved salary records found for the selected period.
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            <div className="rounded-2xl border overflow-hidden">
+                            <div className="rounded-2xl border border-neutral-100 dark:border-white/5 overflow-hidden bg-neutral-50/30 dark:bg-neutral-900/40">
                                 <Table>
-                                    <TableHeader className="bg-muted/50">
-                                        <TableRow className="hover:bg-transparent border-b">
+                                    <TableHeader className="bg-neutral-100/50 dark:bg-neutral-800/50">
+                                        <TableRow className="hover:bg-transparent border-neutral-200 dark:border-white/5">
                                             <TableHead className="font-bold text-xs uppercase tracking-wider py-4 px-6">Period</TableHead>
                                             <TableHead className="font-bold text-xs uppercase tracking-wider py-4">Status</TableHead>
                                             <TableHead className="font-bold text-xs uppercase tracking-wider py-4 text-right">Net Salary</TableHead>

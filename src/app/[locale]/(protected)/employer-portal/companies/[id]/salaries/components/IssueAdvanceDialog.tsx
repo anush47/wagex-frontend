@@ -12,7 +12,7 @@ import { useEffectivePolicy } from "@/hooks/use-policies";
 import { cn } from "@/lib/utils";
 import { PayCycleFrequency } from "@/types/policy";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
-import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { AdvanceStatus } from "@/types/salary";
 
 interface IssueAdvanceDialogProps {

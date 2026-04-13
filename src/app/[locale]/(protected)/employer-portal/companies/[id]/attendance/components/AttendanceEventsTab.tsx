@@ -26,7 +26,7 @@ import type { AttendanceEvent, AttendanceSession, EventType, EventSource, EventS
 import { useAttendanceEvents, useAttendanceSessions } from "@/hooks/use-attendance";
 import { format, subDays, addDays } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
-import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { SearchableSessionSelect } from "@/components/ui/searchable-session-select";
 import { useAttendanceMutations } from "@/hooks/use-attendance";
 import { EventDetailsDialog } from "./EventDetailsDialog";

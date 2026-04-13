@@ -310,13 +310,21 @@ export function EmployeeSalaryDetailsDialog({
                                             <th className="pb-2">Date</th>
                                             <th className="pb-2">In</th>
                                             <th className="pb-2">Out</th>
-                                            <th className="pb-2 text-right">Work</th>
+                                            <th className="pb-2 text-center">Work</th>
+                                            <th className="pb-2 text-center">Break</th>
                                             <th className="pb-2 text-right">OT</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/30">
                                         {salary.sessions.map((session: any, sIdx: number) => {
                                             const sessionDate = session.date ? new Date(session.date) : null;
+                                            const formatDuration = (mins: number | null) => {
+                                                if (!mins) return "0h 0m";
+                                                const h = Math.floor(mins / 60);
+                                                const m = mins % 60;
+                                                return `${h}h ${m}m`;
+                                            };
+
                                             return (
                                                 <tr key={sIdx} className="hover:bg-muted/30 transition-colors">
                                                     <td className="py-2.5 font-bold">
@@ -328,11 +336,14 @@ export function EmployeeSalaryDetailsDialog({
                                                     <td className="py-2.5 text-muted-foreground">
                                                         {session.checkOutTime ? format(new Date(session.checkOutTime), "HH:mm") : '--:--'}
                                                     </td>
-                                                    <td className="py-2.5 text-right font-medium">
-                                                        {((session.workMinutes || 0) / 60).toFixed(1)}h
+                                                    <td className="py-2.5 text-center font-bold text-primary">
+                                                        {formatDuration(session.workMinutes)}
+                                                    </td>
+                                                    <td className="py-2.5 text-center text-muted-foreground font-medium">
+                                                        {formatDuration(session.breakMinutes)}
                                                     </td>
                                                     <td className="py-2.5 text-right font-bold text-blue-600">
-                                                        {((session.overtimeMinutes || 0) / 60).toFixed(1)}h
+                                                        {formatDuration(session.overtimeMinutes)}
                                                     </td>
                                                 </tr>
                                             );

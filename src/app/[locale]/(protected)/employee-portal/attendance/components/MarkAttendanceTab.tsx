@@ -261,24 +261,6 @@ export function MarkAttendanceTab({ employeeId, companyId }: MarkAttendanceTabPr
                 </div>
             </Card>
 
-            {/* Support / Info Row */}
-            <div className="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {[
-                    { icon: IconTarget, title: "Zone Integrity", desc: "Geofencing ensures you are at a verified site.", color: "text-blue-500" },
-                    { icon: IconFingerprint, title: "Single Identity", desc: "One device per legal identity enforced.", color: "text-purple-500" },
-                    { icon: IconClock, title: "Time Sync", desc: "Synchronized with global network time servers.", color: "text-orange-500" },
-                ].map((item, idx) => (
-                    <Card key={idx} className="border border-neutral-200 dark:border-white/10 p-5 md:p-6 rounded-[1.5rem] md:rounded-[2rem] bg-white dark:bg-neutral-900/50 flex items-start gap-4">
-                        <div className={cn("h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-neutral-100 dark:bg-black/20 flex items-center justify-center shrink-0 shadow-inner", item.color)}>
-                            <item.icon className="h-5 w-5 md:h-6 md:w-6" />
-                        </div>
-                        <div className="space-y-1 pt-1">
-                            <h4 className="text-[11px] md:text-sm font-black uppercase tracking-tight">{item.title}</h4>
-                            <p className="text-[10px] md:text-xs text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
-                        </div>
-                    </Card>
-                ))}
-            </div>
         </div>
     );
 }

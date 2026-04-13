@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 
 import { StatutorySelectionTable } from "@/components/payroll/StatutorySelectionTable";
-import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { format } from "date-fns";
 
 const monthsNames = [

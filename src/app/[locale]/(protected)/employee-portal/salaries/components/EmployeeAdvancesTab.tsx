@@ -51,8 +51,8 @@ export default function EmployeeAdvancesTab() {
     return (
         <div className="space-y-6 animate-in fade-in duration-700">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <Card className="bg-background/60 backdrop-blur-sm border-none shadow-sm rounded-3xl overflow-hidden p-6 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-600/20">
+                 <Card className="border border-neutral-200 dark:border-white/10 shadow-sm bg-white dark:bg-neutral-900/50 rounded-3xl overflow-hidden p-6 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-orange-600/10 text-orange-600 flex items-center justify-center shrink-0">
                         <IconScale className="w-6 h-6" />
                     </div>
                     <div>
@@ -64,24 +64,28 @@ export default function EmployeeAdvancesTab() {
                 </Card>
             </div>
 
-            <Card className="bg-background/60 backdrop-blur-sm border-none shadow-xl shadow-neutral-200/50 rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="p-8 pb-0">
-                    <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-600/20">
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
+                <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                             <IconTrendingUp className="w-5 h-5" />
                         </div>
-                        Salary Advances
-                    </CardTitle>
-                    <CardDescription className="mt-1 font-medium">
-                        View your active advances and repayment schedule
-                    </CardDescription>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+                                Salary Advances
+                            </CardTitle>
+                            <CardDescription className="text-xs font-medium text-muted-foreground">
+                                View your active advances and repayment schedule
+                            </CardDescription>
+                        </div>
+                    </div>
                 </CardHeader>
 
-                <CardContent className="p-8 pt-6">
+                <CardContent className="p-8 pt-0">
                     {advancesQuery.isLoading ? (
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
-                                <Skeleton className="h-20 w-full rounded-2xl" />
+                                <Skeleton key={i} className="h-20 w-full rounded-2xl" />
                             ))}
                         </div>
                     ) : advances.length === 0 ? (
@@ -97,8 +101,8 @@ export default function EmployeeAdvancesTab() {
                     ) : (
                         <div className="space-y-8">
                             {advances.map((advance) => (
-                                <div key={advance.id} className="rounded-3xl border bg-muted/20 overflow-hidden shadow-sm">
-                                    <div className="p-6 bg-background flex flex-col md:flex-row justify-between gap-4 border-b">
+                                <div key={advance.id} className="rounded-3xl border border-neutral-100 dark:border-white/10 bg-neutral-50/30 dark:bg-neutral-900/40 overflow-hidden shadow-sm">
+                                    <div className="p-6 bg-background/50 dark:bg-neutral-900/50 flex flex-col md:flex-row justify-between gap-4 border-b border-neutral-100 dark:border-white/5">
                                         <div className="flex gap-4">
                                             <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground shrink-0 outline outline-2 outline-muted-foreground/10 outline-offset-2">
                                                 <IconCalendar className="w-5 h-5" />

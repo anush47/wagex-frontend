@@ -49,22 +49,24 @@ export default function EmployeePaymentsTab() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-700">
-            <Card className="bg-background/60 backdrop-blur-sm border-none shadow-xl shadow-neutral-200/50 rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="p-8 pb-0 flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
-                                <IconCreditCard className="w-5 h-5" />
-                            </div>
-                            Payment Transactions
-                        </CardTitle>
-                        <CardDescription className="mt-1 font-medium">
-                            Track your salary and advance payments and acknowledge receipt
-                        </CardDescription>
+            <Card className="border border-neutral-200 dark:border-white/20 shadow-sm bg-background dark:bg-neutral-900/50 overflow-hidden rounded-[2rem]">
+                <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <IconCreditCard className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+                                Payment Transactions
+                            </CardTitle>
+                            <CardDescription className="text-xs font-medium text-muted-foreground">
+                                Track your salary and advance payments and acknowledge receipt
+                            </CardDescription>
+                        </div>
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-8 pt-6">
+                <CardContent className="p-8 pt-0">
                     {paymentsQuery.isLoading ? (
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
@@ -82,10 +84,10 @@ export default function EmployeePaymentsTab() {
                             </p>
                         </div>
                     ) : (
-                        <div className="rounded-2xl border overflow-hidden">
+                        <div className="rounded-2xl border border-neutral-100 dark:border-white/5 overflow-hidden bg-neutral-50/30 dark:bg-neutral-900/40">
                             <Table>
-                                <TableHeader className="bg-muted/50">
-                                    <TableRow className="hover:bg-transparent border-b">
+                                <TableHeader className="bg-neutral-100/50 dark:bg-neutral-800/50">
+                                    <TableRow className="hover:bg-transparent border-neutral-200 dark:border-white/5">
                                         <TableHead className="font-bold text-xs uppercase tracking-wider py-4 px-6">Payment Date</TableHead>
                                         <TableHead className="font-bold text-xs uppercase tracking-wider py-4">Reference</TableHead>
                                         <TableHead className="font-bold text-xs uppercase tracking-wider py-4 text-right">Amount</TableHead>

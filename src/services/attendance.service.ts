@@ -127,6 +127,10 @@ export class AttendanceService {
         );
     }
 
+    static async getPortalSessionEvents(sessionId: string): Promise<ApiResponse<AttendanceEvent[]>> {
+        return backendApiClient.get<AttendanceEvent[]>(`/attendance/portal/sessions/${sessionId}/events`);
+    }
+
     static async getPortalStatus(): Promise<ApiResponse<any>> {
         return backendApiClient.get<any>('/attendance/portal/status');
     }

@@ -6,6 +6,7 @@ import {
     IconReceipt,
     IconCreditCard,
     IconTrendingUp,
+    IconWallet,
 } from "@tabler/icons-react";
 import EmployeeSalariesTab from "./components/EmployeeSalariesTab";
 import EmployeePaymentsTab from "./components/EmployeePaymentsTab";
@@ -15,57 +16,67 @@ import { useSearchParams, useRouter, useParams } from "next/navigation";
 export default function EmployeeSalariesPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const params = useParams();
     const activeTab = searchParams.get("tab") || "salaries";
 
     const handleTabChange = (value: string) => {
-        const locale = params.locale as string;
-        router.push(`/${locale}/employee-portal/salaries?tab=${value}`);
+        const newUrl = `${window.location.pathname}?tab=${value}`;
+        router.push(newUrl, { scroll: false });
     };
 
     return (
-        <div className="container mx-auto py-8 px-4 md:px-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="mb-10">
-                <h1 className="text-4xl font-black tracking-tight text-neutral-900 mb-2">
-                    My Payroll
-                </h1>
-                <p className="text-neutral-500 font-medium">
-                    Manage your salary records, track payments, and monitor your advances.
-                </p>
+        <div className="w-full max-w-7xl mx-auto py-6 space-y-8 md:space-y-10">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3 text-primary mb-1">
+                        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <IconWallet className="h-5 w-5" />
+                        </div>
+                        <h1 className="text-3xl font-black tracking-tight uppercase">
+                            My Payroll
+                        </h1>
+                    </div>
+                    <p className="text-neutral-500 font-medium text-sm">
+                        Manage your salary records, track payments, and monitor your advances.
+                    </p>
+                </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
-                <TabsList className="bg-white/50 backdrop-blur-md p-1.5 rounded-[2rem] border border-neutral-200/50 shadow-sm inline-flex h-auto w-full md:w-auto overflow-x-auto no-scrollbar justify-start">
-                    <TabsTrigger
-                        value="salaries"
-                        className="rounded-full px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-indigo-600/20 font-bold transition-all flex items-center gap-2"
-                    >
-                        <IconReceipt className="w-4 h-4" />
-                        Salaries
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="payments"
-                        className="rounded-full px-6 py-2.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-600/20 font-bold transition-all flex items-center gap-2"
-                    >
-                        <IconCreditCard className="w-4 h-4" />
-                        Payments
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="advances"
-                        className="rounded-full px-6 py-2.5 data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-600/20 font-bold transition-all flex items-center gap-2"
-                    >
-                        <IconTrendingUp className="w-4 h-4" />
-                        Advances
-                    </TabsTrigger>
-                </TabsList>
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                <div className="overflow-x-auto no-scrollbar pb-2">
+                    <TabsList className="w-full h-12 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl md:grid md:grid-cols-3 md:max-w-xl flex whitespace-nowrap min-w-max md:min-w-0">
+                        <TabsTrigger 
+                            value="salaries" 
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            <IconReceipt className="h-4 w-4" />
+                            <span>Salaries</span>
+                        </TabsTrigger>
+                        <TabsTrigger 
+                            value="payments" 
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            <IconCreditCard className="h-4 w-4" />
+                            <span>Payments</span>
+                        </TabsTrigger>
+                        <TabsTrigger 
+                            value="advances" 
+                            className="flex items-center justify-center gap-2 h-full rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-wide transition-all"
+                        >
+                            <IconTrendingUp className="h-4 w-4" />
+                            <span>Advances</span>
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
-                <TabsContent value="salaries" className="focus-visible:outline-none">
+                <TabsContent value="salaries" className="mt-6 animate-in slide-in-from-bottom-2 duration-300">
                     <EmployeeSalariesTab />
                 </TabsContent>
-                <TabsContent value="payments" className="focus-visible:outline-none">
+                <TabsContent value="payments" className="mt-6 animate-in slide-in-from-bottom-2 duration-300">
                     <EmployeePaymentsTab />
                 </TabsContent>
-                <TabsContent value="advances" className="focus-visible:outline-none">
+                <TabsContent value="advances" className="mt-6 animate-in slide-in-from-bottom-2 duration-300">
                     <EmployeeAdvancesTab />
                 </TabsContent>
             </Tabs>

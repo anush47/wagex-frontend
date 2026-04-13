@@ -17,7 +17,7 @@ import { useCompanyPolicies, useCompanyPolicy } from "@/hooks/use-policies";
 import { useEmployees } from "@/hooks/use-employees";
 
 import { SalariesSelectionTable } from "@/components/payroll/SalariesSelectionTable";
-import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 
 const monthsNames = [

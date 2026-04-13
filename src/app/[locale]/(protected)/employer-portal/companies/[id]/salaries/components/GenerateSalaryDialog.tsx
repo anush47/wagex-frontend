@@ -10,7 +10,7 @@ import { useEmployees } from "@/hooks/use-employees";
 import { useCompanyPolicies, useCompanyPolicy } from "@/hooks/use-policies";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { SalaryDetailsDialog } from "./SalaryDetailsDialog";
 import { Salary, SalaryStatus } from "@/types/salary";
 import { Policy } from "@/types/policy";

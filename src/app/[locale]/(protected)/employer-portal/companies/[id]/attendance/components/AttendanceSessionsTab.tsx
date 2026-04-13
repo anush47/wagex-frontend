@@ -28,7 +28,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
-import { SalaryPeriodQuickSelect } from "./SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 interface AttendanceSessionsTabProps {
     companyId: string;
     initialEmployeeId?: string;

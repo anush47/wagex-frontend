@@ -133,13 +133,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 ),
             }
         ] : []),
-        {
-            label: t("settings"),
-            href: "/settings",
-            icon: (
-                <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-            ),
-        },
     ];
 
     const companyLinks = [
@@ -215,14 +208,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             ),
         },
         {
-            label: t("settings"),
-
-            href: `/employer-portal/companies/${companyId}/settings`,
-            icon: (
-                <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-            ),
-        },
-        {
             label: t("back"),
             href: "/employer-portal/companies",
             exactMatch: true,
@@ -286,7 +271,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                             ))}
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2 border-t border-neutral-200 dark:border-neutral-800 pt-4">
+                    <div className="flex flex-col gap-2 border-t border-neutral-200 dark:border-neutral-800 pt-4 px-2">
                         <ThemeToggle />
                         <LanguageSwitcher />
                         <DropdownMenu>

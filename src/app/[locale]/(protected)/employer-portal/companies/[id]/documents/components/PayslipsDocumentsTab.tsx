@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatCurrency } from "@/lib/utils";
 
 import { SalariesSelectionTable } from "@/components/payroll/SalariesSelectionTable";
-import { SalaryPeriodQuickSelect } from "../../attendance/components/SalaryPeriodQuickSelect";
+import { SalaryPeriodQuickSelect } from "@/components/attendance/SalaryPeriodQuickSelect";
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 
 const monthsNames = [

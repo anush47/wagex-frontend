@@ -278,6 +278,7 @@ interface AttendanceState {
 interface AttendanceActions {
     actions: {
         fetchSessionEvents: (sessionId: string) => Promise<void>;
+        fetchPortalSessionEvents: (sessionId: string) => Promise<void>;
     };
 }
 
@@ -302,6 +303,38 @@ export const useAttendance = create<AttendanceStore>((set, get) => ({
 
                 if (response.error) {
                     throw new Error(response.error.message || 'Failed to fetch session events');
+                }
+
+                const result = response.data as any;
+                const events = (result || []) as AttendanceEvent[];
+
+                set(state => ({
+                    events: { ...state.events, [sessionId]: events },
+                    error: { ...state.error, [sessionId]: null },
+                    loading: { ...state.loading, [sessionId]: false }
+                }));
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+                set(state => ({
+                    error: { ...state.error, [sessionId]: errorMessage },
+                    loading: { ...state.loading, [sessionId]: false }
+                }));
+            }
+        },
+        fetchPortalSessionEvents: async (sessionId: string) => {
+            if (get().loading[sessionId]) return;
+
+            set(state => ({
+                loading: { ...state.loading, [sessionId]: true },
+                error: { ...state.error, [sessionId]: null }
+            }));
+
+            try {
+                const response = await AttendanceService.getPortalSessionEvents(sessionId);
+
+                if (response.error) {
+                    throw new Error(response.error.message || 'Failed to fetch portal session events');
                 }
 
                 const result = response.data as any;

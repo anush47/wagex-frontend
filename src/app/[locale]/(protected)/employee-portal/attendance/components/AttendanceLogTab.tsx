@@ -52,8 +52,8 @@ export function AttendanceLogTab({ employeeId, companyId }: AttendanceLogTabProp
     const meta = (sessionsData as any)?.meta;
 
     const handleRowClick = async (sessionId: string) => {
-        // Fetch events if not already in store
-        await actions.fetchSessionEvents(sessionId);
+        // Fetch events if not already in store (Using portal-specific action to avoid 403)
+        await actions.fetchPortalSessionEvents(sessionId);
         const sessionEvents = useAttendance.getState().events[sessionId] || [];
         if (sessionEvents.length > 0) {
             setSelectedEvent(sessionEvents[0]); // Default to first event (Check-in)
