@@ -163,19 +163,6 @@ export default function ProfilePage() {
                         </CardContent>
                     </Card>
 
-                    <div className="bg-neutral-100/50 dark:bg-neutral-800/50 p-8 rounded-[2.5rem] border border-dashed border-neutral-200 dark:border-neutral-700">
-                        <div className="flex items-start gap-4">
-                            <div className="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center shrink-0">
-                                <IconShieldCheck className="h-4 w-4 text-neutral-500" />
-                            </div>
-                            <div className="space-y-1">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Security Notice</h4>
-                                <p className="text-[11px] text-neutral-400 font-medium leading-relaxed">
-                                    Your account activity is being monitored for security purposes. If you notice any unauthorized changes to your profile, please contact your company administrator immediately.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
             
