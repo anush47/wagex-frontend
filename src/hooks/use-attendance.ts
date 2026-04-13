@@ -209,6 +209,63 @@ export const useAttendanceMutations = () => {
     };
 };
 
+/**
+ * Hook to fetch attendance portal status (Employee Portal)
+ */
+export const usePortalAttendanceStatus = () => {
+    return useQuery({
+        queryKey: ['attendance', 'portal', 'status'],
+        queryFn: async () => {
+            const response = await AttendanceService.getPortalStatus();
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        staleTime: 60 * 1000, // 1 minute
+    });
+};
+
+/**
+ * Hook to fetch portal sessions (Employee Portal)
+ */
+export const useAttendancePortalSessions = (params: SessionQueryParams) => {
+    return useQuery({
+        queryKey: ['attendance', 'portal', 'sessions', params],
+        queryFn: async () => {
+            const response = await AttendanceService.getPortalSessions(params);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        staleTime: 5 * 60 * 1000,
+    });
+};
+
+/**
+ * Hook for portal attendance mutations
+ */
+export const usePortalAttendanceMutations = () => {
+    const queryClient = useQueryClient();
+
+    const markAttendance = useMutation({
+        mutationFn: async (body: { latitude?: number; longitude?: number; remark?: string }) => {
+            const response = await AttendanceService.markPortalAttendance(body);
+            if (response.error) throw new Error(response.error.message);
+            return response.data;
+        },
+        onMutate: () => {
+            return { toastId: toast.loading('Marking attendance...') };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['attendance', 'portal'] });
+            toast.success('Attendance marked successfully', { id: 'mark-attendance' });
+        },
+        onError: (err: any, _variables, context) => {
+            toast.error(err.message || 'Failed to mark attendance', { id: context?.toastId });
+        },
+    });
+
+    return { markAttendance };
+};
+
 // Zustand store for session events
 import { create } from 'zustand';
 

@@ -110,4 +110,28 @@ export class AttendanceService {
     static async updateEventType(id: string, eventType: string): Promise<ApiResponse<{ success: boolean }>> {
         return backendApiClient.patch<{ success: boolean }>(`/attendance/manual/events/${id}/type`, { eventType });
     }
+
+    /**
+     * --- Portal Portal Endpoints ---
+     */
+
+    static async getPortalSessions(params: SessionQueryParams): Promise<ApiResponse<PaginatedResponse<AttendanceSession>>> {
+        const searchParams = new URLSearchParams();
+        if (params.startDate) searchParams.append('startDate', params.startDate);
+        if (params.endDate) searchParams.append('endDate', params.endDate);
+        if (params.page) searchParams.append('page', params.page.toString());
+        if (params.limit) searchParams.append('limit', params.limit.toString());
+
+        return backendApiClient.get<PaginatedResponse<AttendanceSession>>(
+            `/attendance/portal/sessions?${searchParams.toString()}`
+        );
+    }
+
+    static async getPortalStatus(): Promise<ApiResponse<any>> {
+        return backendApiClient.get<any>('/attendance/portal/status');
+    }
+
+    static async markPortalAttendance(body: { latitude?: number; longitude?: number; remark?: string }): Promise<ApiResponse<any>> {
+        return backendApiClient.post<any>('/attendance/portal/mark', body);
+    }
 }
