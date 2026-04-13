@@ -101,13 +101,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 ),
             }
         ] : []),
-        {
-            label: t("profile"),
-            href: user?.role === 'EMPLOYEE' ? "/employee-portal/profile" : "/profile",
-            icon: (
-                <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-            ),
-        },
+        ...(user?.role === 'EMPLOYEE' ? [
+            {
+                label: t("details"),
+                href: "/employee-portal/details",
+                icon: (
+                    <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+                ),
+            }
+        ] : []),
         ...(user?.role === 'EMPLOYEE' ? [
             {
                 label: t("leaves"),
@@ -307,7 +309,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
-                                    <Link href={user?.role === 'EMPLOYEE' ? "/employee-portal/profile" : "/profile"} className="cursor-pointer">
+                                    <Link href="/profile" className="cursor-pointer">
                                         <IconUserBolt className="mr-2 h-4 w-4" />
                                         <span>{t("profile")}</span>
                                     </Link>

@@ -236,6 +236,46 @@ export class AuthService {
             return { data: null, error: { message: 'Failed to fetch profile', statusCode: 500 } };
         }
     }
+
+    /**
+     * Change user password
+     */
+    async changePassword(data: { currentPassword?: string; newPassword: string; revokeOtherSessions?: boolean }): Promise<{ success: boolean; error: Error | null }> {
+        try {
+            logger.info('Changing user password');
+
+            const { error } = await authClient.changePassword({
+                newPassword: data.newPassword,
+                currentPassword: data.currentPassword,
+                revokeOtherSessions: data.revokeOtherSessions ?? true,
+            });
+
+            if (error) {
+                logger.error('Change password failed', error);
+                
+                let message = error.message || 'Failed to change password';
+                if (error.code === 'WEAK_PASSWORD') {
+                    message = 'Password is too weak. Please use a stronger password.';
+                } else if (error.code === 'WRONG_PASSWORD') {
+                    message = 'Current password is incorrect.';
+                }
+                
+                toast.error(message);
+                return { success: false, error: new Error(message) };
+            }
+
+            toast.success('Password changed successfully');
+            return { success: true, error: null };
+        } catch (error) {
+            logger.error('Change password error', error);
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            toast.error(message);
+            return {
+                success: false,
+                error: error instanceof Error ? error : new Error('Unknown error'),
+            };
+        }
+    }
 }
 
 /**

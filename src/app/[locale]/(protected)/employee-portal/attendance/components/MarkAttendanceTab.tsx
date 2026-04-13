@@ -64,7 +64,7 @@ export function MarkAttendanceTab({ employeeId, companyId }: MarkAttendanceTabPr
             (error) => {
                 let msg = "Failed to get location.";
                 switch(error.code) {
-                    case error.PERMISSION_DENIED: msg = "Location permission denied. Please enable it to check in."; break;
+                    case error.PERMISSION_DENIED: msg = "Location permission denied. Please allow location access to check in."; break;
                     case error.POSITION_UNAVAILABLE: msg = "Location information is unavailable."; break;
                     case error.TIMEOUT: msg = "Location request timed out."; break;
                 }
@@ -72,7 +72,7 @@ export function MarkAttendanceTab({ employeeId, companyId }: MarkAttendanceTabPr
                 setGettingLocation(false);
                 toast.error(msg);
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
         );
     };
 
@@ -88,7 +88,8 @@ export function MarkAttendanceTab({ employeeId, companyId }: MarkAttendanceTabPr
                 longitude: coords?.longitude,
                 remark: remark || undefined
             });
-            fetchStatus(); // Refresh status after success
+            // Force immediate status refetch
+            await fetchStatus();
             setRemark("");
         } catch (error) {
             // Error handled by mutation hook

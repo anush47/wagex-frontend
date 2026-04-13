@@ -12,10 +12,20 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { IconRefresh, IconChevronLeft, IconChevronRight, IconClock, IconMapPin } from "@tabler/icons-react";
-import { useAttendancePortalSessions } from "@/hooks/use-attendance";
+import { 
+    IconRefresh, 
+    IconChevronLeft, 
+    IconChevronRight, 
+    IconClock, 
+    IconMapPin, 
+    IconFingerprint, 
+    IconExternalLink 
+} from "@tabler/icons-react";
+import { useAttendancePortalSessions, useAttendance } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { EventDetailsDialog } from "@/components/attendance/EventDetailsDialog";
+import { EventSource, EventType } from "@/types/attendance";
 
 interface AttendanceLogTabProps {
     employeeId: string;
@@ -24,6 +34,10 @@ interface AttendanceLogTabProps {
 
 export function AttendanceLogTab({ employeeId, companyId }: AttendanceLogTabProps) {
     const [page, setPage] = useState(1);
+    const [selectedEvent, setSelectedEvent] = useState<any>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const { events, actions } = useAttendance();
 
     const {
         data: sessionsData,
@@ -36,6 +50,22 @@ export function AttendanceLogTab({ employeeId, companyId }: AttendanceLogTabProp
 
     const sessions = (sessionsData as any)?.items || [];
     const meta = (sessionsData as any)?.meta;
+
+    const handleRowClick = async (sessionId: string) => {
+        // Fetch events if not already in store
+        await actions.fetchSessionEvents(sessionId);
+        const sessionEvents = useAttendance.getState().events[sessionId] || [];
+        if (sessionEvents.length > 0) {
+            setSelectedEvent(sessionEvents[0]); // Default to first event (Check-in)
+            setDialogOpen(true);
+        }
+    };
+
+    const viewEvent = (e: React.MouseEvent, event: any) => {
+        e.stopPropagation();
+        setSelectedEvent(event);
+        setDialogOpen(true);
+    };
 
     const getStatusBadge = (status: string) => {
         const styles: Record<string, string> = {
@@ -113,46 +143,71 @@ export function AttendanceLogTab({ employeeId, companyId }: AttendanceLogTabProp
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                sessions.map((session: any) => (
-                                    <TableRow key={session.id} className="group border-neutral-100 dark:border-white/5 hover:bg-neutral-100/30 dark:hover:bg-white/5 transition-colors">
-                                        <TableCell className="py-4 font-bold text-sm text-foreground">
-                                            {format(new Date(session.date), "MMM d, yyyy")}
-                                        </TableCell>
-                                        <TableCell className="py-4">
-                                            {session.checkInTime ? (
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-sm">{format(new Date(session.checkInTime), "hh:mm a")}</span>
-                                                    {session.checkInLocation && <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{session.checkInLocation}</span>}
+                                sessions.map((session: any) => {
+                                    const sessionEvents = events[session.id] || [];
+                                    const inEvent = sessionEvents.find(e => e.eventType === EventType.IN);
+                                    const outEvent = sessionEvents.find(e => e.eventType === EventType.OUT);
+                                    
+                                    return (
+                                        <TableRow 
+                                            key={session.id} 
+                                            className="group border-neutral-100 dark:border-white/5 hover:bg-neutral-100/30 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                                            onClick={() => handleRowClick(session.id)}
+                                        >
+                                            <TableCell className="py-4 font-bold text-sm text-foreground">
+                                                {format(new Date(session.date), "MMM d, yyyy")}
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                {session.checkInTime ? (
+                                                    <div className="flex flex-col group/item" onClick={(e) => inEvent && viewEvent(e, inEvent)}>
+                                                        <span className="font-bold text-sm flex items-center gap-1.5">
+                                                            {format(new Date(session.checkInTime), "hh:mm a")}
+                                                            {inEvent?.source === EventSource.PORTAL && <IconFingerprint className="h-3 w-3 text-green-500" />}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px] flex items-center gap-1">
+                                                            <IconMapPin className="h-2.5 w-2.5" />
+                                                            {session.checkInLocation || "Area Verified"}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground/50 font-medium">—</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                {session.checkOutTime ? (
+                                                    <div className="flex flex-col group/item" onClick={(e) => outEvent && viewEvent(e, outEvent)}>
+                                                        <span className="font-bold text-sm flex items-center gap-1.5">
+                                                            {format(new Date(session.checkOutTime), "hh:mm a")}
+                                                            {outEvent?.source === EventSource.PORTAL && <IconFingerprint className="h-3 w-3 text-green-500" />}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px] flex items-center gap-1">
+                                                            <IconMapPin className="h-2.5 w-2.5" />
+                                                            {session.checkOutLocation || "Area Verified"}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground/50 font-medium">—</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="py-4 text-center">
+                                                <span className="font-black text-sm text-primary">
+                                                    {formatDuration(session.workMinutes)}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="py-4 text-center">
+                                                <span className="font-medium text-xs text-muted-foreground">
+                                                    {formatDuration(session.breakMinutes)}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    {getStatusBadge(session.workDayStatus)}
+                                                    <IconExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
                                                 </div>
-                                            ) : (
-                                                <span className="text-muted-foreground/50 font-medium">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="py-4">
-                                            {session.checkOutTime ? (
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-sm">{format(new Date(session.checkOutTime), "hh:mm a")}</span>
-                                                    {session.checkOutLocation && <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{session.checkOutLocation}</span>}
-                                                </div>
-                                            ) : (
-                                                <span className="text-muted-foreground/50 font-medium">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="py-4 text-center">
-                                            <span className="font-black text-sm text-primary">
-                                                {formatDuration(session.workMinutes)}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="py-4 text-center">
-                                            <span className="font-medium text-xs text-muted-foreground">
-                                                {formatDuration(session.breakMinutes)}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="py-4">
-                                            {getStatusBadge(session.workDayStatus)}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             )}
                         </TableBody>
                     </Table>
@@ -185,6 +240,13 @@ export function AttendanceLogTab({ employeeId, companyId }: AttendanceLogTabProp
                         </Button>
                     </div>
                 )}
+
+                <EventDetailsDialog 
+                    open={dialogOpen}
+                    onOpenChange={setDialogOpen}
+                    event={selectedEvent}
+                    readOnly={true}
+                />
             </CardContent>
         </Card>
     );

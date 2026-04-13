@@ -23,7 +23,7 @@ import { EmployeeGeneralTab } from "../../employer-portal/companies/[id]/employe
 import { EmployeeFilesTab } from "../../employer-portal/companies/[id]/employees/[employeeId]/components/EmployeeFilesTab";
 import { useMe, useEmployeeMutations } from "@/hooks/use-employees";
 
-export default function EmployeeProfilePage() {
+export default function EmployeeDetailsPage() {
     const t = useTranslations("Common");
     const searchParams = useSearchParams();
     const pathname = usePathname();

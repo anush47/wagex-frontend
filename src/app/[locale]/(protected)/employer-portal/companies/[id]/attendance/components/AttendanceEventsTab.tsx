@@ -162,6 +162,7 @@ export function AttendanceEventsTab({
             WEB: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
             API_KEY: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
             MANUAL: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+            PORTAL: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
         };
 
         return (

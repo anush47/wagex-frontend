@@ -254,9 +254,9 @@ export const usePortalAttendanceMutations = () => {
         onMutate: () => {
             return { toastId: toast.loading('Marking attendance...') };
         },
-        onSuccess: () => {
+        onSuccess: (_data, _variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['attendance', 'portal'] });
-            toast.success('Attendance marked successfully', { id: 'mark-attendance' });
+            toast.success('Attendance marked successfully', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
             toast.error(err.message || 'Failed to mark attendance', { id: context?.toastId });
