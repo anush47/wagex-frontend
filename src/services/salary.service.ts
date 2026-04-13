@@ -33,6 +33,16 @@ export class SalaryService {
         return backendApiClient.get<PaginatedResponse<Salary>>(`/salaries?${searchParams.toString()}`);
     }
 
+    static async getMySalaries(params: SalaryQueryParams): Promise<ApiResponse<PaginatedResponse<Salary>>> {
+        const searchParams = new URLSearchParams();
+        if (params.month && params.month !== 'ALL') searchParams.append('month', params.month.toString());
+        if (params.year) searchParams.append('year', params.year.toString());
+        if (params.page) searchParams.append('page', params.page.toString());
+        if (params.limit) searchParams.append('limit', params.limit.toString());
+
+        return backendApiClient.get<PaginatedResponse<Salary>>(`/salaries/me?${searchParams.toString()}`);
+    }
+
     static async getSalaryById(id: string): Promise<ApiResponse<Salary>> {
         return backendApiClient.get<Salary>(`/salaries/${id}`);
     }

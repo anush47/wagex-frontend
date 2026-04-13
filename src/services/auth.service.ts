@@ -244,6 +244,10 @@ export class AuthService {
         try {
             logger.info('Changing user password');
 
+            if (!data.currentPassword) {
+                return { success: false, error: new Error('Current password is required') };
+            }
+
             const { error } = await authClient.changePassword({
                 newPassword: data.newPassword,
                 currentPassword: data.currentPassword,

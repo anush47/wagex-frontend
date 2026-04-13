@@ -7,6 +7,14 @@ export class PaymentService {
         return backendApiClient.get<Payment[]>(`/payments?companyId=${params.companyId}`);
     }
 
+    static async getMyPayments(): Promise<ApiResponse<Payment[]>> {
+        return backendApiClient.get<Payment[]>('/payments/me');
+    }
+
+    static async acknowledgePayment(id: string): Promise<ApiResponse<Payment>> {
+        return backendApiClient.post<Payment>(`/payments/${id}/acknowledge`);
+    }
+
     static async createPayment(dto: any): Promise<ApiResponse<Payment>> {
         return backendApiClient.post<Payment>('/payments', dto);
     }

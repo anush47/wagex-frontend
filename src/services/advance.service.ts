@@ -7,6 +7,10 @@ export class AdvanceService {
         return backendApiClient.get<SalaryAdvance[]>(`/advances?companyId=${params.companyId}`);
     }
 
+    static async getMyAdvances(): Promise<ApiResponse<SalaryAdvance[]>> {
+        return backendApiClient.get<SalaryAdvance[]>('/advances/me');
+    }
+
     static async getAdvanceById(id: string): Promise<ApiResponse<SalaryAdvance>> {
         return backendApiClient.get<SalaryAdvance>(`/advances/${id}`);
     }

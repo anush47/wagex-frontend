@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ChangePasswordDialog } from "@/components/profile/ChangePasswordDialog";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
     const { user } = useAuthStore();
@@ -120,7 +121,7 @@ export default function ProfilePage() {
                                     )}
                                 </div>
                                 <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                                    {React.cloneElement(item.icon as React.ReactElement, { className: "h-24 w-24" })}
+                                    {React.cloneElement(item.icon as React.ReactElement, { className: "h-24 w-24" } as any)}
                                 </div>
                             </div>
                         ))}

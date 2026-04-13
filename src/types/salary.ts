@@ -156,6 +156,7 @@ export interface Payment {
     referenceNo?: string;
     remarks?: string;
     status: PaymentStatus;
+    acknowledgedAt?: string;
     salary?: Salary;
     advance?: SalaryAdvance;
     createdAt: string;
