@@ -54,13 +54,34 @@ export default function EmployeeProfilePage() {
         }
     }, [searchParams]);
 
-    const canonicalStringify = (obj: any): string => {
-        if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
-        if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
-        return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
+    const areObjectsBitwiseEqual = (a: any, b: any): boolean => {
+        const ignoreFields = ['updatedAt', 'createdAt', 'id', 'employeeId', 'userId', 'company'];
+        
+        const canonicalStringify = (obj: any): string => {
+            if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+            if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
+            return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
+        };
+
+        const clean = (obj: any) => {
+            if (!obj) return obj;
+            const newObj = JSON.parse(JSON.stringify(obj));
+            const removeKeys = (o: any) => {
+                if (!o || typeof o !== 'object') return;
+                ignoreFields.forEach(f => delete o[f]);
+                Object.keys(o).forEach(k => {
+                    if (o[k] === "" || o[k] === undefined) o[k] = null; // Normalize empty values
+                    if (typeof o[k] === 'object') removeKeys(o[k]);
+                });
+            };
+            removeKeys(newObj);
+            return newObj;
+        };
+
+        return canonicalStringify(clean(a)) === canonicalStringify(clean(b));
     };
 
-    const isDirty = canonicalStringify(me) !== canonicalStringify(employeeForm);
+    const isDirty = !areObjectsBitwiseEqual(me, employeeForm);
     const canSelfEdit = employeeForm?.canSelfEdit ?? true;
 
     const handleSave = async () => {
@@ -168,6 +189,7 @@ export default function EmployeeProfilePage() {
                     {/* For now, the component handles state, we just need to ensure the save button reflects permissions */}
                     <EmployeeGeneralTab
                         formData={employeeForm}
+                        isEmployee={true}
                         onChange={(field, value) => {
                             if (!canSelfEdit) return;
                             // Prevent self-editing of critical fields

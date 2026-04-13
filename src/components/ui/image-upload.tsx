@@ -25,8 +25,9 @@ export function ImageUpload({
     className,
     label = "Company Logo",
     description = "brand logo",
-    alt = "Brand Identity"
-}: ImageUploadProps) {
+    alt = "Brand Identity",
+    disabled = false
+}: ImageUploadProps & { disabled?: boolean }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | undefined>();
     const [isDragging, setIsDragging] = useState(false);
@@ -56,6 +57,7 @@ export function ImageUpload({
     }, [value, resolvedUrl, uploading]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
+        if (disabled) return;
         let file: File | undefined;
 
         if ('files' in e.target && e.target.files) {
@@ -98,6 +100,7 @@ export function ImageUpload({
     };
 
     const onDragOver = (e: React.DragEvent) => {
+        if (disabled) return;
         e.preventDefault();
         setIsDragging(true);
     };
@@ -107,12 +110,14 @@ export function ImageUpload({
     };
 
     const onDrop = (e: React.DragEvent) => {
+        if (disabled) return;
         e.preventDefault();
         setIsDragging(false);
         handleFileChange(e);
     };
 
     const handleRemove = (e: React.MouseEvent) => {
+        if (disabled) return;
         e.stopPropagation();
         setPreview(undefined);
         onChange("");
@@ -130,17 +135,19 @@ export function ImageUpload({
             )}
 
             <div
-                onClick={() => !preview && !uploading && fileInputRef.current?.click()}
+                onClick={() => !preview && !uploading && !disabled && fileInputRef.current?.click()}
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
                 className={cn(
-                    "relative group cursor-pointer transition-all duration-500 rounded-[2rem] overflow-hidden shadow-sm",
+                    "relative group transition-all duration-500 rounded-[2rem] overflow-hidden shadow-sm",
                     "border-2 border-dashed flex flex-col items-center justify-center min-h-[220px]",
+                    !disabled && "cursor-pointer",
                     isDragging
                         ? "border-primary bg-primary/5 scale-[1.02]"
                         : "border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-900",
-                    (preview || uploading || resolving) && "border-none"
+                    (preview || uploading || resolving) && "border-none",
+                    disabled && !preview && "opacity-50 cursor-not-allowed bg-neutral-100 dark:bg-neutral-800/20"
                 )}
             >
                 <input
@@ -160,13 +167,18 @@ export function ImageUpload({
 
                 {!preview && !uploading && !resolving ? (
                     <div className="flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
-                        <div className="h-16 w-16 rounded-3xl bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500 ease-out">
-                            <IconCloudUpload className="h-8 w-8 text-neutral-400 group-hover:text-primary transition-colors" />
+                        <div className={cn(
+                            "h-16 w-16 rounded-3xl bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500 ease-out",
+                            disabled && "group-hover:scale-100"
+                        )}>
+                            <IconCloudUpload className={cn("h-8 w-8 text-neutral-400 transition-colors", !disabled && "group-hover:text-primary")} />
                         </div>
-                        <p className="text-lg font-bold tracking-tight mb-1">Upload image</p>
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-[200px]">
-                            Drag & drop or <span className="text-primary font-semibold">browse</span> your {description}
-                        </p>
+                        <p className="text-lg font-bold tracking-tight mb-1">{disabled ? "No image uploaded" : "Upload image"}</p>
+                        {!disabled && (
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-[200px]">
+                                Drag & drop or <span className="text-primary font-semibold">browse</span> your {description}
+                            </p>
+                        )}
                     </div>
                 ) : preview && !uploading && !resolving ? (
                     <div className="relative w-full h-full flex items-center justify-center bg-white dark:bg-neutral-950 p-6 min-h-[220px] transition-all duration-700 animate-in zoom-in-95">
@@ -175,35 +187,50 @@ export function ImageUpload({
                             alt={alt}
                             className="max-h-[160px] max-w-full object-contain rounded-xl select-none"
                         />
-                        <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center gap-3">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                className="rounded-full px-6 font-bold shadow-xl hover:scale-105 active:scale-95 transition-all"
-                                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                            >
-                                Change
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                size="icon"
-                                className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all"
-                                onClick={(e) => { e.stopPropagation(); window.open(preview, '_blank'); }}
-                            >
-                                <IconEye className="h-5 w-5" />
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all"
-                                onClick={handleRemove}
-                            >
-                                <IconX className="h-5 w-5" />
-                            </Button>
-                        </div>
+                        {!disabled && (
+                            <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center gap-3">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="rounded-full px-6 font-bold shadow-xl hover:scale-105 active:scale-95 transition-all"
+                                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                                >
+                                    Change
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all"
+                                    onClick={(e) => { e.stopPropagation(); window.open(preview, '_blank'); }}
+                                >
+                                    <IconEye className="h-5 w-5" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all"
+                                    onClick={handleRemove}
+                                >
+                                    <IconX className="h-5 w-5" />
+                                </Button>
+                            </div>
+                        )}
+                        {disabled && (
+                             <div className="absolute right-4 top-4">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-10 w-10 rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all bg-white/50 backdrop-blur-sm"
+                                    onClick={(e) => { e.stopPropagation(); window.open(preview, '_blank'); }}
+                                >
+                                    <IconEye className="h-5 w-5 text-neutral-900" />
+                                </Button>
+                             </div>
+                        )}
                     </div>
                 ) : null}
             </div>

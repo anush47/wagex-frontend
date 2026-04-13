@@ -73,7 +73,13 @@ export function SearchableEmployeeSelect({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-between h-11 rounded-xl px-4 font-normal hover:bg-muted/50", className)}
+                    className={cn(
+                        "w-full justify-between h-14 rounded-2xl px-6 font-bold hover:bg-muted/50 transition-all duration-200",
+                        !disabled 
+                            ? "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm"
+                            : "bg-neutral-100/80 dark:bg-neutral-800/50 border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-400 cursor-not-allowed opacity-100 shadow-none",
+                        className
+                    )}
                     disabled={disabled}
                 >
                     {selectedEmployee ? (

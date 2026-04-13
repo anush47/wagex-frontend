@@ -84,15 +84,34 @@ export default function EmployeeDetailsPage({ params }: { params: Promise<{ id: 
     const policySource = policyData?.source || {};
     const originalEmployee = employeeData;
 
-    const canonicalStringify = (obj: any): string => {
-        if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
-        if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
-        return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
+    const areObjectsBitwiseEqual = (a: any, b: any): boolean => {
+        const ignoreFields = ['updatedAt', 'createdAt', 'id', 'employeeId', 'userId', 'company'];
+        
+        const canonicalStringify = (obj: any): string => {
+            if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+            if (Array.isArray(obj)) return '[' + obj.map(canonicalStringify).join(',') + ']';
+            return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonicalStringify(obj[key])).join(',') + '}';
+        };
+
+        const clean = (obj: any) => {
+            if (!obj) return obj;
+            const newObj = JSON.parse(JSON.stringify(obj));
+            const removeKeys = (o: any) => {
+                if (!o || typeof o !== 'object') return;
+                ignoreFields.forEach(f => delete o[f]);
+                Object.keys(o).forEach(k => {
+                    if (o[k] === "" || o[k] === undefined) o[k] = null; // Normalize empty values
+                    if (typeof o[k] === 'object') removeKeys(o[k]);
+                });
+            };
+            removeKeys(newObj);
+            return newObj;
+        };
+
+        return canonicalStringify(clean(a)) === canonicalStringify(clean(b));
     };
 
-    const isEmployeeDirty = canonicalStringify(originalEmployee) !== canonicalStringify(employeeForm);
-    const isDirty = isEmployeeDirty;
-
+    const isDirty = !areObjectsBitwiseEqual(originalEmployee, employeeForm);
 
     const handleResetPolicy = async () => {
         setEmployeeForm(prev => prev ? ({ ...prev, policyId: null }) : null);

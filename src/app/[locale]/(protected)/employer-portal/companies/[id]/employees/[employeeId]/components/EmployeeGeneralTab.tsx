@@ -23,6 +23,7 @@ import {
 } from "@tabler/icons-react";
 import { MaritalStatus } from "@/types/policy";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Gender, EmploymentType } from "@/types/policy";
 import { cn } from "@/lib/utils";
@@ -35,10 +36,27 @@ interface EmployeeGeneralTabProps {
     onChange: (field: keyof Employee, value: any) => void;
     onDetailChange: (field: string, value: any) => void;
     departments?: any[];
+    isEmployee?: boolean;
 }
 
-export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departments = [] }: EmployeeGeneralTabProps) {
+export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departments = [], isEmployee = false }: EmployeeGeneralTabProps) {
     const { data: calendars, isLoading: isCalendarsLoading } = useCalendars();
+
+    const canSelfEdit = formData.canSelfEdit !== false;
+    
+    // Helper to determine if a field should be disabled for an employee
+    const isFieldDisabled = (fieldName: string, isRestricted: boolean = false) => {
+        if (!isEmployee) return false;
+        if (isRestricted) return true; // Always disabled for employees (e.g. salary, designation)
+        return !canSelfEdit; // Disabled only if self-edit is off
+    };
+
+    const getFieldClasses = (disabled: boolean = false) => cn(
+        "h-14 rounded-2xl px-6 font-bold text-base transition-all duration-200 outline-none",
+        !disabled
+            ? "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10"
+            : "bg-neutral-100/80 dark:bg-neutral-800/50 border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-400 cursor-not-allowed opacity-100 shadow-none"
+    );
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -58,7 +76,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.nameWithInitials}
                                     onChange={e => onChange('nameWithInitials', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner focus:ring-2 focus:ring-primary/20 transition-all"
+                                    disabled={isFieldDisabled('nameWithInitials')}
+                                    className={getFieldClasses(isFieldDisabled('nameWithInitials'))}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -67,7 +86,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                     type="number"
                                     value={formData.employeeNo || ""}
                                     onChange={e => onChange('employeeNo', parseInt(e.target.value) || 0)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-black font-mono text-base text-primary shadow-inner"
+                                    disabled={isFieldDisabled('employeeNo', true)}
+                                    className={cn(getFieldClasses(isFieldDisabled('employeeNo', true)), "font-black font-mono text-primary")}
                                 />
                             </div>
                         </div>
@@ -77,7 +97,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                             <Input
                                 value={formData.fullName}
                                 onChange={e => onChange('fullName', e.target.value)}
-                                className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                disabled={isFieldDisabled('fullName')}
+                                className={getFieldClasses(isFieldDisabled('fullName'))}
                             />
                         </div>
 
@@ -87,7 +108,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.nic || ""}
                                     onChange={e => onChange('nic', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('nic')}
+                                    className={getFieldClasses(isFieldDisabled('nic'))}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -95,7 +117,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.designation || ""}
                                     onChange={e => onChange('designation', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('designation', true)}
+                                    className={getFieldClasses(isFieldDisabled('designation', true))}
                                 />
                             </div>
                         </div>
@@ -107,7 +130,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                     type="date"
                                     value={formData.joinedDate ? new Date(formData.joinedDate).toISOString().split('T')[0] : ""}
                                     onChange={e => onChange('joinedDate', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('joinedDate', true)}
+                                    className={getFieldClasses(isFieldDisabled('joinedDate', true))}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -116,7 +140,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                     type="date"
                                     value={formData.resignedDate ? new Date(formData.resignedDate).toISOString().split('T')[0] : ""}
                                     onChange={e => onChange('resignedDate', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('resignedDate', true)}
+                                    className={getFieldClasses(isFieldDisabled('resignedDate', true))}
                                 />
                             </div>
                         </div>
@@ -126,7 +151,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                             <Input
                                 value={formData.phone || ""}
                                 onChange={e => onChange('phone', e.target.value)}
-                                className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                disabled={isFieldDisabled('phone')}
+                                className={getFieldClasses(isFieldDisabled('phone'))}
                             />
                         </div>
 
@@ -135,26 +161,29 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                             <Input
                                 value={formData.address || ""}
                                 onChange={e => onChange('address', e.target.value)}
-                                className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                disabled={isFieldDisabled('address')}
+                                className={getFieldClasses(isFieldDisabled('address'))}
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Remarks / Special Notes</Label>
-                            <textarea
-                                rows={4}
-                                value={formData.remark || ""}
-                                onChange={e => onChange('remark', e.target.value)}
-                                className="w-full bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl p-6 font-medium text-base shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                                placeholder="Add any additional notes about the employee..."
-                            />
-                        </div>
+                        {!isEmployee && (
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Remarks / Special Notes</Label>
+                                <textarea
+                                    rows={4}
+                                    value={formData.remark || ""}
+                                    onChange={e => onChange('remark', e.target.value)}
+                                    className={cn(getFieldClasses(false), "w-full py-6 resize-none h-auto")}
+                                    placeholder="Add any additional notes about the employee..."
+                                />
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Gender</Label>
-                                <Select value={formData.gender} onValueChange={v => onChange('gender', v)}>
-                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                <Select value={formData.gender} onValueChange={v => onChange('gender', v)} disabled={isFieldDisabled('gender')}>
+                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('gender'))}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
@@ -165,8 +194,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Employment Type</Label>
-                                <Select value={formData.employmentType} onValueChange={v => onChange('employmentType', v)}>
-                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                <Select value={formData.employmentType} onValueChange={v => onChange('employmentType', v)} disabled={isFieldDisabled('employmentType', true)}>
+                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('employmentType', true))}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
@@ -197,7 +226,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.fathersName || ""}
                                     onChange={e => onDetailChange('fathersName', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('fathersName')}
+                                    className={getFieldClasses(isFieldDisabled('fathersName'))}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -205,7 +235,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.mothersName || ""}
                                     onChange={e => onDetailChange('mothersName', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('mothersName')}
+                                    className={getFieldClasses(isFieldDisabled('mothersName'))}
                                 />
                             </div>
                         </div>
@@ -213,8 +244,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Marital Status</Label>
-                                <Select value={formData.details?.maritalStatus} onValueChange={v => onDetailChange('maritalStatus', v)}>
-                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                <Select value={formData.details?.maritalStatus} onValueChange={v => onDetailChange('maritalStatus', v)} disabled={isFieldDisabled('maritalStatus')}>
+                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('maritalStatus'))}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
@@ -229,7 +260,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                     <Input
                                         value={formData.details?.spouseName || ""}
                                         onChange={e => onDetailChange('spouseName', e.target.value)}
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                        disabled={isFieldDisabled('spouseName')}
+                                        className={getFieldClasses(isFieldDisabled('spouseName'))}
                                     />
                                 </div>
                             )}
@@ -242,7 +274,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.nationality || ""}
                                     onChange={e => onDetailChange('nationality', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('nationality')}
+                                    className={cn(getFieldClasses(isFieldDisabled('nationality')), "pl-16")}
                                 />
                             </div>
                         </div>
@@ -264,7 +297,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.emergencyContactName || ""}
                                     onChange={e => onDetailChange('emergencyContactName', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('emergencyContactName')}
+                                    className={getFieldClasses(isFieldDisabled('emergencyContactName'))}
                                     placeholder="Full name of emergency contact"
                                 />
                             </div>
@@ -273,7 +307,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.emergencyContactPhone || ""}
                                     onChange={e => onDetailChange('emergencyContactPhone', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('emergencyContactPhone')}
+                                    className={getFieldClasses(isFieldDisabled('emergencyContactPhone'))}
                                     placeholder="+94"
                                 />
                             </div>
@@ -293,8 +328,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Department</Label>
-                                <Select value={formData.departmentId || "unassigned"} onValueChange={v => onChange('departmentId', v === "unassigned" ? null : v)}>
-                                    <SelectTrigger className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner">
+                                <Select value={formData.departmentId || "unassigned"} onValueChange={v => onChange('departmentId', v === "unassigned" ? null : v)} disabled={isFieldDisabled('departmentId', true)}>
+                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('departmentId', true))}>
                                         <SelectValue placeholder="Select Department" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
@@ -312,9 +347,11 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                     value={formData.managerId}
                                     onSelect={(id) => onChange('managerId', id)}
                                     excludeIds={[formData.id]}
+                                    disabled={isFieldDisabled('managerId', true)}
                                     placeholder="Select Manager"
+                                    className={getFieldClasses(isFieldDisabled('managerId', true))}
                                 />
-                                {formData.managerId && (
+                                {formData.managerId && !isEmployee && (
                                     <Button
                                         variant="link"
                                         size="sm"
@@ -339,29 +376,32 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Basic Salary (LKR)</Label>
-                                <div className="relative">
-                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-neutral-300">LKR</span>
-                                    <Input
-                                        type="text"
-                                        value={formData.basicSalary?.toLocaleString() || '0'}
-                                        onChange={e => {
-                                            const value = e.target.value.replace(/,/g, '');
-                                            onChange('basicSalary', parseFloat(value) || 0);
-                                        }}
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-black text-xl shadow-inner text-emerald-600"
-                                    />
+                            {!isEmployee && (
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Basic Salary (LKR)</Label>
+                                    <div className="relative">
+                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-neutral-300">LKR</span>
+                                        <Input
+                                            type="text"
+                                            value={formData.basicSalary?.toLocaleString() || '0'}
+                                            onChange={e => {
+                                                const value = e.target.value.replace(/,/g, '');
+                                                onChange('basicSalary', parseFloat(value) || 0);
+                                            }}
+                                            className={cn(getFieldClasses(false), "pl-16 text-emerald-600 font-black text-xl")}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="space-y-2">
+                            )}
+                            <div className={cn("space-y-2", isEmployee && "md:col-span-2")}>
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Bank Name</Label>
                                 <div className="relative">
                                     <IconBuildingBank className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
                                     <Input
                                         value={formData.details?.bankName || ""}
                                         onChange={e => onDetailChange('bankName', e.target.value)}
-                                        className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl pl-16 pr-6 font-bold text-base shadow-inner"
+                                        disabled={isFieldDisabled('bankName')}
+                                        className={cn(getFieldClasses(isFieldDisabled('bankName')), "pl-16")}
                                         placeholder="Bank Name"
                                     />
                                 </div>
@@ -374,7 +414,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.bankBranch || ""}
                                     onChange={e => onDetailChange('bankBranch', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('bankBranch')}
+                                    className={getFieldClasses(isFieldDisabled('bankBranch'))}
                                     placeholder="Branch Name"
                                 />
                             </div>
@@ -383,7 +424,8 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                                 <Input
                                     value={formData.details?.accountNumber || ""}
                                     onChange={e => onDetailChange('accountNumber', e.target.value)}
-                                    className="h-14 bg-neutral-50 dark:bg-neutral-800/50 border-none rounded-2xl px-6 font-bold text-base shadow-inner"
+                                    disabled={isFieldDisabled('accountNumber')}
+                                    className={getFieldClasses(isFieldDisabled('accountNumber'))}
                                     placeholder="0000000000"
                                 />
                             </div>
@@ -393,36 +435,65 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
             </div>
 
             <div className="space-y-8">
-                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-neutral-100 dark:bg-neutral-900/50 rounded-[2.5rem] p-8">
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className={cn(
-                                "h-10 w-10 rounded-xl flex items-center justify-center transition-colors shadow-sm",
-                                formData.status === 'ACTIVE' ? "bg-emerald-500 text-white" : "bg-neutral-300 text-neutral-500"
-                            )}>
-                                <IconUserBolt className="h-5 w-5" />
+                {!isEmployee && (
+                    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-neutral-100 dark:bg-neutral-900/50 rounded-[2.5rem] p-8">
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-colors shadow-sm",
+                                    formData.status === 'ACTIVE' ? "bg-emerald-500 text-white" : "bg-neutral-300 text-neutral-500"
+                                )}>
+                                    <IconUserBolt className="h-5 w-5" />
+                                </div>
+                                <Label className="text-lg font-bold">Account Status</Label>
                             </div>
-                            <Label className="text-lg font-bold">Account Status</Label>
+
+                            <Select value={formData.status} onValueChange={v => onChange('status', v)}>
+                                <SelectTrigger className={getFieldClasses(false)}>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem value={EmployeeStatus.ACTIVE}>Active</SelectItem>
+                                    <SelectItem value={EmployeeStatus.INACTIVE}>Inactive</SelectItem>
+                                    <SelectItem value={EmployeeStatus.SUSPENDED}>Suspended</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider px-1">
+                                {formData.status === 'ACTIVE'
+                                    ? "Employee is eligible for payroll and attendance tracking."
+                                    : "Employee is currently restricted from system activities."}
+                            </p>
+
+                            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-4">
+                                <div className="flex items-center justify-between bg-white dark:bg-neutral-800 p-4 rounded-2xl shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "h-8 w-8 rounded-lg flex items-center justify-center",
+                                            (formData as any).active !== false ? "bg-blue-500/10 text-blue-600" : "bg-neutral-100 text-neutral-400"
+                                        )}>
+                                            <IconShieldCheck className="h-4 w-4" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-bold">Portal Access</Label>
+                                            <p className="text-[10px] text-neutral-400 font-medium">Portal login permission</p>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={(formData as any).active !== false}
+                                        onCheckedChange={(checked) => onChange('active' as any, checked)}
+                                        disabled={!formData.userId}
+                                    />
+                                </div>
+                                {!formData.userId && (
+                                    <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight px-1">
+                                        * Login not provisioned for this employee.
+                                    </p>
+                                )}
+                            </div>
                         </div>
-
-                        <Select value={formData.status} onValueChange={v => onChange('status', v)}>
-                            <SelectTrigger className="h-12 bg-white dark:bg-neutral-800 border-none rounded-xl px-4 font-bold shadow-sm">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                                <SelectItem value={EmployeeStatus.ACTIVE}>Active</SelectItem>
-                                <SelectItem value={EmployeeStatus.INACTIVE}>Inactive</SelectItem>
-                                <SelectItem value={EmployeeStatus.SUSPENDED}>Suspended</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider px-1">
-                            {formData.status === 'ACTIVE'
-                                ? "Employee is eligible for payroll and attendance tracking."
-                                : "Employee is currently restricted from system activities."}
-                        </p>
-                    </div>
-                </Card>
+                    </Card>
+                )}
 
                 <Card className="border border-neutral-200 dark:border-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-white dark:bg-neutral-900 rounded-[2.5rem] overflow-hidden">
                     <CardContent className="p-10 space-y-8">
@@ -440,6 +511,7 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                             companyId={formData.companyId}
                             value={formData.photo}
                             onChange={(key) => onChange('photo', key)}
+                            disabled={isFieldDisabled('photo')}
                         />
                     </CardContent>
                 </Card>
