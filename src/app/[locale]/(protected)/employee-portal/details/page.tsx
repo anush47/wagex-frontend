@@ -10,7 +10,8 @@ import {
     IconDeviceFloppy,
     IconUser,
     IconFiles,
-    IconLoader2
+    IconLoader2,
+    IconInfoCircle
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
@@ -133,6 +134,23 @@ export default function EmployeeDetailsPage() {
     return (
         <div className="w-full max-w-7xl mx-auto py-6 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 relative pb-24">
 
+            {!canSelfEdit && (
+                <div className="bg-blue-50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-900 shadow-xl shadow-blue-500/5 rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center gap-6 animate-in fade-in slide-in-from-top-4 duration-1000">
+                    <div className="h-16 w-16 rounded-3xl bg-blue-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30">
+                        <IconInfoCircle className="h-8 w-8" />
+                    </div>
+                    <div className="flex-1 text-center md:text-left space-y-1">
+                        <h2 className="text-xl font-black text-blue-900 dark:text-blue-400 uppercase tracking-tight">Profile Information</h2>
+                        <p className="text-sm font-bold text-blue-700/70 dark:text-blue-500/70 leading-relaxed">
+                            Self-editing is currently disabled for your account. If you need to update any of your personal or bank details, please contact your administrator.
+                        </p>
+                    </div>
+                    <Badge variant="outline" className="rounded-xl px-4 py-2 border-blue-500/30 bg-blue-500/5 text-blue-600 font-bold uppercase tracking-widest text-[10px]">
+                        Information Only
+                    </Badge>
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-neutral-900 p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
                 <div className="flex items-center gap-6">
                     <EmployeeAvatar
@@ -158,12 +176,6 @@ export default function EmployeeDetailsPage() {
                         </div>
                     </div>
                 </div>
-
-                {!canSelfEdit && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20">
-                        <span className="text-xs font-black uppercase tracking-widest">Read Only Mode</span>
-                    </div>
-                )}
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-10">

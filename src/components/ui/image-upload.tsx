@@ -141,13 +141,15 @@ export function ImageUpload({
                 onDrop={onDrop}
                 className={cn(
                     "relative group transition-all duration-500 rounded-[2rem] overflow-hidden shadow-sm",
-                    "border-2 border-dashed flex flex-col items-center justify-center min-h-[220px]",
-                    !disabled && "cursor-pointer",
-                    isDragging
+                    "border-2 flex flex-col items-center justify-center min-h-[220px]",
+                    !disabled 
+                        ? "border-dashed cursor-pointer" 
+                        : "border-solid border-neutral-100 dark:border-neutral-800 cursor-default",
+                    isDragging && !disabled
                         ? "border-primary bg-primary/5 scale-[1.02]"
                         : "border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-900",
                     (preview || uploading || resolving) && "border-none",
-                    disabled && !preview && "opacity-50 cursor-not-allowed bg-neutral-100 dark:bg-neutral-800/20"
+                    disabled && !preview && "opacity-100 bg-neutral-100 dark:bg-neutral-800/20"
                 )}
             >
                 <input

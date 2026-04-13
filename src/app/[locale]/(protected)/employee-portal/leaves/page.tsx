@@ -24,16 +24,35 @@ export default function EmployeeLeavesPage() {
     const [activeTab, setActiveTab] = useState(tabFromUrl);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-    // Sync tab state with URL parameter
+    // Sync tab state and dialog state with URL parameters
     useEffect(() => {
         const tabFromUrl = searchParams.get("tab") || "requests";
         setActiveTab(tabFromUrl);
+
+        // Persistent dialog state from URL
+        if (searchParams.get("action") === "request") {
+            setCreateDialogOpen(true);
+        } else {
+            setCreateDialogOpen(false);
+        }
     }, [searchParams]);
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
-        // Update URL without page reload
-        const newUrl = `${window.location.pathname}?tab=${value}`;
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", value);
+        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const handleDialogOpenChange = (open: boolean) => {
+        setCreateDialogOpen(open);
+        const params = new URLSearchParams(searchParams.toString());
+        if (open) {
+            params.set("action", "request");
+        } else {
+            params.delete("action");
+        }
+        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
         router.push(newUrl, { scroll: false });
     };
 
@@ -80,7 +99,7 @@ export default function EmployeeLeavesPage() {
                 </div>
 
                 <Button
-                    onClick={() => setCreateDialogOpen(true)}
+                    onClick={() => handleDialogOpenChange(true)}
                     className="rounded-2xl h-12 px-8 font-black text-xs uppercase tracking-wider shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                     <IconPlus className="mr-2 h-5 w-5" />
@@ -123,7 +142,7 @@ export default function EmployeeLeavesPage() {
             {/* Create Dialog */}
             <CreateLeaveRequestDialog
                 open={createDialogOpen}
-                onOpenChange={setCreateDialogOpen}
+                onOpenChange={handleDialogOpenChange}
                 companyId={companyId}
                 defaultEmployeeId={employeeId}
                 creatorRole="EMPLOYEE"

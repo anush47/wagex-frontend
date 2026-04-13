@@ -55,7 +55,17 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
         "h-14 rounded-2xl px-6 font-bold text-base transition-all duration-200 outline-none",
         !disabled
             ? "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10"
-            : "bg-neutral-100/80 dark:bg-neutral-800/50 border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-400 cursor-not-allowed opacity-100 shadow-none"
+            : "bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 cursor-not-allowed shadow-none"
+    );
+
+    const ReadOnlyField = ({ value, className, icon: Icon }: { value: string | number | null | undefined, className?: string, icon?: any }) => (
+        <div className={cn(
+            "h-12 flex items-center font-black text-lg text-neutral-900 dark:text-white tracking-tight",
+            className
+        )}>
+            {Icon && <Icon className="mr-3 h-5 w-5 text-primary shrink-0" />}
+            <span className="truncate">{value || "—"}</span>
+        </div>
     );
 
     return (
@@ -73,97 +83,124 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Name with Initials</Label>
-                                <Input
-                                    value={formData.nameWithInitials}
-                                    onChange={e => onChange('nameWithInitials', e.target.value)}
-                                    disabled={isFieldDisabled('nameWithInitials')}
-                                    className={getFieldClasses(isFieldDisabled('nameWithInitials'))}
-                                />
+                                {isFieldDisabled('nameWithInitials') ? (
+                                    <ReadOnlyField value={formData.nameWithInitials} />
+                                ) : (
+                                    <Input
+                                        value={formData.nameWithInitials}
+                                        onChange={e => onChange('nameWithInitials', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Member Number</Label>
-                                <Input
-                                    type="number"
-                                    value={formData.employeeNo || ""}
-                                    onChange={e => onChange('employeeNo', parseInt(e.target.value) || 0)}
-                                    disabled={isFieldDisabled('employeeNo', true)}
-                                    className={cn(getFieldClasses(isFieldDisabled('employeeNo', true)), "font-black font-mono text-primary")}
-                                />
+                                {isFieldDisabled('employeeNo', true) ? (
+                                    <ReadOnlyField value={formData.employeeNo} className="font-black font-mono text-primary" />
+                                ) : (
+                                    <Input
+                                        type="number"
+                                        value={formData.employeeNo || ""}
+                                        onChange={e => onChange('employeeNo', parseInt(e.target.value) || 0)}
+                                        className={cn(getFieldClasses(false), "font-black font-mono text-primary")}
+                                    />
+                                )}
                             </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Full Legal Name</Label>
-                            <Input
-                                value={formData.fullName}
-                                onChange={e => onChange('fullName', e.target.value)}
-                                disabled={isFieldDisabled('fullName')}
-                                className={getFieldClasses(isFieldDisabled('fullName'))}
-                            />
+                            {isFieldDisabled('fullName') ? (
+                                <ReadOnlyField value={formData.fullName} />
+                            ) : (
+                                <Input
+                                    value={formData.fullName}
+                                    onChange={e => onChange('fullName', e.target.value)}
+                                    className={getFieldClasses(false)}
+                                />
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">NIC Number</Label>
-                                <Input
-                                    value={formData.nic || ""}
-                                    onChange={e => onChange('nic', e.target.value)}
-                                    disabled={isFieldDisabled('nic')}
-                                    className={getFieldClasses(isFieldDisabled('nic'))}
-                                />
+                                {isFieldDisabled('nic') ? (
+                                    <ReadOnlyField value={formData.nic} />
+                                ) : (
+                                    <Input
+                                        value={formData.nic || ""}
+                                        onChange={e => onChange('nic', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Designation</Label>
-                                <Input
-                                    value={formData.designation || ""}
-                                    onChange={e => onChange('designation', e.target.value)}
-                                    disabled={isFieldDisabled('designation', true)}
-                                    className={getFieldClasses(isFieldDisabled('designation', true))}
-                                />
+                                {isFieldDisabled('designation', true) ? (
+                                    <ReadOnlyField value={formData.designation} />
+                                ) : (
+                                    <Input
+                                        value={formData.designation || ""}
+                                        onChange={e => onChange('designation', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Joined Date</Label>
-                                <Input
-                                    type="date"
-                                    value={formData.joinedDate ? new Date(formData.joinedDate).toISOString().split('T')[0] : ""}
-                                    onChange={e => onChange('joinedDate', e.target.value)}
-                                    disabled={isFieldDisabled('joinedDate', true)}
-                                    className={getFieldClasses(isFieldDisabled('joinedDate', true))}
-                                />
+                                {isFieldDisabled('joinedDate', true) ? (
+                                    <ReadOnlyField value={formData.joinedDate ? new Date(formData.joinedDate).toLocaleDateString('en-US', { dateStyle: 'long' }) : ""} />
+                                ) : (
+                                    <Input
+                                        type="date"
+                                        value={formData.joinedDate ? new Date(formData.joinedDate).toISOString().split('T')[0] : ""}
+                                        onChange={e => onChange('joinedDate', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Resigned Date</Label>
-                                <Input
-                                    type="date"
-                                    value={formData.resignedDate ? new Date(formData.resignedDate).toISOString().split('T')[0] : ""}
-                                    onChange={e => onChange('resignedDate', e.target.value)}
-                                    disabled={isFieldDisabled('resignedDate', true)}
-                                    className={getFieldClasses(isFieldDisabled('resignedDate', true))}
-                                />
+                                {isFieldDisabled('resignedDate', true) ? (
+                                    <ReadOnlyField value={formData.resignedDate ? new Date(formData.resignedDate).toLocaleDateString('en-US', { dateStyle: 'long' }) : ""} />
+                                ) : (
+                                    <Input
+                                        type="date"
+                                        value={formData.resignedDate ? new Date(formData.resignedDate).toISOString().split('T')[0] : ""}
+                                        onChange={e => onChange('resignedDate', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Phone Number</Label>
-                            <Input
-                                value={formData.phone || ""}
-                                onChange={e => onChange('phone', e.target.value)}
-                                disabled={isFieldDisabled('phone')}
-                                className={getFieldClasses(isFieldDisabled('phone'))}
-                            />
+                            {isFieldDisabled('phone') ? (
+                                <ReadOnlyField value={formData.phone} />
+                            ) : (
+                                <Input
+                                    value={formData.phone || ""}
+                                    onChange={e => onChange('phone', e.target.value)}
+                                    className={getFieldClasses(false)}
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Home Address</Label>
-                            <Input
-                                value={formData.address || ""}
-                                onChange={e => onChange('address', e.target.value)}
-                                disabled={isFieldDisabled('address')}
-                                className={getFieldClasses(isFieldDisabled('address'))}
-                            />
+                            {isFieldDisabled('address') ? (
+                                <ReadOnlyField value={formData.address} />
+                            ) : (
+                                <Input
+                                    value={formData.address || ""}
+                                    onChange={e => onChange('address', e.target.value)}
+                                    className={getFieldClasses(false)}
+                                />
+                            )}
                         </div>
 
                         {!isEmployee && (
@@ -182,30 +219,38 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Gender</Label>
-                                <Select value={formData.gender} onValueChange={v => onChange('gender', v)} disabled={isFieldDisabled('gender')}>
-                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('gender'))}>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        <SelectItem value={Gender.MALE}>Male</SelectItem>
-                                        <SelectItem value={Gender.FEMALE}>Female</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {isFieldDisabled('gender') ? (
+                                    <ReadOnlyField value={formData.gender} />
+                                ) : (
+                                    <Select value={formData.gender} onValueChange={v => onChange('gender', v as any)}>
+                                        <SelectTrigger className={getFieldClasses(false)}>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            <SelectItem value={Gender.MALE}>Male</SelectItem>
+                                            <SelectItem value={Gender.FEMALE}>Female</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Employment Type</Label>
-                                <Select value={formData.employmentType} onValueChange={v => onChange('employmentType', v)} disabled={isFieldDisabled('employmentType', true)}>
-                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('employmentType', true))}>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        <SelectItem value={EmploymentType.PERMANENT}>Permanent</SelectItem>
-                                        <SelectItem value={EmploymentType.PROBATION}>Probation</SelectItem>
-                                        <SelectItem value={EmploymentType.CONTRACT}>Contract</SelectItem>
-                                        <SelectItem value={EmploymentType.INTERN}>Intern</SelectItem>
-                                        <SelectItem value={EmploymentType.TEMPORARY}>Temporary</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {isFieldDisabled('employmentType', true) ? (
+                                    <ReadOnlyField value={formData.employmentType} />
+                                ) : (
+                                    <Select value={formData.employmentType} onValueChange={v => onChange('employmentType', v as any)}>
+                                        <SelectTrigger className={getFieldClasses(false)}>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            <SelectItem value={EmploymentType.PERMANENT}>Permanent</SelectItem>
+                                            <SelectItem value={EmploymentType.PROBATION}>Probation</SelectItem>
+                                            <SelectItem value={EmploymentType.CONTRACT}>Contract</SelectItem>
+                                            <SelectItem value={EmploymentType.INTERN}>Intern</SelectItem>
+                                            <SelectItem value={EmploymentType.TEMPORARY}>Temporary</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                         </div>
                     </CardContent>
@@ -223,61 +268,80 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Fathers Name</Label>
-                                <Input
-                                    value={formData.details?.fathersName || ""}
-                                    onChange={e => onDetailChange('fathersName', e.target.value)}
-                                    disabled={isFieldDisabled('fathersName')}
-                                    className={getFieldClasses(isFieldDisabled('fathersName'))}
-                                />
+                                {isFieldDisabled('fathersName') ? (
+                                    <ReadOnlyField value={formData.details?.fathersName} />
+                                ) : (
+                                    <Input
+                                        value={formData.details?.fathersName || ""}
+                                        onChange={e => onDetailChange('fathersName', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Mothers Name</Label>
-                                <Input
-                                    value={formData.details?.mothersName || ""}
-                                    onChange={e => onDetailChange('mothersName', e.target.value)}
-                                    disabled={isFieldDisabled('mothersName')}
-                                    className={getFieldClasses(isFieldDisabled('mothersName'))}
-                                />
+                                {isFieldDisabled('mothersName') ? (
+                                    <ReadOnlyField value={formData.details?.mothersName} />
+                                ) : (
+                                    <Input
+                                        value={formData.details?.mothersName || ""}
+                                        onChange={e => onDetailChange('mothersName', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                    />
+                                )}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Marital Status</Label>
-                                <Select value={formData.details?.maritalStatus} onValueChange={v => onDetailChange('maritalStatus', v)} disabled={isFieldDisabled('maritalStatus')}>
-                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('maritalStatus'))}>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        <SelectItem value={MaritalStatus.SINGLE}>Single</SelectItem>
-                                        <SelectItem value={MaritalStatus.MARRIED}>Married</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {isFieldDisabled('maritalStatus') ? (
+                                    <ReadOnlyField value={formData.details?.maritalStatus?.toLowerCase()} className="capitalize" />
+                                ) : (
+                                    <Select value={formData.details?.maritalStatus} onValueChange={v => onDetailChange('maritalStatus', v)}>
+                                        <SelectTrigger className={getFieldClasses(false)}>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            <SelectItem value={MaritalStatus.SINGLE}>Single</SelectItem>
+                                            <SelectItem value={MaritalStatus.MARRIED}>Married</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                             {formData.details?.maritalStatus === MaritalStatus.MARRIED && (
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Spouse Name</Label>
-                                    <Input
-                                        value={formData.details?.spouseName || ""}
-                                        onChange={e => onDetailChange('spouseName', e.target.value)}
-                                        disabled={isFieldDisabled('spouseName')}
-                                        className={getFieldClasses(isFieldDisabled('spouseName'))}
-                                    />
+                                    {isFieldDisabled('spouseName') ? (
+                                        <ReadOnlyField value={formData.details?.spouseName} />
+                                    ) : (
+                                        <Input
+                                            value={formData.details?.spouseName || ""}
+                                            onChange={e => onDetailChange('spouseName', e.target.value)}
+                                            className={getFieldClasses(false)}
+                                        />
+                                    )}
                                 </div>
                             )}
                         </div>
 
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Nationality</Label>
-                            <div className="relative">
-                                <IconGlobe className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                                <Input
-                                    value={formData.details?.nationality || ""}
-                                    onChange={e => onDetailChange('nationality', e.target.value)}
-                                    disabled={isFieldDisabled('nationality')}
-                                    className={cn(getFieldClasses(isFieldDisabled('nationality')), "pl-16")}
+                            {isFieldDisabled('nationality') ? (
+                                <ReadOnlyField 
+                                    value={formData.details?.nationality} 
+                                    icon={IconGlobe}
                                 />
-                            </div>
+                            ) : (
+                                <div className="relative">
+                                    <IconGlobe className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                                    <Input
+                                        value={formData.details?.nationality || ""}
+                                        onChange={e => onDetailChange('nationality', e.target.value)}
+                                        className={cn(getFieldClasses(false), "pl-16")}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -294,23 +358,29 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Contact Person Name</Label>
-                                <Input
-                                    value={formData.details?.emergencyContactName || ""}
-                                    onChange={e => onDetailChange('emergencyContactName', e.target.value)}
-                                    disabled={isFieldDisabled('emergencyContactName')}
-                                    className={getFieldClasses(isFieldDisabled('emergencyContactName'))}
-                                    placeholder="Full name of emergency contact"
-                                />
+                                {isFieldDisabled('emergencyContactName') ? (
+                                    <ReadOnlyField value={formData.details?.emergencyContactName} />
+                                ) : (
+                                    <Input
+                                        value={formData.details?.emergencyContactName || ""}
+                                        onChange={e => onDetailChange('emergencyContactName', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                        placeholder="Full name of emergency contact"
+                                    />
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Contact Phone</Label>
-                                <Input
-                                    value={formData.details?.emergencyContactPhone || ""}
-                                    onChange={e => onDetailChange('emergencyContactPhone', e.target.value)}
-                                    disabled={isFieldDisabled('emergencyContactPhone')}
-                                    className={getFieldClasses(isFieldDisabled('emergencyContactPhone'))}
-                                    placeholder="+94"
-                                />
+                                {isFieldDisabled('emergencyContactPhone') ? (
+                                    <ReadOnlyField value={formData.details?.emergencyContactPhone} />
+                                ) : (
+                                    <Input
+                                        value={formData.details?.emergencyContactPhone || ""}
+                                        onChange={e => onDetailChange('emergencyContactPhone', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                        placeholder="+94"
+                                    />
+                                )}
                             </div>
                         </div>
                     </CardContent>
@@ -328,38 +398,47 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Department</Label>
-                                <Select value={formData.departmentId || "unassigned"} onValueChange={v => onChange('departmentId', v === "unassigned" ? null : v)} disabled={isFieldDisabled('departmentId', true)}>
-                                    <SelectTrigger className={getFieldClasses(isFieldDisabled('departmentId', true))}>
-                                        <SelectValue placeholder="Select Department" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                                        {departments?.map(dept => (
-                                            <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                {isFieldDisabled('departmentId', true) ? (
+                                    <ReadOnlyField value={formData.department?.name || "Unassigned"} />
+                                ) : (
+                                    <Select value={formData.departmentId || "unassigned"} onValueChange={v => onChange('departmentId', v === "unassigned" ? null : v)}>
+                                        <SelectTrigger className={getFieldClasses(false)}>
+                                            <SelectValue placeholder="Select Department" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                                            {departments?.map(dept => (
+                                                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Reporting Manager</Label>
-                                <SearchableEmployeeSelect
-                                    companyId={formData.companyId}
-                                    value={formData.managerId}
-                                    onSelect={(id) => onChange('managerId', id)}
-                                    excludeIds={[formData.id]}
-                                    disabled={isFieldDisabled('managerId', true)}
-                                    placeholder="Select Manager"
-                                    className={getFieldClasses(isFieldDisabled('managerId', true))}
-                                />
-                                {formData.managerId && !isEmployee && (
-                                    <Button
-                                        variant="link"
-                                        size="sm"
-                                        onClick={() => onChange('managerId', null)}
-                                        className="h-6 px-0 text-[10px] text-red-500 hover:text-red-600 uppercase font-black tracking-widest"
-                                    >
-                                        Clear Manager
-                                    </Button>
+                                {isFieldDisabled('managerId', true) ? (
+                                    <ReadOnlyField value={formData.manager?.fullName} />
+                                ) : (
+                                    <>
+                                        <SearchableEmployeeSelect
+                                            companyId={formData.companyId}
+                                            value={formData.managerId}
+                                            onSelect={(id) => onChange('managerId', id)}
+                                            excludeIds={[formData.id]}
+                                            placeholder="Select Manager"
+                                            className={getFieldClasses(false)}
+                                        />
+                                        {formData.managerId && !isEmployee && (
+                                            <Button
+                                                variant="link"
+                                                size="sm"
+                                                onClick={() => onChange('managerId', null)}
+                                                className="h-6 px-0 text-[10px] text-red-500 hover:text-red-600 uppercase font-black tracking-widest"
+                                            >
+                                                Clear Manager
+                                            </Button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -395,39 +474,51 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                             )}
                             <div className={cn("space-y-2", isEmployee && "md:col-span-2")}>
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Bank Name</Label>
-                                <div className="relative">
-                                    <IconBuildingBank className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                                    <Input
-                                        value={formData.details?.bankName || ""}
-                                        onChange={e => onDetailChange('bankName', e.target.value)}
-                                        disabled={isFieldDisabled('bankName')}
-                                        className={cn(getFieldClasses(isFieldDisabled('bankName')), "pl-16")}
-                                        placeholder="Bank Name"
+                                {isFieldDisabled('bankName') ? (
+                                    <ReadOnlyField 
+                                        value={formData.details?.bankName} 
+                                        icon={IconBuildingBank}
                                     />
-                                </div>
+                                ) : (
+                                    <div className="relative">
+                                        <IconBuildingBank className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                                        <Input
+                                            value={formData.details?.bankName || ""}
+                                            onChange={e => onDetailChange('bankName', e.target.value)}
+                                            className={cn(getFieldClasses(false), "pl-16")}
+                                            placeholder="Bank Name"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Bank Branch</Label>
-                                <Input
-                                    value={formData.details?.bankBranch || ""}
-                                    onChange={e => onDetailChange('bankBranch', e.target.value)}
-                                    disabled={isFieldDisabled('bankBranch')}
-                                    className={getFieldClasses(isFieldDisabled('bankBranch'))}
-                                    placeholder="Branch Name"
-                                />
+                                {isFieldDisabled('bankBranch') ? (
+                                    <ReadOnlyField value={formData.details?.bankBranch} />
+                                ) : (
+                                    <Input
+                                        value={formData.details?.bankBranch || ""}
+                                        onChange={e => onDetailChange('bankBranch', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                        placeholder="Branch Name"
+                                    />
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Account Number</Label>
-                                <Input
-                                    value={formData.details?.accountNumber || ""}
-                                    onChange={e => onDetailChange('accountNumber', e.target.value)}
-                                    disabled={isFieldDisabled('accountNumber')}
-                                    className={getFieldClasses(isFieldDisabled('accountNumber'))}
-                                    placeholder="0000000000"
-                                />
+                                {isFieldDisabled('accountNumber') ? (
+                                    <ReadOnlyField value={formData.details?.accountNumber} className="font-mono" />
+                                ) : (
+                                    <Input
+                                        value={formData.details?.accountNumber || ""}
+                                        onChange={e => onDetailChange('accountNumber', e.target.value)}
+                                        className={getFieldClasses(false)}
+                                        placeholder="0000000000"
+                                    />
+                                )}
                             </div>
                         </div>
                     </CardContent>
@@ -516,19 +607,19 @@ export function EmployeeGeneralTab({ formData, onChange, onDetailChange, departm
                     </CardContent>
                 </Card>
 
-                <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Tenure Info</h4>
+                <div className="p-8 bg-neutral-50 dark:bg-white/5 rounded-[2.5rem] border border-neutral-100 dark:border-white/5 space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Record Details</h4>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center text-xs">
                             <span className="font-bold text-neutral-400 uppercase tracking-tighter">Joined Date</span>
                             <span className="font-black text-neutral-900 dark:text-white">
-                                {formData.createdAt ? new Date(formData.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
+                                {formData.joinedDate ? new Date(formData.joinedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
                             <span className="font-bold text-neutral-400 uppercase tracking-tighter">Last Update</span>
                             <span className="font-black text-neutral-900 dark:text-white">
-                                {formData.updatedAt ? new Date(formData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
+                                {formData.updatedAt ? new Date(formData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
                             </span>
                         </div>
                     </div>

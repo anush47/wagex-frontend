@@ -57,6 +57,15 @@ export interface Employee {
         id: string;
         name: string;
     };
+    department?: {
+        id: string;
+        name: string;
+    };
+    manager?: {
+        id: string;
+        fullName: string;
+        employeeNo: number;
+    };
     user?: {
         id: string;
         email: string;
