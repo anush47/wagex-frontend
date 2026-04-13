@@ -27,6 +27,7 @@ interface LeaveRequestDetailsDialogProps {
     onOpenChange: (open: boolean) => void;
     request: LeaveRequest | null;
     leaveTypes?: any[];
+    showActions?: boolean;
     onApprove?: (id: string, reason?: string) => Promise<void>;
     onReject?: (id: string, reason: string) => Promise<void>;
     onCancel?: (id: string) => Promise<void>;
@@ -38,6 +39,7 @@ export function LeaveRequestDetailsDialog({
     onOpenChange,
     request,
     leaveTypes = [],
+    showActions = true,
     onApprove,
     onReject,
     onCancel,
@@ -369,18 +371,25 @@ export function LeaveRequestDetailsDialog({
                         </div>
 
                         {request.status === "PENDING" ? (
-                            <div className="space-y-3">
-                                <Label className="text-xs font-bold text-muted-foreground ml-1">
-                                    Response Reason (Remarks)
-                                </Label>
-                                <Textarea
-                                    placeholder="Enter reason or remarks for your decision..."
-                                    className="min-h-[100px] rounded-xl bg-background/50 border-border/50 focus:border-primary/50 transition-all text-sm"
-                                    value={responseReason}
-                                    onChange={(e) => setResponseReason(e.target.value)}
-                                    disabled={processing}
-                                />
-                            </div>
+                            showActions ? (
+                                <div className="space-y-3">
+                                    <Label className="text-xs font-bold text-muted-foreground ml-1">
+                                        Response Reason (Remarks)
+                                    </Label>
+                                    <Textarea
+                                        placeholder="Enter reason or remarks for your decision..."
+                                        className="min-h-[100px] rounded-xl bg-background/50 border-border/50 focus:border-primary/50 transition-all text-sm"
+                                        value={responseReason}
+                                        onChange={(e) => setResponseReason(e.target.value)}
+                                        disabled={processing}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-orange-50/50 dark:bg-orange-950/10 border border-orange-200/50 dark:border-orange-800/30 rounded-xl text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center gap-2">
+                                    <IconClock className="w-4 h-4" />
+                                    Awaiting manager review
+                                </div>
+                            )
                         ) : (
                             <div className="space-y-3">
                                 {(request.approvedBy || request.rejectedBy) && (
@@ -423,7 +432,7 @@ export function LeaveRequestDetailsDialog({
                 </div>
 
                 {/* Action Buttons - Sticky Footer */}
-                {(request.status === "PENDING" || request.status === "APPROVED") && (
+                {(request.status === "PENDING" || (request.status === "APPROVED" && showActions)) && (
                     <DialogFooter className="p-4 md:p-8 bg-muted/60 border-t border-border shrink-0 z-10 transition-all">
                         <div className="flex flex-row gap-3 w-full justify-between items-center">
                             {/* Delete button on the left for pending requests */}
@@ -442,7 +451,7 @@ export function LeaveRequestDetailsDialog({
 
                             {/* Approve/Reject/Cancel buttons on the right */}
                             <div className="flex flex-row gap-2 md:gap-3 ml-auto flex-1 justify-end">
-                                {request.status === "PENDING" && (
+                                {request.status === "PENDING" && showActions && (
                                     <>
                                         {onReject && (
                                             <Button
@@ -467,7 +476,7 @@ export function LeaveRequestDetailsDialog({
                                         )}
                                     </>
                                 )}
-                                {request.status === "APPROVED" && onCancel && (
+                                {request.status === "APPROVED" && onCancel && showActions && (
                                     <Button
                                         variant="outline"
                                         className="rounded-xl px-4 md:px-8 h-10 md:h-11 font-bold text-xs hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200"

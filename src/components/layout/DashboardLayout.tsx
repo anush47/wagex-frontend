@@ -108,6 +108,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <IconUserBolt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
+        ...(user?.role === 'EMPLOYEE' ? [
+            {
+                label: t("leaves"),
+                href: "/employee-portal/leaves",
+                icon: (
+                    <IconCalendarTime className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+                ),
+            }
+        ] : []),
         {
             label: t("settings"),
             href: "/settings",
@@ -155,21 +164,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             ),
         },
         {
-            label: "Leaves", // TODO: Add translation key
+            label: t("leaves"),
             href: `/employer-portal/companies/${companyId}/leaves`,
             icon: (
                 <IconCalendarTime className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
         {
-            label: "Attendance", // TODO: Add translation key
+            label: t("attendance"),
             href: `/employer-portal/companies/${companyId}/attendance`,
             icon: (
                 <IconCalendarCheck className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
         },
         {
-            label: "Salaries",
+            label: t("salaries"),
             href: `/employer-portal/companies/${companyId}/salaries`,
             icon: (
                 <IconWallet className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />

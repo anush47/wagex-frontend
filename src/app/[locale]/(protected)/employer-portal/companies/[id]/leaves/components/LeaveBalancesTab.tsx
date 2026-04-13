@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLeaveBalances } from "@/hooks/use-leaves";
@@ -10,10 +10,19 @@ import { LeaveBalance } from "@/types/leave";
 
 interface LeaveBalancesTabProps {
     companyId: string;
+    employeeId?: string | null;
+    showSelector?: boolean;
 }
 
-export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+export function LeaveBalancesTab({ companyId, employeeId: manualEmployeeId, showSelector = true }: LeaveBalancesTabProps) {
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(manualEmployeeId || null);
+
+    // Sync manualEmployeeId if it changes
+    useEffect(() => {
+        if (manualEmployeeId) {
+            setSelectedEmployeeId(manualEmployeeId);
+        }
+    }, [manualEmployeeId]);
 
     // Use React Query for balances
     const {
@@ -28,18 +37,20 @@ export function LeaveBalancesTab({ companyId }: LeaveBalancesTabProps) {
     return (
         <div className="space-y-6">
             {/* Employee Selector */}
-            <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-neutral-50 dark:bg-neutral-900/50 rounded-[2rem]">
-                <CardHeader>
-                    <CardTitle className="text-xl font-black uppercase tracking-tight">Select Employee</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <SearchableEmployeeSelect
-                        companyId={companyId}
-                        value={selectedEmployeeId || undefined}
-                        onSelect={(id) => setSelectedEmployeeId(id)}
-                    />
-                </CardContent>
-            </Card>
+            {showSelector && (
+                <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-neutral-50 dark:bg-neutral-900/50 rounded-[2rem]">
+                    <CardHeader>
+                        <CardTitle className="text-xl font-black uppercase tracking-tight">Select Employee</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <SearchableEmployeeSelect
+                            companyId={companyId}
+                            value={selectedEmployeeId || undefined}
+                            onSelect={(id) => setSelectedEmployeeId(id)}
+                        />
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Balances */}
             {loading ? (

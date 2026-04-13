@@ -37,12 +37,20 @@ import { cn } from "@/lib/utils";
 interface LeaveRequestsTabProps {
     companyId: string;
     refreshTrigger?: number;
+    mode?: "employer" | "employee";
+    employeeId?: string;
 }
 
-export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequestsTabProps) {
+export function LeaveRequestsTab({
+    companyId,
+    refreshTrigger = 0,
+    mode = "employer",
+    employeeId: manualEmployeeId
+}: LeaveRequestsTabProps) {
+    const isEmployee = mode === "employee";
     const { user } = useAuth();
     const [statusFilter, setStatusFilter] = useState<LeaveStatus | "ALL">("ALL");
-    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(undefined);
+    const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(manualEmployeeId || undefined);
     const [startDate, setStartDate] = useState<string | undefined>(undefined);
     const [endDate, setEndDate] = useState<string | undefined>(undefined);
     const [showFilters, setShowFilters] = useState(false);
@@ -50,6 +58,14 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
+
+    // Sync manualEmployeeId if it changes
+    useEffect(() => {
+        if (manualEmployeeId) {
+            setEmployeeFilter(manualEmployeeId);
+        }
+    }, [manualEmployeeId]);
+
     // Use React Query for requests
     const {
         data: requests = [],
@@ -141,6 +157,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                 onOpenChange={setDetailsOpen}
                 request={selectedRequest}
                 leaveTypes={leaveTypes}
+                showActions={!isEmployee}
                 onApprove={async (id, reason) => {
                     await handleApprove(id, reason);
                     setDetailsOpen(false);
@@ -162,8 +179,12 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                 <IconFileText className="h-5 w-5" />
                             </div>
                             <div>
-                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">Leave Requests</CardTitle>
-                                <p className="text-xs font-medium text-muted-foreground">Manage and review employee leave applications.</p>
+                                <CardTitle className="text-xl font-bold tracking-tight text-foreground">
+                                    {isEmployee ? "Leave History" : "Leave Requests"}
+                                </CardTitle>
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    {isEmployee ? "Review your leave applications and status." : "Manage and review employee leave applications."}
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -219,14 +240,16 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                 </div>
                             </div>
 
-                            <div className="w-full md:w-[200px] shrink-0">
-                                <SearchableEmployeeSelect
-                                    companyId={companyId}
-                                    value={employeeFilter || undefined}
-                                    onSelect={(id) => setEmployeeFilter(id)}
-                                    placeholder="Employee"
-                                />
-                            </div>
+                            {!isEmployee && (
+                                <div className="w-full md:w-[200px] shrink-0">
+                                    <SearchableEmployeeSelect
+                                        companyId={companyId}
+                                        value={employeeFilter || undefined}
+                                        onSelect={(id) => setEmployeeFilter(id)}
+                                        placeholder="Employee"
+                                    />
+                                </div>
+                            )}
 
                             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LeaveStatus | "ALL")}>
                                 <SelectTrigger className="w-full md:w-[150px] h-10 rounded-xl border-neutral-200 dark:border-neutral-800 font-bold text-xs bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
@@ -241,7 +264,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                 </SelectContent>
                             </Select>
 
-                            {(employeeFilter || statusFilter !== "ALL" || startDate || endDate) && (
+                            {(employeeFilter || statusFilter !== "ALL" || startDate || endDate) && !isEmployee && (
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -266,7 +289,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Employee</TableHead>
+                                        {!isEmployee && <TableHead>Employee</TableHead>}
                                         <TableHead>Leave Type</TableHead>
                                         <TableHead>Dates</TableHead>
                                         <TableHead>Duration</TableHead>
@@ -279,12 +302,14 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                 <TableBody>
                                     {[1, 2, 3, 4, 5].map((i) => (
                                         <TableRow key={i} className="animate-pulse">
-                                            <TableCell>
-                                                <div className="space-y-2">
-                                                    <div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" />
-                                                    <div className="h-3 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
-                                                </div>
-                                            </TableCell>
+                                            {!isEmployee && (
+                                                <TableCell>
+                                                    <div className="space-y-2">
+                                                        <div className="h-4 w-32 bg-neutral-100 dark:bg-neutral-800 rounded" />
+                                                        <div className="h-3 w-16 bg-neutral-50 dark:bg-neutral-800/50 rounded" />
+                                                    </div>
+                                                </TableCell>
+                                            )}
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-2 w-2 rounded-full bg-neutral-100 dark:bg-neutral-800" />
@@ -319,7 +344,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Employee</TableHead>
+                                        {!isEmployee && <TableHead>Employee</TableHead>}
                                         <TableHead>Leave Type</TableHead>
                                         <TableHead>Dates</TableHead>
                                         <TableHead>Duration</TableHead>
@@ -336,16 +361,18 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                             className="cursor-pointer hover:bg-muted/50 transition-colors"
                                             onClick={() => handleRowClick(request)}
                                         >
-                                            <TableCell>
-                                                <div className="font-medium">
-                                                    {request.employee?.nameWithInitials}{" "}
-                                                    {request.employee?.employeeNo && (
-                                                        <span className="text-muted-foreground font-mono text-xs">
-                                                            ({request.employee.employeeNo})
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </TableCell>
+                                            {!isEmployee && (
+                                                <TableCell>
+                                                    <div className="font-medium">
+                                                        {request.employee?.nameWithInitials}{" "}
+                                                        {request.employee?.employeeNo && (
+                                                            <span className="text-muted-foreground font-mono text-xs">
+                                                                ({request.employee.employeeNo})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            )}
                                             <TableCell className="whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     {(() => {
@@ -413,31 +440,45 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                                             <TableCell onClick={(e) => e.stopPropagation()}>
                                                 {request.status === "PENDING" && (
                                                     <div className="flex items-center gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            className="rounded-lg shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90"
-                                                            onClick={() => handleApprove(request.id)}
-                                                            disabled={approveRequest.isPending && approveRequest.variables?.id === request.id}
-                                                        >
-                                                            {approveRequest.isPending && approveRequest.variables?.id === request.id ? (
-                                                                <IconRefresh className="h-4 w-4 mr-2 animate-spin" />
-                                                            ) : (
-                                                                <IconCheck className="h-4 w-4 mr-2" />
-                                                            )}
-                                                            Approve
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleReject(request.id)}
-                                                            disabled={rejectRequest.isPending && rejectRequest.variables?.id === request.id}
-                                                        >
-                                                            {rejectRequest.isPending && rejectRequest.variables?.id === request.id ? (
-                                                                <IconRefresh className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <IconX className="h-4 w-4" />
-                                                            )}
-                                                        </Button>
+                                                        {!isEmployee ? (
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="rounded-lg shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90"
+                                                                    onClick={() => handleApprove(request.id)}
+                                                                    disabled={approveRequest.isPending && approveRequest.variables?.id === request.id}
+                                                                >
+                                                                    {approveRequest.isPending && approveRequest.variables?.id === request.id ? (
+                                                                        <IconRefresh className="h-4 w-4 mr-2 animate-spin" />
+                                                                    ) : (
+                                                                        <IconCheck className="h-4 w-4 mr-2" />
+                                                                    )}
+                                                                    Approve
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleReject(request.id)}
+                                                                    disabled={rejectRequest.isPending && rejectRequest.variables?.id === request.id}
+                                                                >
+                                                                    {rejectRequest.isPending && rejectRequest.variables?.id === request.id ? (
+                                                                        <IconRefresh className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <IconX className="h-4 w-4" />
+                                                                    )}
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                                                                onClick={() => handleDeleteClick(request.id)}
+                                                            >
+                                                                <IconTrash className="h-4 w-4 mr-2" />
+                                                                Delete
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 )}
                                             </TableCell>
@@ -463,7 +504,7 @@ export function LeaveRequestsTab({ companyId, refreshTrigger = 0 }: LeaveRequest
                     setDeleteConfirmOpen(false);
                     setRequestToDelete(null);
                 }}
-                loading={false}
+                loading={deleteRequest.isPending}
                 variant="destructive"
             />
         </>
