@@ -12,6 +12,7 @@ interface SessionInOutDetailsProps {
     sessionId: string;
     additionalInOutCount: number;
     editing?: boolean;
+    onViewEvent?: (event: AttendanceEvent) => void;
 }
 
 const EMPTY_ARRAY: any[] = [];
@@ -20,6 +21,7 @@ export function SessionInOutDetails({
     sessionId,
     additionalInOutCount,
     editing = false,
+    onViewEvent,
 }: SessionInOutDetailsProps) {
     const [expanded, setExpanded] = useState(false);
 
@@ -97,6 +99,7 @@ export function SessionInOutDetails({
                                         <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Time</th>
                                         <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Source / Device</th>
                                         <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Location</th>
+                                        <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/30">
@@ -142,6 +145,16 @@ export function SessionInOutDetails({
                                             </td>
                                             <td className="px-4 py-2 text-[10px] text-muted-foreground italic">
                                                 {event.location || "-"}
+                                            </td>
+                                            <td className="px-4 py-2 text-right">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 px-2 text-[10px] font-bold uppercase tracking-tight"
+                                                    onClick={() => (onViewEvent as any)?.(event)}
+                                                >
+                                                    Details
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))}

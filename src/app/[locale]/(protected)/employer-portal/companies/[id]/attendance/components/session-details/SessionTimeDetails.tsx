@@ -216,6 +216,7 @@ export function SessionTimeDetails({
                         sessionId={session.id}
                         additionalInOutCount={session.additionalInOutCount || 0}
                         editing={editing}
+                        onViewEvent={onViewEvent}
                     />
                 </div>
             )}
