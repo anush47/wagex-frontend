@@ -24,21 +24,22 @@ export function GuestGuard({ children }: GuestGuardProps) {
         if (isLoading || isProfileLoading) return;
 
         if (isAuthenticated) {
-            // Half-registered: Logged in via Supabase but no backend profile
-            if (!user) {
+            // Half-registered: Logged in but no backend profile OR incomplete profile
+            const isIncomplete = !user || !user.fullName;
+            if (isIncomplete) {
                 const isRegisterPage = pathname === '/register' || pathname.startsWith('/register/');
                 const isProfileStep = searchParams.get("step") === "profile";
 
                 if (!(isRegisterPage && isProfileStep)) {
-                    logger.info("Authenticated user missing profile, forcing to registration profile step");
+                    logger.info("Authenticated user missing/incomplete profile, forcing to registration profile step");
                     router.replace("/register?step=profile");
                 }
                 return;
             }
 
-            // Inactive account: Pending Review
-            if (user.active === false) {
-                logger.info("Inactive user attempting to access guest route, redirecting to pending review");
+            // Inactive account: Pending Review (only if profile is complete)
+            if (user.active === false && user.fullName) {
+                logger.info("Inactive user with complete profile attempting to access guest route, redirecting to pending review");
                 router.replace("/pending-review");
                 return;
             }
@@ -67,7 +68,7 @@ export function GuestGuard({ children }: GuestGuardProps) {
     // 2. Authenticated but missing profile AND specifically on the registration profile step
     const isRegisterPage = pathname.includes("/register");
     const isProfileStep = searchParams.get("step") === "profile";
-    const isHalfRegistered = isAuthenticated && !user;
+    const isHalfRegistered = isAuthenticated && (!user || !user.fullName);
 
     const canRender = !isAuthenticated || (isHalfRegistered && isRegisterPage && isProfileStep);
 

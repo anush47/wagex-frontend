@@ -45,8 +45,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
             // 2. Check for inactive account
             // If user has a profile but is inactive, they MUST go to pending review
             if (user.active === false) {
+                // If profile is incomplete, force to registration
+                if (!user.fullName) {
+                    if (!isRegisterPage && !isSignOutPage) {
+                        logger.info("Inactive user with incomplete profile, redirecting to registration profile step");
+                        router.replace("/register?step=profile");
+                    }
+                    return;
+                }
+
+                // If profile is complete, force to pending review
                 if (!isPendingReviewPage && !isSignOutPage) {
-                    logger.warn("Inactive user attempted to access restricted route, redirecting to pending review", { path: pathname });
+                    logger.warn("Inactive user with complete profile attempted to access restricted route, redirecting to pending review", { path: pathname });
                     router.replace("/pending-review");
                 }
                 return;
@@ -105,8 +115,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
         // Missing profile: can only see register or signout
         if (!user && !isRegisterPage && !isSignOutPage) return null;
 
-        // Inactive users can only see pending-review and signout
-        if (user && user.active === false && !isPendingReviewPage && !isSignOutPage) return null;
+        // Inactive users with incomplete profiles can only see register and signout
+        if (user && user.active === false && !user.fullName && !isRegisterPage && !isSignOutPage) return null;
+
+        // Inactive users with COMPLETE profiles can only see pending-review and signout
+        if (user && user.active === false && user.fullName && !isPendingReviewPage && !isSignOutPage) return null;
         
         // Active users cannot see pending-review
         if (user && user.active !== false && isPendingReviewPage) return null;
