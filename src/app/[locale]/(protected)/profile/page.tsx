@@ -19,11 +19,32 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ChangePasswordDialog } from "@/components/profile/ChangePasswordDialog";
 import { Button } from "@/components/ui/button";
-
+import { Input } from "@/components/ui/input";
 export default function ProfilePage() {
-    const { user } = useAuthStore();
+    const { user, updateProfile, isProfileLoading } = useAuthStore();
     const t = useTranslations("Common");
     const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        fullName: user?.fullName || user?.nameWithInitials || "",
+        address: user?.address || "",
+        phone: user?.phone || ""
+    });
+
+    const isEmployerOrAdmin = user?.role === "EMPLOYER" || user?.role === "ADMIN";
+
+    const handleSave = async () => {
+        const payload: any = { fullName: formData.fullName, nameWithInitials: formData.fullName };
+        if (isEmployerOrAdmin) {
+            payload.address = formData.address;
+            payload.phone = formData.phone;
+        }
+        const success = await updateProfile(payload);
+        if (success) {
+            setIsEditing(false);
+        }
+    };
 
     if (!user) {
         return (
@@ -133,33 +154,93 @@ export default function ProfilePage() {
                 <div className="lg:col-span-8 space-y-8">
                     <Card className="border border-neutral-200 dark:border-white/10 shadow-sm rounded-[2.5rem] bg-white dark:bg-neutral-900/50 overflow-hidden">
                         <CardHeader className="p-8 pb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                    <IconUser className="h-5 w-5" />
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                        <IconUser className="h-5 w-5" />
+                                    </div>
+                                    <CardTitle className="text-xl font-black uppercase tracking-tight">Personal Details</CardTitle>
                                 </div>
-                                <CardTitle className="text-xl font-black uppercase tracking-tight">Personal Details</CardTitle>
+                                <div className="flex items-center gap-2">
+                                    {isEditing ? (
+                                        <>
+                                            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={isProfileLoading}>
+                                                Cancel
+                                            </Button>
+                                            <Button size="sm" onClick={handleSave} disabled={isProfileLoading}>
+                                                {isProfileLoading ? "Saving..." : "Save Changes"}
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button variant="outline" size="sm" onClick={() => {
+                                            setFormData({
+                                                fullName: user?.fullName || user?.nameWithInitials || "",
+                                                address: user?.address || "",
+                                                phone: user?.phone || ""
+                                            });
+                                            setIsEditing(true);
+                                        }}>
+                                            Edit Profile
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-8 pt-0 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {infoItems.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-neutral-100/50 dark:bg-white/5 border border-transparent hover:border-neutral-200 dark:hover:border-white/10 transition-all group">
-                                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", item.color)}>
-                                        {item.icon}
+                        <CardContent className="p-8 pt-0">
+                            {isEditing ? (
+                                <div className="space-y-4 max-w-md mt-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Name</label>
+                                        <Input 
+                                            value={formData.fullName} 
+                                            onChange={e => setFormData(f => ({ ...f, fullName: e.target.value }))}
+                                            placeholder="Your Name"
+                                        />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[9px] font-black uppercase text-neutral-400 tracking-widest mb-0.5">{item.label}</p>
-                                        <div className="flex items-center gap-2">
-                                            {item.badge ? (
-                                                <Badge className="h-5 font-black text-[9px] uppercase bg-primary/10 text-primary border-none">
-                                                    {item.value}
-                                                </Badge>
-                                            ) : (
-                                                <p className="text-sm font-bold truncate text-neutral-700 dark:text-neutral-200">{item.value}</p>
-                                            )}
-                                        </div>
-                                    </div>
+                                    {isEmployerOrAdmin && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Address</label>
+                                                <Input 
+                                                    value={formData.address} 
+                                                    onChange={e => setFormData(f => ({ ...f, address: e.target.value }))}
+                                                    placeholder="Your Address"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Phone</label>
+                                                <Input 
+                                                    value={formData.phone} 
+                                                    onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))}
+                                                    placeholder="Your Phone Number"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {infoItems.map((item, idx) => (
+                                        <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-neutral-100/50 dark:bg-white/5 border border-transparent hover:border-neutral-200 dark:hover:border-white/10 transition-all group">
+                                            <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", item.color)}>
+                                                {item.icon}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[9px] font-black uppercase text-neutral-400 tracking-widest mb-0.5">{item.label}</p>
+                                                <div className="flex items-center gap-2">
+                                                    {item.badge ? (
+                                                        <Badge className="h-5 font-black text-[9px] uppercase bg-primary/10 text-primary border-none">
+                                                            {item.value}
+                                                        </Badge>
+                                                    ) : (
+                                                        <p className="text-sm font-bold truncate text-neutral-700 dark:text-neutral-200">{item.value}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

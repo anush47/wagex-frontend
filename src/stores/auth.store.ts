@@ -28,6 +28,7 @@ interface AuthActions {
     getAccessToken: () => string | null;
     initialize: () => Promise<void>;
     fetchProfile: () => Promise<void>;
+    updateProfile: (data: Partial<UserProfile>) => Promise<boolean>;
 }
 
 /**
@@ -341,6 +342,27 @@ export const useAuthStore = create<AuthStore>()(
                     logger.error('Failed to fetch profile', error);
                     set({ isProfileLoading: false });
                 }
+            },
+
+            /**
+             * Update user profile via api and store
+             */
+            updateProfile: async (data: Partial<UserProfile>) => {
+                set({ isProfileLoading: true });
+                const { data: profile } = await authService.updateProfile(data);
+                if (profile) {
+                    const { user, session } = get();
+                    set({ 
+                        user: {
+                            ...profile,
+                            email: profile.email || user?.email || session?.user?.email || ''
+                        },
+                        isProfileLoading: false 
+                    });
+                    return true;
+                }
+                set({ isProfileLoading: false });
+                return false;
             },
         }),
         { name: 'AuthStore' }

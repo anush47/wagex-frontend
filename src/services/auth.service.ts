@@ -238,6 +238,29 @@ export class AuthService {
     }
 
     /**
+     * Update user profile in backend
+     */
+    async updateProfile(data: Partial<UserProfile>): Promise<{ data: UserProfile | null; error: any | null }> {
+        try {
+            logger.info('Updating user profile', { ...data });
+            const response = await backendApiClient.patch<UserProfile>('/users/me', data);
+            
+            if (response.error) {
+                toast.error(response.error.message || 'Failed to update profile');
+                return { data: null, error: response.error };
+            }
+            
+            toast.success('Profile updated successfully');
+            return { data: response.data || null, error: null };
+        } catch (error) {
+            logger.error('Failed to update profile', error);
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            toast.error(message);
+            return { data: null, error: { message, statusCode: 500 } };
+        }
+    }
+
+    /**
      * Change user password
      */
     async changePassword(data: { currentPassword?: string; newPassword: string; revokeOtherSessions?: boolean }): Promise<{ success: boolean; error: Error | null }> {
