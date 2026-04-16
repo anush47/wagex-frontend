@@ -159,11 +159,24 @@ export const useAuthStore = create<AuthStore>()(
                     const { user: authUser, profile, session, error } = await authService.signIn(credentials);
 
                     if (error) {
-                        set({
-                            error: error.message,
-                            isLoading: false,
-                            isAuthenticated: false,
-                        });
+                        // Special handling for incomplete profiles: we ARE authenticated in the auth system, 
+                        // just missing the backend profile. Setting isAuthenticated ensures the GuestGuard 
+                        // picks up the change and redirects to the registration form.
+                        if (error.message === 'REGISTRATION_REQUIRED' && session) {
+                            set({
+                                session,
+                                user: null, 
+                                isAuthenticated: true,
+                                isLoading: false,
+                                error: null,
+                            });
+                        } else {
+                            set({
+                                error: error.message,
+                                isLoading: false,
+                                isAuthenticated: false,
+                            });
+                        }
                         throw error;
                     }
 

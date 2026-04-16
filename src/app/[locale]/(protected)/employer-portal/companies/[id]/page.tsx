@@ -37,7 +37,7 @@ import { useEmployees } from "@/hooks/use-employees";
 import { Link } from "@/i18n/routing";
 import { LeaveRequest, LeaveStatus } from "@/types/leave";
 import { AttendanceSession } from "@/types/attendance";
-import { startOfDay, endOfDay, format, differenceInMinutes } from "date-fns";
+import { startOfDay, endOfDay, format, differenceInMinutes, isSameDay } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
@@ -64,10 +64,11 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
     // Data Hooks
     const { data: sessionData, isLoading: loadingSessions } = useAttendanceSessions({
         companyId: id,
-        startDate: format(startOfTodayUtc, "yyyy-MM-dd'T'HH:mm:ss"),
-        endDate: format(endOfTodayUtc, "yyyy-MM-dd'T'HH:mm:ss"),
+        startDate: startOfTodayUtc.toISOString(),
+        endDate: endOfTodayUtc.toISOString(),
         limit: 100,
-    });
+        includeActive: true,
+    } as any);
 
     const { data: pendingLeavesData, isLoading: loadingPendingLeaves } = useLeaveRequests(id, {
         status: LeaveStatus.PENDING,
@@ -96,8 +97,14 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
         });
 
         const clockedIn = sessions.filter((s: AttendanceSession) => !s.checkOutTime);
-        const completed = sessions.filter((s: AttendanceSession) => !!s.checkOutTime);
-        const presentTodayIds = new Set(sessions.map((s: AttendanceSession) => s.employeeId));
+        const completed = sessions.filter((s: AttendanceSession) => 
+            !!s.checkOutTime && isSameDay(new Date(s.date), today)
+        );
+        const presentTodayIds = new Set(
+            sessions
+                .filter((s: AttendanceSession) => !s.checkOutTime || isSameDay(new Date(s.date), today))
+                .map((s: AttendanceSession) => s.employeeId)
+        );
         const leaveIds = new Set(todayApprovedLeaves.map((l: LeaveRequest) => l.employeeId));
         const totalCount = (employeesData as any)?.meta?.total || employees.length;
 

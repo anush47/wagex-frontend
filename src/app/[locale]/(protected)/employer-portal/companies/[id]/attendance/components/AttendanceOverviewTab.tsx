@@ -75,10 +75,11 @@ export function AttendanceOverviewTab({ companyId, onOpenSession, timezone = "UT
 
     const { data: sessionData, isLoading: loadingSessions } = useAttendanceSessions({
         companyId,
-        startDate: format(startOfTodayUtc, "yyyy-MM-dd'T'HH:mm:ss"),
-        endDate: format(endOfTodayUtc, "yyyy-MM-dd'T'HH:mm:ss"),
+        startDate: startOfTodayUtc.toISOString(),
+        endDate: endOfTodayUtc.toISOString(),
         limit: 100,
-    });
+        includeActive: true,
+    } as any);
 
     // Fetch Today's Approved Leaves
     const { data: leaveData, isLoading: loadingLeaves } = useLeaveRequests(companyId, {
@@ -104,7 +105,9 @@ export function AttendanceOverviewTab({ companyId, onOpenSession, timezone = "UT
 
     // Categorize Employees
     const clockedInSessions = sessions.filter((s: AttendanceSession) => !s.checkOutTime);
-    const clockedOutSessions = sessions.filter((s: AttendanceSession) => !!s.checkOutTime);
+    const clockedOutSessions = sessions.filter((s: AttendanceSession) => 
+        !!s.checkOutTime && isSameDay(new Date(s.date), today)
+    );
 
     const presentIds = new Set(clockedInSessions.map((s: AttendanceSession) => s.employeeId));
     const finishedIds = new Set(clockedOutSessions.map((s: AttendanceSession) => s.employeeId));
