@@ -450,7 +450,40 @@ export function AttendanceOverviewTab({ companyId, onOpenSession, timezone = "UT
                         <div className="space-y-4">
                             <div className="p-4 rounded-2xl bg-muted/20 border border-border/40">
                                 <div className="text-xs font-black uppercase tracking-tight mb-1 text-primary">Peak Hour</div>
-                                <p className="text-[10px] font-bold text-muted-foreground leading-snug">Highest volume of clock-ins occurred at 08:45 AM today.</p>
+                                <p className="text-[10px] font-bold text-muted-foreground leading-snug">
+                                    {(() => {
+                                        if (sessions.length === 0) return "No attendance recorded for today yet.";
+
+                                        const buckets: Record<string, number> = {};
+                                        sessions.forEach((s: AttendanceSession) => {
+                                            if (s.checkInTime) {
+                                                const date = toZonedTime(new Date(s.checkInTime), timezone);
+                                                const mins = date.getMinutes();
+                                                const roundedMins = Math.floor(mins / 15) * 15;
+                                                const key = `${date.getHours()}:${roundedMins}`;
+                                                buckets[key] = (buckets[key] || 0) + 1;
+                                            }
+                                        });
+
+                                        let bestKey = "";
+                                        let maxCount = 0;
+                                        Object.entries(buckets).forEach(([key, count]) => {
+                                            if (count > maxCount) {
+                                                maxCount = count;
+                                                bestKey = key;
+                                            }
+                                        });
+
+                                        if (!bestKey) return "No attendance recorded for today yet.";
+
+                                        const [h, m] = bestKey.split(":").map(Number);
+                                        const d = new Date();
+                                        d.setHours(h, m, 0, 0);
+                                        const timeStr = format(d, "hh:mm a");
+
+                                        return `Highest volume of clock-ins occurred at ${timeStr} today.`;
+                                    })()}
+                                </p>
                             </div>
                             {absentEmployees.length > 0 && (
                                 <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10">
