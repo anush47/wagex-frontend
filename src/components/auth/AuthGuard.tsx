@@ -55,20 +55,30 @@ export function AuthGuard({ children }: AuthGuardProps) {
             // 3. Prevent active users from seeing the pending review page
             if (isPendingReviewPage) {
                 logger.info("Active user attempted to access pending review page, redirecting to dashboard");
-                router.replace(user.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
+                if (user.role === 'ADMIN') {
+                    router.replace("/admin-portal/dashboard");
+                } else if (user.role === 'EMPLOYEE') {
+                    router.replace("/employee-portal/dashboard");
+                } else {
+                    router.replace("/employer-portal/dashboard");
+                }
                 return;
             }
 
             // 4. Role-based portal protection
             const isEmployerPortal = pathname.startsWith('/employer-portal');
             const isEmployeePortal = pathname.startsWith('/employee-portal');
+            const isAdminPortal = pathname.startsWith('/admin-portal');
 
-            if (user.role === 'EMPLOYEE' && isEmployerPortal) {
-                logger.warn("Employee attempted to access employer portal, redirecting", { userId: user.id });
+            if (user.role === 'EMPLOYEE' && (isEmployerPortal || isAdminPortal)) {
+                logger.warn("Employee attempted to access restricted portal, redirecting", { userId: user.id });
                 router.replace("/employee-portal/dashboard");
-            } else if ((user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) {
-                logger.warn("Employer/Admin attempted to access employee portal, redirecting", { userId: user.id });
+            } else if (user.role === 'EMPLOYER' && (isEmployeePortal || isAdminPortal)) {
+                logger.warn("Employer attempted to access restricted portal, redirecting", { userId: user.id });
                 router.replace("/employer-portal/dashboard");
+            } else if (user.role === 'ADMIN' && isEmployeePortal) {
+                logger.warn("Admin attempted to access employee portal, redirecting", { userId: user.id });
+                router.replace("/admin-portal/dashboard");
             }
         }
     }, [user, isAuthenticated, isLoading, isProfileLoading, router, pathname]);
@@ -102,8 +112,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
         if (user && user.active !== false && isPendingReviewPage) return null;
         
         // Portal enforcement
-        if (user && user.role === 'EMPLOYEE' && isEmployerPortal) return null;
-        if (user && (user.role === 'EMPLOYER' || user.role === 'ADMIN') && isEmployeePortal) return null;
+        const isAdminPortal = pathname.startsWith('/admin-portal');
+
+        if (user && user.role === 'EMPLOYEE' && (isEmployerPortal || isAdminPortal)) return null;
+        if (user && user.role === 'EMPLOYER' && (isEmployeePortal || isAdminPortal)) return null;
+        if (user && user.role === 'ADMIN' && isEmployeePortal) return null;
     }
 
     return <>{children}</>;

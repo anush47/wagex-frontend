@@ -87,7 +87,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const mainLinks = [
         {
             label: t("dashboard"),
-            href: user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard",
+            href: user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : 
+                  (user?.role === 'ADMIN' && pathname.startsWith('/admin-portal')) ? "/admin-portal/dashboard" : 
+                  "/employer-portal/dashboard",
             icon: (
                 <IconBrandTabler className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
             ),
@@ -98,6 +100,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 href: "/employer-portal/companies",
                 icon: (
                     <IconBuildingSkyscraper className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+                ),
+            }
+        ] : []),
+        ...(user?.role === 'ADMIN' ? [
+            {
+                label: "Audit Logs",
+                href: "/admin-portal/audit-logs",
+                icon: (
+                    <IconClipboardList className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
                 ),
             }
         ] : []),

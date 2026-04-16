@@ -72,7 +72,13 @@ export default function LoginPage() {
             if (user?.active === false) {
                 router.push("/pending-review");
             } else {
-                router.push(user?.role === 'EMPLOYEE' ? "/employee-portal/dashboard" : "/employer-portal/dashboard");
+                if (user?.role === 'ADMIN') {
+                    router.push("/admin-portal/dashboard");
+                } else if (user?.role === 'EMPLOYEE') {
+                    router.push("/employee-portal/dashboard");
+                } else {
+                    router.push("/employer-portal/dashboard");
+                }
             }
         } catch (err: any) {
             // Handled
