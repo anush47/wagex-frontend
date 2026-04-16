@@ -50,6 +50,47 @@ export class UserService {
             };
         }
     }
+
+    /**
+     * Get a list of users based on query parameters (Admin only mostly)
+     */
+    async getUsers(query: Record<string, string | number | boolean> = {}): Promise<ApiResponse<any>> {
+        try {
+            const params = new URLSearchParams();
+            Object.entries(query).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    params.append(key, String(value));
+                }
+            });
+
+            return await backendApiClient.get<any>(`/users?${params.toString()}`);
+        } catch (error) {
+            logger.error('Failed to get users', error);
+            return {
+                error: {
+                    message: error instanceof Error ? error.message : 'Unknown error',
+                    statusCode: 500,
+                },
+            };
+        }
+    }
+
+    /**
+     * Update any user (Admin only)
+     */
+    async updateUser(id: string, data: any): Promise<ApiResponse<any>> {
+        try {
+            return await backendApiClient.put<any>(`/users/${id}`, data);
+        } catch (error) {
+            logger.error('Failed to update user', error);
+            return {
+                error: {
+                    message: error instanceof Error ? error.message : 'Unknown error',
+                    statusCode: 500,
+                },
+            };
+        }
+    }
 }
 
 /**
