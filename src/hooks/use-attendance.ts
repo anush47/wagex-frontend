@@ -88,7 +88,8 @@ export const useAttendanceMutations = () => {
             toast.success('Attendance event created', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to create event', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to create event', { id: context?.toastId });
         },
     });
 
@@ -106,7 +107,8 @@ export const useAttendanceMutations = () => {
             toast.success('Session created', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to create session', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to create session', { id: context?.toastId });
         },
     });
 
@@ -124,7 +126,8 @@ export const useAttendanceMutations = () => {
             toast.success('Session updated', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to update session', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to update session', { id: context?.toastId });
         },
     });
 
@@ -142,7 +145,8 @@ export const useAttendanceMutations = () => {
             toast.success('Session deleted', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to delete session', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to delete session', { id: context?.toastId });
         },
     });
 
@@ -160,7 +164,8 @@ export const useAttendanceMutations = () => {
             toast.success('Event linked to session', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to link event', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to link event', { id: context?.toastId });
         },
     });
 
@@ -178,7 +183,8 @@ export const useAttendanceMutations = () => {
             toast.success('Event unlinked', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to unlink event', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to unlink event', { id: context?.toastId });
         },
     });
 
@@ -203,7 +209,8 @@ export const useAttendanceMutations = () => {
                 toast.success('Event type updated', { id: context?.toastId });
             },
             onError: (err: any, _variables, context) => {
-                toast.error(err.message || 'Failed to update event type', { id: context?.toastId });
+                const message = Array.isArray(err.message) ? err.message[0] : err.message;
+                toast.error(message || 'Failed to update event type', { id: context?.toastId });
             },
         }),
     };
@@ -259,7 +266,11 @@ export const usePortalAttendanceMutations = () => {
             toast.success('Attendance marked successfully', { id: context?.toastId });
         },
         onError: (err: any, _variables, context) => {
-            toast.error(err.message || 'Failed to mark attendance', { id: context?.toastId });
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            toast.error(message || 'Failed to mark attendance', { 
+                id: context?.toastId,
+                description: message ? 'Your request was blocked by the system policy.' : undefined
+            });
         },
     });
 

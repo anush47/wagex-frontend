@@ -260,7 +260,6 @@ export function MarkAttendanceTab({ employeeId, companyId }: MarkAttendanceTabPr
                     </div>
                 </div>
             </Card>
-
         </div>
     );
 }
