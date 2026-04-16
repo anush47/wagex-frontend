@@ -256,9 +256,9 @@ export function SettlePaymentsDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="w-full max-w-[95vw] lg:max-w-[1100px] rounded-2xl md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-background h-[95vh] md:h-[85vh] flex flex-col" showCloseButton={true}>
-                <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden relative">
+                <div className="flex flex-col lg:flex-row flex-1 overflow-hidden relative">
                     {/* Left Panel: Integrated Dues List */}
-                    <div className="flex-none lg:flex-1 h-[350px] lg:h-auto flex flex-col bg-muted/5 border-b lg:border-b-0 lg:border-r border-border/50 overflow-hidden">
+                    <div className="flex-1 flex flex-col bg-muted/5 border-b lg:border-b-0 lg:border-r border-border/50 overflow-hidden min-h-[200px]">
                         <div className="p-4 md:p-8 pb-2 md:pb-4 shrink-0 mt-4 md:mt-0">
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 md:mb-6 gap-4">
                                 <div className="flex items-center gap-3">
@@ -436,8 +436,8 @@ export function SettlePaymentsDialog({
                     </div>
 
                     {/* Right Panel: Disbursement Configuration */}
-                    <div className="w-full lg:w-[380px] bg-muted/10 flex flex-col border-t lg:border-t-0 lg:border-l border-border/50 overflow-visible lg:overflow-hidden shrink-0 lg:shrink">
-                        <div className="p-4 md:p-8 flex-1 flex flex-col lg:overflow-y-auto pb-8">
+                    <div className="flex-1 lg:flex-none lg:w-[380px] bg-muted/10 flex flex-col border-t lg:border-t-0 lg:border-l border-border/50 overflow-hidden min-h-[300px]">
+                        <div className="p-4 md:p-8 flex-1 flex flex-col overflow-y-auto pb-8">
                             <div className="mb-6 p-6 rounded-[1.75rem] bg-background shadow-xl shadow-primary/5 border border-primary/5">
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
