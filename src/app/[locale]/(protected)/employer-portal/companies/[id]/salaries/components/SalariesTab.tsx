@@ -578,38 +578,19 @@ export function SalariesTab({
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-black text-sm text-foreground">
                                                         {(() => {
-                                                            const additions = (salary.components || [])
-                                                                .filter(c => c.category === 'ADDITION')
-                                                                .reduce((acc, c) => acc + c.amount, 0);
-                                                            const deductions = (salary.components || [])
-                                                                .filter(c => c.category === 'DEDUCTION')
-                                                                .reduce((acc, c) => acc + c.amount, 0) + salary.noPayAmount + salary.taxAmount;
-                                                            
-                                                            const gross = salary.basicSalary + salary.otAmount + additions;
-                                                            const net = gross - deductions - salary.advanceDeduction;
-                                                            
                                                             const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
-                                                            return formatCurrency(net - paid);
+                                                            return formatCurrency(salary.netSalary - paid);
                                                         })()}
                                                     </span>
                                                     <div className="flex flex-col items-end mt-1 space-y-0.5">
                                                         {(() => {
-                                                            const additions = (salary.components || [])
-                                                                .filter(c => c.category === 'ADDITION')
-                                                                .reduce((acc, c) => acc + c.amount, 0);
-                                                            const deductions = (salary.components || [])
-                                                                .filter(c => c.category === 'DEDUCTION')
-                                                                .reduce((acc, c) => acc + c.amount, 0) + salary.noPayAmount + salary.taxAmount;
-                                                            
-                                                            const gross = salary.basicSalary + salary.otAmount + additions;
-                                                            const net = gross - deductions - salary.advanceDeduction;
                                                             const paid = (salary.payments || []).reduce((sum, p) => sum + p.amount, 0);
 
                                                             return (
                                                                 <>
                                                                     {paid > 0 && (
                                                                         <span className="text-[10px] font-bold text-neutral-400">
-                                                                            Tot: {formatCurrency(net)}
+                                                                            Tot: {formatCurrency(salary.netSalary)}
                                                                         </span>
                                                                     )}
                                                                     {salary.advanceDeduction > 0 && (

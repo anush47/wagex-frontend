@@ -255,12 +255,12 @@ export function SettlePaymentsDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-none max-w-[95vw] w-[1100px] rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-background h-[85vh] flex flex-col" showCloseButton={true}>
-                <div className="flex flex-1 overflow-hidden relative">
+            <DialogContent className="w-full max-w-[95vw] lg:max-w-[1100px] rounded-2xl md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-background h-[95vh] md:h-[85vh] flex flex-col" showCloseButton={true}>
+                <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden relative">
                     {/* Left Panel: Integrated Dues List */}
-                    <div className="flex-1 flex flex-col bg-muted/5 border-r border-border/50 overflow-hidden">
-                        <div className="p-8 pb-4">
-                            <div className="flex items-center justify-between mb-6">
+                    <div className="flex-none lg:flex-1 h-[350px] lg:h-auto flex flex-col bg-muted/5 border-b lg:border-b-0 lg:border-r border-border/50 overflow-hidden">
+                        <div className="p-4 md:p-8 pb-2 md:pb-4 shrink-0 mt-4 md:mt-0">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 md:mb-6 gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-md">
                                         <IconWallet className="h-5 w-5" />
@@ -270,11 +270,11 @@ export function SettlePaymentsDialog({
                                         <DialogDescription className="text-[10px] font-bold uppercase text-muted-foreground mt-1 tracking-widest opacity-50">Select Cycles & Advances</DialogDescription>
                                     </div>
                                 </div>
-                                <div className="relative w-64">
+                                <div className="relative w-full md:w-64">
                                     <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
                                     <Input 
                                         placeholder="Search staff..." 
-                                        className="pl-9 h-9 rounded-xl bg-background border-none shadow-inner text-[11px] font-bold"
+                                        className="pl-9 h-9 rounded-xl bg-background border-none shadow-inner text-[11px] font-bold w-full"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -436,8 +436,8 @@ export function SettlePaymentsDialog({
                     </div>
 
                     {/* Right Panel: Disbursement Configuration */}
-                    <div className="w-[380px] bg-muted/10 flex flex-col border-l border-border/50 overflow-hidden">
-                        <div className="p-8 flex-1 flex flex-col overflow-y-auto">
+                    <div className="w-full lg:w-[380px] bg-muted/10 flex flex-col border-t lg:border-t-0 lg:border-l border-border/50 overflow-visible lg:overflow-hidden shrink-0 lg:shrink">
+                        <div className="p-4 md:p-8 flex-1 flex flex-col lg:overflow-y-auto pb-8">
                             <div className="mb-6 p-6 rounded-[1.75rem] bg-background shadow-xl shadow-primary/5 border border-primary/5">
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
@@ -528,30 +528,30 @@ export function SettlePaymentsDialog({
                 </div>
 
                 {/* Global Sticky Footer */}
-                <div className="h-24 px-10 bg-muted/20 border-t border-border/50 flex items-center justify-between z-10">
-                    <div className="flex items-center gap-8">
+                <div className="min-h-[4rem] py-4 md:py-0 px-4 md:px-10 bg-muted/20 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0 z-10 shrink-0">
+                    <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto justify-between md:justify-start">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1 opacity-50">Settlement Amount</span>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-black tabular-nums text-primary">{paymentAmount.toLocaleString()}</span>
+                                <span className="text-xl md:text-2xl font-black tabular-nums text-primary">{paymentAmount.toLocaleString()}</span>
                                 <span className="text-[10px] font-black text-primary/40 uppercase tracking-tighter">LKR</span>
                             </div>
                         </div>
-                        <div className="w-[1px] h-10 bg-border/50" />
+                        <div className="w-[1px] h-10 bg-border/50 hidden md:block" />
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1 opacity-50">Payload Status</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-lg font-black text-foreground">{selectionQueue.length} <span className="text-xs opacity-40 uppercase font-bold tracking-tight">Items</span></span>
+                                <span className="text-base md:text-lg font-black text-foreground">{selectionQueue.length} <span className="text-[10px] md:text-xs opacity-40 uppercase font-bold tracking-tight">Items</span></span>
                                 {selectionQueue.length > 0 && <IconCheck className="h-4 w-4 text-green-500" />}
                             </div>
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
                         {selectionQueue.length > 0 && (
                             <Button 
                                 variant="outline" 
-                                className="h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-muted/10 border-muted-foreground/10"
+                                className="h-12 px-4 md:px-6 rounded-[1rem] md:rounded-xl font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-muted/10 border-muted-foreground/10 w-1/3 md:w-auto"
                                 onClick={() => setSelectionQueue([])}
                             >
                                 ResetSelection
@@ -560,7 +560,7 @@ export function SettlePaymentsDialog({
                         <Button 
                             onClick={handleSubmit} 
                             disabled={selectionQueue.length === 0 || paymentAmount <= 0 || createPaymentMutation.isPending}
-                            className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all min-w-[240px] bg-foreground text-background"
+                            className="flex-1 md:flex-none h-12 md:h-14 px-6 md:px-12 rounded-[1rem] md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all bg-foreground text-background"
                         >
                             {createPaymentMutation.isPending ? "Processing..." : "Confirm Payment"}
                         </Button>
