@@ -543,7 +543,7 @@ export function SalaryDetailsDialog({
                                             <IconEdit className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
                                         </div>
                                     </div>
-                                {deductions.map((comp, idx) => (
+                                {deductions.filter(c => c.systemType !== 'LATE_DEDUCTION').map((comp, idx) => (
                                     <div key={idx} className="p-2 px-4 flex justify-between items-center text-sm group hover:bg-muted/30 transition-colors">
                                         <Input
                                             value={comp.name}

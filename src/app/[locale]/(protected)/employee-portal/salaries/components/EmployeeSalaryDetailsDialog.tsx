@@ -224,7 +224,7 @@ export function EmployeeSalaryDetailsDialog({
                                     </div>
                                 )}
 
-                                {deductions.map((comp, idx) => (
+                                {deductions.filter(c => c.systemType !== 'LATE_DEDUCTION').map((comp, idx) => (
                                     <div key={idx} className="p-3 px-4 flex justify-between items-center text-sm">
                                         <span className="font-medium text-muted-foreground">{comp.name}</span>
                                         <span className="font-bold text-red-600">-{formatCurrency(comp.amount)}</span>
