@@ -43,6 +43,7 @@ import { format } from "date-fns";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
 import { PaymentDetailsDialog } from "./PaymentDetailsDialog";
 import { formatCurrency } from "@/lib/utils";
+import { computeSalaryTotals } from "@/lib/salary-calculations";
 
 interface SalaryDetailsDialogProps {
     open: boolean;
@@ -139,20 +140,25 @@ export function SalaryDetailsDialog({
         setEditableSessions(prev => prev.filter(s => s.id !== id));
     };
 
-    const additions = editableComponents.filter(c => c.category === 'ADDITION') || [];
-    const deductions = editableComponents.filter(c => c.category === 'DEDUCTION') || [];
+    // Split for rendering rows (not for totals — totals come from computeSalaryTotals below)
+    const additions = editableComponents.filter(c => c.category === 'ADDITION');
+    const deductions = editableComponents.filter(c => c.category === 'DEDUCTION');
 
-    const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
-    const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
-    
-    // grossEarnings = basic + totalAdditions + adjustments
-    // totalAdditions already contains ot-pay and holiday-pay as components if they exist
-    const grossEarnings = (editableBasicSalary || 0) + totalAdditions + (editableOtAdjustment || 0) + (editableHolidayPayAdjustment || 0);
-    
-    // totalRecoveries = (unpaid/late) + advance + tax + componentDeductions + recoveryAdjustment
-    const totalRecoveries = (salary.noPayAmount || 0) + (salary.lateDeduction || 0) + (editableLateAdjustment || 0) + editableAdvanceDeduction + salary.taxAmount + totalDeductions + (editableRecoveryAdjustment || 0);
-    
-    const currentNetSalary = grossEarnings - totalRecoveries;
+    // Use the centralized utility — mirrors backend salary-engine.service.ts exactly.
+    // NOTE: lateDeduction (auto-calculated) is already inside editableComponents as a
+    // LATE_DEDUCTION entry — do NOT add salary.lateDeduction separately here.
+    // editableLateAdjustment is the manual override and IS included via the utility.
+    const { grossEarnings, totalAdditions, totalDeductions, totalRecoveries, netSalary: currentNetSalary } = computeSalaryTotals({
+        basicSalary: editableBasicSalary,
+        components: editableComponents,
+        noPayAmount: salary.noPayAmount || 0,
+        taxAmount: salary.taxAmount || 0,
+        advanceDeduction: editableAdvanceDeduction,
+        otAdjustment: editableOtAdjustment,
+        holidayPayAdjustment: editableHolidayPayAdjustment,
+        lateAdjustment: editableLateAdjustment,
+        recoveryAdjustment: editableRecoveryAdjustment,
+    });
 
     const isDirty = (
         editableBasicSalary !== salary.basicSalary ||

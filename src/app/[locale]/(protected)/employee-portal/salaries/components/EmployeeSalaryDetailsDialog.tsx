@@ -26,6 +26,7 @@ import {
 import { Salary, SalaryStatus } from "@/types/salary";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
+import { computeSalaryTotals } from "@/lib/salary-calculations";
 
 interface EmployeeSalaryDetailsDialogProps {
     open: boolean;
@@ -40,20 +41,22 @@ export function EmployeeSalaryDetailsDialog({
 }: EmployeeSalaryDetailsDialogProps) {
     if (!salary) return null;
 
-    const additions = salary.components?.filter(c => c.category === 'ADDITION') || [];
-    const deductions = salary.components?.filter(c => c.category === 'DEDUCTION') || [];
-
-    const totalAdditions = additions.reduce((s, c) => s + c.amount, 0);
-    const totalDeductions = deductions.reduce((s, c) => s + c.amount, 0);
-    
-    // grossEarnings = basic + totalAdditions + adjustments
-    const grossEarnings = (salary.basicSalary || 0) + totalAdditions + (salary.otAdjustment || 0) + (salary.holidayPayAdjustment || 0);
-    
-    // totalRecoveries = (unpaid/late) + advance + tax + componentDeductions + recoveryAdjustment
-    // NOTE: noPayAmount is hidden as per requirements
-    const totalRecoveries = (salary.lateDeduction || 0) + (salary.lateAdjustment || 0) + (salary.advanceDeduction || 0) + (salary.taxAmount || 0) + totalDeductions + (salary.recoveryAdjustment || 0);
-    
-    const currentNetSalary = grossEarnings - totalRecoveries;
+    // Use the centralized utility — mirrors backend salary-engine.service.ts exactly.
+    // noPayAmount is intentionally excluded from the employee view (hidden per requirements);
+    // the stored salary.netSalary (backend-calculated) is used as the authoritative net figure.
+    const { grossEarnings, totalDeductions, totalRecoveries, additions, deductions } = computeSalaryTotals({
+        basicSalary: salary.basicSalary || 0,
+        components: salary.components || [],
+        noPayAmount: 0, // hidden from employee view
+        taxAmount: salary.taxAmount || 0,
+        advanceDeduction: salary.advanceDeduction || 0,
+        otAdjustment: salary.otAdjustment || 0,
+        holidayPayAdjustment: salary.holidayPayAdjustment || 0,
+        lateAdjustment: salary.lateAdjustment || 0,
+        recoveryAdjustment: salary.recoveryAdjustment || 0,
+    });
+    // Use the backend-stored netSalary as the authoritative value (not a frontend re-derivation)
+    const currentNetSalary = salary.netSalary;
 
     const getStatusBadge = (status: SalaryStatus) => {
         const styles: Record<string, string> = {
