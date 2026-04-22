@@ -3,7 +3,7 @@
 import React from "react";
 import Handlebars from "handlebars";
 import { cn } from "@/lib/utils";
-import { IconFocusCentered, IconMinus, IconPlus, IconFileDescription } from "@tabler/icons-react";
+import { IconFocusCentered, IconMinus, IconPlus } from "@tabler/icons-react";
 
 interface LivePreviewProps {
   html: string;
@@ -30,7 +30,9 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
   const [error, setError] = React.useState<string | null>(null);
   const [scale, setScale] = React.useState(0.8);
   const [isAutoFit, setIsAutoFit] = React.useState(true);
+  const [iframeHeight, setIframeHeight] = React.useState(1122);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
   const paperConfig = React.useMemo(() => {
     const size = PAPER_SIZES[config.paperSize || 'A4'] || PAPER_SIZES['A4'];
@@ -41,6 +43,7 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
     };
   }, [config.paperSize, config.orientation]);
 
+  // Render Handlebars template client-side
   React.useEffect(() => {
     try {
       if (!html) {
@@ -102,6 +105,7 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
     }
   }, [html, data]);
 
+  // Auto-scale to fit container width
   React.useEffect(() => {
     const updateScale = () => {
       if (isAutoFit && containerRef.current) {
@@ -115,37 +119,84 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
     return () => { clearTimeout(timer); window.removeEventListener('resize', updateScale); };
   }, [rendered, isAutoFit, paperConfig.widthPx]);
 
-  if (error) {
-    return (
-      <div className="flex-1 p-8 flex items-center justify-center">
-        <div className="p-6 rounded-3xl bg-rose-50/[0.03] border-2 border-rose-500/20 text-rose-500 text-[11px] font-mono shadow-2xl backdrop-blur-xl">
-           <div className="flex items-center gap-3 mb-2 font-black uppercase tracking-widest italic">
-              <span className="h-5 w-5 bg-rose-500 text-white rounded flex items-center justify-center not-italic">!</span>
-              Layout Error
-           </div>
-           <p className="pl-8 opacity-70 leading-relaxed">{error}</p>
-        </div>
-      </div>
-    );
-  }
+  // Build the full iframe HTML — CSS is fully isolated inside the iframe
+  const iframeContent = React.useMemo(() => {
+    if (error) return '';
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* Preview card effect — scoped inside iframe, not visible when printing */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 20px; background: #e5e7eb; }
+    .report-page {
+      margin: 0 auto 32px;
+      box-shadow: 0 20px 60px -10px rgba(0,0,0,0.18), 0 4px 16px -4px rgba(0,0,0,0.10);
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .report-page:last-child { margin-bottom: 0; }
+    /* Payslip slip (no report-page wrapper) */
+    .slip {
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    /* User template CSS */
+    ${css || ''}
+  </style>
+</head>
+<body>
+  ${rendered}
+</body>
+</html>`;
+  }, [css, rendered, error]);
+
+  // After iframe loads, resize to match inner content height
+  const handleIframeLoad = React.useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    try {
+      const doc = iframe.contentWindow?.document;
+      if (doc?.body) {
+        const h = doc.body.scrollHeight + 40;
+        setIframeHeight(Math.max(h, paperConfig.heightPx));
+      }
+    } catch {
+      // cross-origin guard — shouldn't happen with srcDoc
+    }
+  }, [paperConfig.heightPx]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-neutral-100 dark:bg-neutral-900/60 relative overflow-hidden">
       <div ref={containerRef} className="flex-1 overflow-auto p-12 custom-scrollbar relative">
         <div
           style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}
-          className="flex flex-col items-center gap-12 shrink-0 pb-32"
+          className="flex flex-col items-center shrink-0 pb-32"
         >
-          {/* Main Template Content */}
-          <div className="preview-content-wrapper">
-             <style dangerouslySetInnerHTML={{ __html: css || "" }} />
-             {/* 
-                Industry Standard Preview Simulation:
-                Since the HTML now contains explicit <div class="report-page"> blocks,
-                we just render it all and let the CSS handle the shadow/card look in preview mode.
-             */}
-             <div dangerouslySetInnerHTML={{ __html: rendered }} />
-          </div>
+          {error ? (
+            <div className="p-6 rounded-3xl bg-rose-50/[0.03] border-2 border-rose-500/20 text-rose-500 text-[11px] font-mono shadow-2xl backdrop-blur-xl max-w-lg w-full">
+              <div className="flex items-center gap-3 mb-2 font-black uppercase tracking-widest italic">
+                <span className="h-5 w-5 bg-rose-500 text-white rounded flex items-center justify-center not-italic text-xs">!</span>
+                Layout Error
+              </div>
+              <p className="pl-8 opacity-70 leading-relaxed">{error}</p>
+            </div>
+          ) : (
+            <iframe
+              ref={iframeRef}
+              key={iframeContent}
+              srcDoc={iframeContent}
+              onLoad={handleIframeLoad}
+              title="Template Preview"
+              style={{
+                width: paperConfig.widthPx + 'px',
+                height: iframeHeight + 'px',
+                border: 'none',
+                display: 'block',
+                background: 'transparent',
+              }}
+            />
+          )}
         </div>
 
         {/* Floating Zoom Controls */}
@@ -156,7 +207,7 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
           >
             <IconMinus className="h-4 w-4" />
           </button>
-          
+
           <button
             onClick={() => { setIsAutoFit(!isAutoFit); if (!isAutoFit) setScale(0.8); }}
             className={cn(
@@ -176,31 +227,12 @@ export function LivePreview({ html, css, data, config = { paperSize: 'A4', orien
           </button>
         </div>
       </div>
+
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
-        
-        /* Preview-specific overrides for .report-page */
-        .preview-content-wrapper .report-page {
-          margin: 0 auto;
-          box-shadow: 0 40px 100px -20px rgba(0,0,0,0.2), 0 20px 40px -10px rgba(0,0,0,0.1);
-          border: 1px solid rgba(0,0,0,0.05);
-          position: relative;
-        }
-        .preview-content-wrapper .report-page:not(:last-child) {
-          margin-bottom: 40px;
-        }
-
-        /* Portrait/Landscape handled by paper config inside the template css but we ensure preview matches */
-        .preview-content-wrapper .report-page {
-            max-width: ${paperConfig.widthPx}px !important;
-            width: ${paperConfig.widthPx}px !important;
-            height: ${paperConfig.heightPx}px !important;
-            min-height: ${paperConfig.heightPx}px !important;
-            overflow: hidden;
-        }
       `}</style>
     </div>
   );

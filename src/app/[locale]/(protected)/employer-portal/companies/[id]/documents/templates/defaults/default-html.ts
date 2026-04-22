@@ -338,263 +338,176 @@ export function getAttendanceReportHtml(): string {
 </div>`;
 }
 
-/* ─── EPF FORM C — R-4 Contribution Schedule ────────────────────────────── */
+/* ─── EPF FORM C — standard Sri Lanka physical form layout ──────────────── */
 export function getEpfFormHtml(): string {
   return `<div class="paginated-document">
 {{#each (chunk salaries 22)}}
 <div class="report-page">
 
-  <div class="form-header">
-    <div class="fh-left">
-      {{#if ../company.logo}}<img src="{{../company.logo}}" class="company-logo" alt="logo" />{{/if}}
-      <div>
-        <div class="co-name">{{../company.name}}</div>
-        <div class="co-meta">{{../company.address}}</div>
-      </div>
+  {{#if @first}}
+  <!-- Top two-box header: employer info left, summary table right -->
+  <div class="top-header">
+    <div class="header-left">
+      <div class="fund-label">EMPLOYEE&rsquo;S PROVIDENT FUND</div>
+      <div class="employer-name">{{../company.name}}</div>
+      <div class="employer-address">{{../company.address}}</div>
+      <div class="ref-number">Reference Number :&nbsp;&nbsp;<strong>{{../company.employerNumber}}</strong></div>
     </div>
-    <div class="fh-center">
-      <div class="form-badge">Employees&rsquo; Provident Fund</div>
-      <div class="form-title">Form C &mdash; R-4</div>
-      <div class="form-sub">Contribution Schedule &mdash; {{../month}}/{{../year}}</div>
-    </div>
-    <div class="fh-right">
-      <div class="ref-box">
-        <div class="ref-lbl">Employer No.</div>
-        <div class="ref-val">{{../company.employerNumber}}</div>
-        <div class="ref-lbl" style="margin-top:4px;">Period</div>
-        <div class="ref-val">{{../month}} / {{../year}}</div>
-        <div class="ref-lbl" style="margin-top:4px;">Page</div>
-        <div class="ref-val">{{add @index 1}}</div>
-      </div>
+    <div class="header-right">
+      <div class="form-title-box">C Form EPF Act No. 15 of 1958</div>
+      <table class="summary-table">
+        <tr><td>Registration Number</td><td><strong>{{../company.employerNumber}}</strong></td></tr>
+        <tr><td>Month and Year of contribution</td><td>{{../month}} &mdash; {{../year}}</td></tr>
+        <tr><td>Number of Employees</td><td>{{../totals.count}}</td></tr>
+        <tr><td>Contributions Rs.</td><td>{{formatCurrency ../totals.totalContribution}}</td></tr>
+        <tr><td>Surcharges Rs.</td><td></td></tr>
+        <tr class="tr-bold"><td>Total Remittance Rs.</td><td><strong>{{formatCurrency ../totals.totalContribution}}</strong></td></tr>
+        <tr><td>Cheque Number</td><td></td></tr>
+        <tr><td>Bank</td><td></td></tr>
+      </table>
     </div>
   </div>
-
-  {{#if @first}}
-  <table class="info-table">
-    <tr>
-      <td class="i-lbl">Employer Name</td>
-      <td class="i-val" colspan="3">{{../company.name}}</td>
-    </tr>
-    <tr>
-      <td class="i-lbl">Address</td>
-      <td class="i-val" colspan="3">{{../company.address}}</td>
-    </tr>
-    <tr>
-      <td class="i-lbl">Employer No.</td>
-      <td class="i-val">{{../company.employerNumber}}</td>
-      <td class="i-lbl">Contribution Period</td>
-      <td class="i-val">{{../month}} / {{../year}}</td>
-    </tr>
-  </table>
-
-  <div class="rate-bar">
-    Employee Contribution: <strong>8%</strong> of liable wages &nbsp;&bull;&nbsp;
-    Employer Contribution: <strong>12%</strong> of liable wages &nbsp;&bull;&nbsp;
-    Total EPF Contribution: <strong>20%</strong> of liable wages
+  {{else}}
+  <!-- Compact header for continuation pages -->
+  <div class="cont-header">
+    <span class="cont-employer">{{../company.name}}</span>
+    <span class="cont-title">C Form EPF Act No. 15 of 1958 &mdash; (Continued)</span>
+    <span class="cont-period">{{../month}} / {{../year}} &mdash; Page {{add @index 1}}</span>
   </div>
   {{/if}}
 
-  <table class="form-table">
+  <table class="schedule-table">
     <thead>
       <tr>
-        <th class="t-center" style="width:26px">No.</th>
-        <th class="t-center" style="width:54px">Emp No</th>
-        <th class="t-left">Employee Name</th>
-        <th class="t-center" style="width:70px">EPF<br/>Member No.</th>
-        <th style="width:82px">Liable<br/>Wages (Rs.)</th>
-        <th style="width:68px">Employee<br/>8% (Rs.)</th>
-        <th style="width:68px">Employer<br/>12% (Rs.)</th>
-        <th style="width:72px">Total<br/>Contribution</th>
+        <th class="col-name">EMPLOYEE&rsquo;S NAME</th>
+        <th class="col-nic">N. I. C.</th>
+        <th class="col-member">MEMBER<br/>NO.</th>
+        <th class="col-num">TOTAL</th>
+        <th class="col-num">EMPLOYER<br/>(12%)</th>
+        <th class="col-num">EMPLOYEE<br/>(8%)</th>
+        <th class="col-num">TOTAL<br/>EARNINGS</th>
       </tr>
     </thead>
     <tbody>
-      {{#each this as |row idx|}}
+      {{#each this as |row|}}
       <tr>
-        <td class="t-center">{{add idx 1}}</td>
-        <td class="t-center">{{row.employee.employeeNo}}</td>
-        <td class="t-left">{{row.employee.fullName}}</td>
-        <td class="t-center">{{row.employee.employeeNo}}</td>
-        <td class="t-right">{{formatCurrency row.liableEarnings}}</td>
-        <td class="t-right">{{formatCurrency row.epfEmployee}}</td>
-        <td class="t-right">{{formatCurrency row.epfEmployer}}</td>
-        <td class="t-total">{{formatCurrency (add row.epfEmployee row.epfEmployer)}}</td>
+        <td class="td-name">{{row.employee.fullName}}</td>
+        <td class="td-center">{{row.employee.nic}}</td>
+        <td class="td-center">{{row.employee.employeeNo}}</td>
+        <td class="td-num">{{formatCurrency (add row.epfEmployee row.epfEmployer)}}</td>
+        <td class="td-num">{{formatCurrency row.epfEmployer}}</td>
+        <td class="td-num">{{formatCurrency row.epfEmployee}}</td>
+        <td class="td-num">{{formatCurrency row.liableEarnings}}</td>
       </tr>
       {{/each}}
+      {{#if @last}}
+      <tr class="blank-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr class="blank-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      {{/if}}
     </tbody>
     {{#if @last}}
     <tfoot>
       <tr class="totals-row">
-        <td colspan="4" class="totals-label">Schedule Total</td>
-        <td class="t-right">&nbsp;</td>
-        <td class="t-right">{{formatCurrency ../totals.totalEmployeeContribution}}</td>
-        <td class="t-right">{{formatCurrency ../totals.totalEmployerContribution}}</td>
-        <td class="t-total">{{formatCurrency ../totals.totalContribution}}</td>
+        <td colspan="3"></td>
+        <td class="td-num">{{formatCurrency ../totals.totalContribution}}</td>
+        <td class="td-num">{{formatCurrency ../totals.totalEmployerContribution}}</td>
+        <td class="td-num">{{formatCurrency ../totals.totalEmployeeContribution}}</td>
+        <td></td>
       </tr>
     </tfoot>
     {{/if}}
   </table>
 
   {{#if @last}}
-  <div class="surcharge-row">
-    <span>Employee Contribution (8%):&nbsp;<strong>{{formatCurrency ../totals.totalEmployeeContribution}}</strong></span>
-    <span>Employer Contribution (12%):&nbsp;<strong>{{formatCurrency ../totals.totalEmployerContribution}}</strong></span>
-    <span>Surcharge (if applicable):&nbsp;<strong>—</strong></span>
-  </div>
-
-  <div class="payable-bar">
-    <span class="payable-label">Total EPF Payable</span>
-    <span class="payable-amount">Rs. {{formatCurrency ../totals.totalContribution}}</span>
-  </div>
-
-  <div class="declaration">
-    <div class="declaration-text">
-      I / We hereby certify that the above particulars are true and correct, and that all employees liable to contribute to the Employees&rsquo; Provident Fund have been included in this schedule, and that the contributions shown have been deducted from wages. I am / We are aware that any false statement made in this form renders me / us liable to prosecution under the Employees&rsquo; Provident Fund Act No.&nbsp;15 of 1958 and its amendments.
-    </div>
-    <div class="sig-grid">
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">Authorized Signatory</div>
-        <div class="sig-date">Name:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Date:</div>
-      </div>
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">Employer / Director</div>
-        <div class="sig-date">Designation:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Date:</div>
-      </div>
-      <div class="sig-block stamp-block">
-        <div class="stamp-lbl">Company Seal / Stamp</div>
-        <div class="stamp-box"></div>
-      </div>
-    </div>
-  </div>
+  <div class="certification">I certify that the information given above is correct.</div>
+  <div class="sig-dotted">............................................................................</div>
   {{/if}}
 
-  <div class="form-footer">EPF Form C (R-4) &mdash; {{../company.name}} &mdash; {{../month}}/{{../year}} &mdash; Page {{add @index 1}} &mdash; Computer Generated</div>
+  <div class="page-num">Page {{add @index 1}}</div>
 </div>
 {{/each}}
 </div>`;
 }
 
-/* ─── ETF FORM C — R-4 Contribution Schedule ────────────────────────────── */
+/* ─── ETF FORM R-4 — standard Sri Lanka physical form layout ────────────── */
 export function getEtfFormHtml(): string {
   return `<div class="paginated-document">
 {{#each (chunk salaries 25)}}
 <div class="report-page">
 
-  <div class="form-header">
-    <div class="fh-left">
-      {{#if ../company.logo}}<img src="{{../company.logo}}" class="company-logo" alt="logo" />{{/if}}
-      <div>
-        <div class="co-name">{{../company.name}}</div>
-        <div class="co-meta">{{../company.address}}</div>
-      </div>
+  {{#if @first}}
+  <!-- Top two-box header: employer info left, summary table right -->
+  <div class="top-header">
+    <div class="header-left">
+      <div class="fund-label">EMPLOYEE&rsquo;S TRUST FUND BOARD</div>
+      <div class="employer-name">{{../company.name}}</div>
+      <div class="employer-address">{{../company.address}}</div>
     </div>
-    <div class="fh-center">
-      <div class="form-badge">Employees&rsquo; Trust Fund</div>
-      <div class="form-title">Form C &mdash; R-4</div>
-      <div class="form-sub">Contribution Schedule &mdash; {{../month}}/{{../year}}</div>
-    </div>
-    <div class="fh-right">
-      <div class="ref-box">
-        <div class="ref-lbl">Employer No.</div>
-        <div class="ref-val">{{../company.employerNumber}}</div>
-        <div class="ref-lbl" style="margin-top:4px;">Period</div>
-        <div class="ref-val">{{../month}} / {{../year}}</div>
-        <div class="ref-lbl" style="margin-top:4px;">Page</div>
-        <div class="ref-val">{{add @index 1}}</div>
-      </div>
+    <div class="header-right">
+      <div class="form-title-box">Advice of Remittance form R-4</div>
+      <table class="summary-table">
+        <tr><td>Registration Number</td><td><strong>{{../company.employerNumber}}</strong></td></tr>
+        <tr><td>Month and Year of contribution</td><td>{{../month}} &mdash; {{../year}}</td></tr>
+        <tr><td>Number of Employees</td><td>{{../totals.count}}</td></tr>
+        <tr><td>Contributions Rs.</td><td>{{formatCurrency ../totals.totalContribution}}</td></tr>
+        <tr><td>Surcharges Rs.</td><td></td></tr>
+        <tr class="tr-bold"><td>Total Remittance Rs.</td><td><strong>{{formatCurrency ../totals.totalContribution}}</strong></td></tr>
+        <tr><td>Cheque Number</td><td></td></tr>
+        <tr><td>Bank</td><td></td></tr>
+      </table>
     </div>
   </div>
-
-  {{#if @first}}
-  <table class="info-table">
-    <tr>
-      <td class="i-lbl">Employer Name</td>
-      <td class="i-val" colspan="3">{{../company.name}}</td>
-    </tr>
-    <tr>
-      <td class="i-lbl">Address</td>
-      <td class="i-val" colspan="3">{{../company.address}}</td>
-    </tr>
-    <tr>
-      <td class="i-lbl">Employer No.</td>
-      <td class="i-val">{{../company.employerNumber}}</td>
-      <td class="i-lbl">Contribution Period</td>
-      <td class="i-val">{{../month}} / {{../year}}</td>
-    </tr>
-  </table>
-
-  <div class="rate-bar">
-    ETF is an <strong>employer-only</strong> contribution &nbsp;&bull;&nbsp;
-    Employer Contribution: <strong>3%</strong> of wages paid &nbsp;&bull;&nbsp;
-    No deduction from employee salary
+  {{else}}
+  <!-- Compact header for continuation pages -->
+  <div class="cont-header">
+    <span class="cont-employer">{{../company.name}}</span>
+    <span class="cont-title">Advice of Remittance form R-4 &mdash; (Continued)</span>
+    <span class="cont-period">{{../month}} / {{../year}} &mdash; Page {{add @index 1}}</span>
   </div>
   {{/if}}
 
-  <table class="form-table">
+  <table class="schedule-table">
     <thead>
       <tr>
-        <th class="t-center" style="width:26px">No.</th>
-        <th class="t-center" style="width:54px">Emp No</th>
-        <th class="t-left">Employee Name</th>
-        <th class="t-center" style="width:70px">ETF<br/>Member No.</th>
-        <th style="width:90px">Wages Paid<br/>(Rs.)</th>
-        <th style="width:80px">Employer<br/>3% (Rs.)</th>
+        <th class="col-name">EMPLOYEE&rsquo;S NAME</th>
+        <th class="col-nic">N. I. C.</th>
+        <th class="col-member">MEMBER<br/>NO.</th>
+        <th class="col-num">CONTRIBUTION</th>
+        <th class="col-num">TOTAL<br/>EARNINGS</th>
       </tr>
     </thead>
     <tbody>
-      {{#each this as |row idx|}}
+      {{#each this as |row|}}
       <tr>
-        <td class="t-center">{{add idx 1}}</td>
-        <td class="t-center">{{row.employee.employeeNo}}</td>
-        <td class="t-left">{{row.employee.fullName}}</td>
-        <td class="t-center">{{row.employee.employeeNo}}</td>
-        <td class="t-right">{{formatCurrency row.basicSalary}}</td>
-        <td class="t-total">{{formatCurrency row.etfEmployer}}</td>
+        <td class="td-name">{{row.employee.fullName}}</td>
+        <td class="td-center">{{row.employee.nic}}</td>
+        <td class="td-center">{{row.employee.employeeNo}}</td>
+        <td class="td-num">{{formatCurrency row.etfEmployer}}</td>
+        <td class="td-num">{{formatCurrency row.basicSalary}}</td>
       </tr>
       {{/each}}
+      {{#if @last}}
+      <tr class="blank-row"><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr class="blank-row"><td></td><td></td><td></td><td></td><td></td></tr>
+      {{/if}}
     </tbody>
     {{#if @last}}
     <tfoot>
       <tr class="totals-row">
-        <td colspan="4" class="totals-label">Schedule Total</td>
-        <td class="t-right">&nbsp;</td>
-        <td class="t-total">{{formatCurrency ../totals.totalContribution}}</td>
+        <td colspan="3"></td>
+        <td class="td-num">{{formatCurrency ../totals.totalContribution}}</td>
+        <td></td>
       </tr>
     </tfoot>
     {{/if}}
   </table>
 
   {{#if @last}}
-  <div class="payable-bar">
-    <span class="payable-label">Total ETF Payable (Employer 3%)</span>
-    <span class="payable-amount">Rs. {{formatCurrency ../totals.totalContribution}}</span>
-  </div>
-
-  <div class="declaration">
-    <div class="declaration-text">
-      I / We hereby declare that the above particulars relating to the contributions payable to the Employees&rsquo; Trust Fund are true and correct. All employees liable to contribute have been included in this schedule. The contributions shown represent 3% of the wages paid to each employee for the period stated. I / We understand that any false declaration renders me / us liable to prosecution under the Employees&rsquo; Trust Fund Act No.&nbsp;46 of 1980 and its amendments.
-    </div>
-    <div class="sig-grid">
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">Authorized Signatory</div>
-        <div class="sig-date">Name:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Date:</div>
-      </div>
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">Employer / Director</div>
-        <div class="sig-date">Designation:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Date:</div>
-      </div>
-      <div class="sig-block stamp-block">
-        <div class="stamp-lbl">Company Seal / Stamp</div>
-        <div class="stamp-box"></div>
-      </div>
-    </div>
-  </div>
+  <div class="certification">I certify that the information given above is correct.</div>
+  <div class="sig-dotted">............................................................................</div>
   {{/if}}
 
-  <div class="form-footer">ETF Form C (R-4) &mdash; {{../company.name}} &mdash; {{../month}}/{{../year}} &mdash; Page {{add @index 1}} &mdash; Computer Generated</div>
+  <div class="page-num">Page {{add @index 1}}</div>
 </div>
 {{/each}}
 </div>`;

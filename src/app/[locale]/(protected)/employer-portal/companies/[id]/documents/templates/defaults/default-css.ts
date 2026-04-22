@@ -244,70 +244,56 @@ export function getAttendanceReportCss(): string {
 `;
 }
 
-/* ─── EPF FORM C (R-4) — black & white ──────────────────────────────────── */
+/* ─── EPF FORM C — physical form layout ─────────────────────────────────── */
 export function getEpfFormCss(): string {
   return `${getGeneralPrintCss()}
-/* --- EPF FORM C (R-4) --- */
-.report-page { padding: 10mm 14mm 18mm; }
+/* --- EPF / ETF STATUTORY FORM --- */
+.report-page { padding: 12mm 14mm 16mm; font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #000; }
 
-.form-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 8px; }
-.fh-left { display: flex; align-items: flex-start; gap: 8px; }
-.company-logo { height: 36px; object-fit: contain; }
-.co-name { font-size: 12px; font-weight: 950; text-transform: uppercase; line-height: 1.1; color: #111; }
-.co-meta { font-size: 7.5px; color: #444; margin-top: 2px; }
-.fh-center { flex: 1; text-align: center; padding: 0 10px; }
-.form-badge { font-size: 6.5px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: #111; color: #fff; padding: 2px 8px; display: inline-block; margin-bottom: 3px; }
-.form-title { font-size: 14px; font-weight: 950; letter-spacing: 2px; text-transform: uppercase; line-height: 1.1; color: #111; }
-.form-sub { font-size: 8px; color: #333; margin-top: 2px; }
-.fh-right { text-align: right; min-width: 90px; }
-.ref-box { border: 1px solid #777; padding: 4px 8px; }
-.ref-lbl { font-size: 6px; text-transform: uppercase; color: #666; }
-.ref-val { font-size: 8.5px; font-weight: 900; color: #111; }
+/* Two-box top header */
+.top-header { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #000; margin-bottom: 12px; }
+.header-left { padding: 10px 12px; border-right: 1px solid #000; }
+.header-right { padding: 10px 12px; }
+.fund-label { font-size: 8px; font-weight: 700; text-transform: uppercase; border: 1px solid #000; display: inline-block; padding: 2px 6px; margin-bottom: 8px; }
+.employer-name { font-size: 14px; font-weight: 900; text-transform: uppercase; line-height: 1.2; }
+.employer-address { font-size: 8px; line-height: 1.6; margin-top: 4px; color: #222; }
+.ref-number { font-size: 8px; margin-top: 14px; padding-top: 8px; border-top: 1px solid #ccc; }
+.form-title-box { font-size: 11px; font-weight: 900; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #000; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 8px; }
+.summary-table tr td { padding: 3px 4px; border-bottom: 1px solid #ddd; vertical-align: middle; }
+.summary-table tr td:first-child { width: 60%; }
+.summary-table tr td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.summary-table tr.tr-bold td { font-weight: 700; }
 
-.info-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 8px; border: 1px solid #bbb; }
-.info-table td { padding: 4px 6px; border: 1px solid #ccc; vertical-align: top; }
-.i-lbl { background: #eee; font-weight: 700; color: #111; width: 18%; white-space: nowrap; }
-.i-val { width: 32%; color: #111; }
+/* Compact continuation header (subsequent pages) */
+.cont-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+.cont-employer { font-size: 11px; font-weight: 900; text-transform: uppercase; }
+.cont-title { font-size: 8px; font-weight: 700; }
+.cont-period { font-size: 8px; color: #555; }
 
-.rate-bar { background: #f0f0f0; border: 1px solid #bbb; padding: 4px 10px; font-size: 7.5px; text-align: center; margin-bottom: 8px; color: #111; font-weight: 600; }
+/* Schedule table */
+.schedule-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 20px; }
+.schedule-table thead tr { background: #111; color: #fff; }
+.schedule-table th { padding: 5px 6px; font-size: 7.5px; font-weight: 900; text-transform: uppercase; border: 1px solid #333; text-align: center; line-height: 1.3; }
+.schedule-table th.col-name { text-align: left; min-width: 130px; }
+.schedule-table th.col-nic { min-width: 80px; }
+.schedule-table th.col-member { width: 60px; }
+.schedule-table th.col-num { width: 80px; }
+.schedule-table td { padding: 4px 6px; border: 1px solid #ccc; vertical-align: middle; }
+.schedule-table .td-name { text-align: left; font-weight: 600; }
+.schedule-table .td-center { text-align: center; }
+.schedule-table .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+.schedule-table .blank-row td { height: 22px; background: #fff !important; }
+.schedule-table tfoot .totals-row td { border-top: 2px solid #000; font-weight: 900; font-size: 9px; border-bottom: 1px solid #ccc; background: #fff; }
 
-.form-table { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 6px; }
-.form-table thead tr { background: #111; color: #fff; }
-.form-table th { padding: 5px 4px; font-size: 7px; font-weight: 900; text-transform: uppercase; border: 1px solid #333; text-align: right; line-height: 1.3; letter-spacing: 0.03em; }
-.form-table th.t-left { text-align: left; }
-.form-table th.t-center { text-align: center; }
-.form-table td { padding: 3.5px 4px; border: 1px solid #ddd; font-size: 8px; vertical-align: middle; color: #111; }
-.form-table td.t-right { text-align: right; font-variant-numeric: tabular-nums; }
-.form-table td.t-center { text-align: center; }
-.form-table td.t-total { text-align: right; font-weight: 900; font-variant-numeric: tabular-nums; color: #111; }
-.form-table td.t-left { text-align: left; }
-.form-table tbody tr:nth-child(even) { background: #f8f8f8; }
-.totals-row { background: #111 !important; color: #fff !important; }
-.totals-row td { font-weight: 900; font-size: 8.5px; border-color: #333 !important; color: #fff !important; }
-.totals-label { text-align: right !important; padding-right: 8px; letter-spacing: 0.05em; }
-
-.payable-bar { display: flex; justify-content: flex-end; align-items: center; gap: 20px; padding: 6px 8px; border-top: 2px solid #111; border-bottom: 2px solid #111; margin-bottom: 10px; }
-.payable-label { font-size: 8.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #111; }
-.payable-amount { font-size: 13px; font-weight: 950; color: #111; }
-
-.surcharge-row { display: flex; justify-content: flex-end; gap: 16px; padding: 3px 8px; font-size: 8px; border-bottom: 1px dashed #bbb; margin-bottom: 4px; color: #111; }
-
-.declaration { margin-top: 6px; }
-.declaration-text { font-size: 7.5px; color: #333; line-height: 1.5; border: 1px dashed #bbb; padding: 5px 8px; background: #fafafa; margin-bottom: 10px; }
-.sig-grid { display: flex; gap: 30px; }
-.sig-block { flex: 1; }
-.sig-line { border-bottom: 1px solid #333; height: 36px; margin-bottom: 3px; }
-.sig-name { font-size: 7.5px; font-weight: 700; color: #111; }
-.sig-date { font-size: 7px; color: #555; margin-top: 3px; }
-.stamp-block { max-width: 140px; }
-.stamp-lbl { font-size: 7.5px; font-weight: 700; margin-bottom: 3px; color: #111; }
-.stamp-box { border: 1px solid #999; height: 55px; width: 110px; }
-
-.form-footer { font-size: 6.5px; color: #888; text-align: center; border-top: 1px solid #ddd; padding-top: 3px; margin-top: 8px; }
+/* Certification and signature */
+.certification { font-size: 8.5px; margin-top: 24px; margin-bottom: 40px; }
+.sig-dotted { font-size: 10px; letter-spacing: 3px; color: #000; }
+.page-num { text-align: right; font-size: 7.5px; color: #555; margin-top: 6px; position: absolute; bottom: 10mm; right: 14mm; }
 `;
 }
 
-/* ─── ETF FORM C (R-4) — black & white, same structure as EPF ───────────── */
+/* ─── ETF FORM R-4 — same CSS as EPF form ───────────────────────────────── */
 export function getEtfFormCss(): string {
   return getEpfFormCss();
 }
