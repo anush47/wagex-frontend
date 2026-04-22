@@ -81,17 +81,36 @@ export async function printDocument(templateId: string, resourceId: string, opti
   }
 }
 
-export async function bulkPrintDocuments(templateId: string, resourceIds: string[]) {
+export async function bulkPrintDocuments(
+  templateId: string,
+  resourceIds: string[],
+  onPartialFailure?: (failedIds: string[], successCount: number) => void,
+) {
     try {
       const results: any[] = [];
-      
+      const failed: string[] = [];
+
       for (const id of resourceIds) {
         const res = await backendApiClient.get<any>(`/templates/render/${templateId}/${id}`);
         if (res.data) {
           results.push(res.data);
+        } else {
+          failed.push(id);
+          console.error(`Failed to render document for resource: ${id}`, res.error);
         }
       }
-  
+
+      if (failed.length > 0) {
+        console.error(`Bulk print: ${failed.length} document(s) failed to render.`, failed);
+        if (onPartialFailure) {
+          onPartialFailure(failed, results.length);
+        }
+        if (results.length === 0) {
+          throw new Error(`All ${failed.length} document(s) failed to render. Check console for details.`);
+        }
+        // Continue printing the successfully rendered documents
+      }
+
       if (results.length === 0) return;
 
       const printWindow = window.open("", "_blank");

@@ -43,9 +43,11 @@ export function PayslipsDocumentsTab() {
     const [selectedSalaries, setSelectedSalaries] = React.useState<string[]>([]);
 
     const handleBulkPrint = () => {
-        if (!selectedTemplate) return toast.error("Please select a template first");
+        if (!selectedTemplate) return toast.error("No active template found. Please activate a template first.");
         if (selectedSalaries.length === 0) return toast.error("Please select at least one employee");
-        bulkPrintDocuments(selectedTemplate, selectedSalaries);
+        bulkPrintDocuments(selectedTemplate, selectedSalaries, (failedIds, successCount) => {
+            toast.warning(`${failedIds.length} payslip(s) failed to render and were skipped. ${successCount} printed successfully.`);
+        });
     };
 
     return (
@@ -178,7 +180,7 @@ export function PayslipsDocumentsTab() {
                                         <span className="text-xs font-black uppercase tracking-tight text-foreground truncate max-w-[120px]">{selectedTemplateName}</span>
                                     </div>
                                 </div>
-                                <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest h-6 px-3 rounded-lg shadow-sm font-black italic">Verified</Badge>
+                                <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest h-6 px-3 rounded-lg shadow-sm font-black italic">Active</Badge>
                             </div>
                         </div>
 
