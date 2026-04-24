@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import {
     IconBrandTabler,
@@ -354,7 +355,7 @@ export const Logo = () => {
     } catch (e) {
         sidebarContext = null;
     }
-    
+
     const handleClick = () => {
         if (sidebarContext && typeof window !== "undefined" && window.innerWidth < 768) {
             sidebarContext.setOpen(false);
@@ -365,16 +366,21 @@ export const Logo = () => {
         <Link
             href="/"
             onClick={handleClick}
-            className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+            className="flex items-center py-1 relative z-20"
         >
-            <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-            <motion.span
+            <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="font-black text-black dark:text-white whitespace-pre tracking-tighter italic"
             >
-                WageX
-            </motion.span>
+                <Image
+                    src="/images/wagex_logo_transparent.png"
+                    alt="WageX"
+                    width={110}
+                    height={47}
+                    className="object-contain dark:invert"
+                    priority
+                />
+            </motion.div>
         </Link>
     );
 };
@@ -397,9 +403,16 @@ export const LogoIcon = () => {
         <Link
             href="/"
             onClick={handleClick}
-            className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+            className="flex items-center py-1 relative z-20"
         >
-            <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+            <Image
+                src="/images/wagex_logo_transparent.png"
+                alt="WageX"
+                width={40}
+                height={17}
+                className="object-contain dark:invert"
+                priority
+            />
         </Link>
     );
 };

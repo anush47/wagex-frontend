@@ -88,6 +88,9 @@ export function getPayslipHtml(): string {
     {{#if employee.details.accountNumber}}&nbsp;&mdash;&nbsp;Acc: {{employee.details.accountNumber}}{{/if}}
     &nbsp;&nbsp;This is a computer-generated document. No signature required.
   </div>
+  <div class="slip-brand">
+    <img src="/images/wagex_logo.png" alt="WageX" class="slip-wagex-logo" />
+  </div>
 </div>`;
 }
 
@@ -157,7 +160,10 @@ export function getSalarySheetHtml(): string {
       {{/if}}
     </table>
 
-    <div class="print-page-footer">Page {{add @index 1}}</div>
+    <div class="print-page-footer">
+      <span>Page {{add @index 1}}</span>
+      <img src="/images/wagex_logo.png" alt="WageX" class="footer-wagex-logo" />
+    </div>
   </div>
   {{/each}}
 </div>`;
@@ -332,7 +338,10 @@ export function getAttendanceReportHtml(): string {
   </div>
   {{/if}}
 
-  <div class="print-page-footer">{{../company.name}} &mdash; Attendance Report &mdash; Page {{add @index 1}}</div>
+  <div class="print-page-footer">
+    <span>{{../company.name}} &mdash; Attendance Report &mdash; Page {{add @index 1}}</span>
+    <img src="/images/wagex_logo.png" alt="WageX" class="footer-wagex-logo" />
+  </div>
 </div>
 {{/each}}
 </div>`;
@@ -423,7 +432,10 @@ export function getEpfFormHtml(): string {
   <div class="sig-dotted">............................................................................</div>
   {{/if}}
 
-  <div class="page-num">Page {{add @index 1}}</div>
+  <div class="page-num">
+    <img src="/images/wagex_logo.png" alt="WageX" class="page-num-wagex-logo" />
+    Page {{add @index 1}}
+  </div>
 </div>
 {{/each}}
 </div>`;
@@ -507,7 +519,10 @@ export function getEtfFormHtml(): string {
   <div class="sig-dotted">............................................................................</div>
   {{/if}}
 
-  <div class="page-num">Page {{add @index 1}}</div>
+  <div class="page-num">
+    <img src="/images/wagex_logo.png" alt="WageX" class="page-num-wagex-logo" />
+    Page {{add @index 1}}
+  </div>
 </div>
 {{/each}}
 </div>`;

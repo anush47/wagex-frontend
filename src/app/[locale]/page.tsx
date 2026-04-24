@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/routing';
 import { LandingHeader } from '@/components/layout/LandingHeader';
@@ -152,26 +153,44 @@ export default function Home() {
             </main>
 
             {/* Footer */}
-            <footer className="py-12 md:py-16 px-6 border-t border-neutral-200/50 dark:border-neutral-800/50">
-                <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-10 md:gap-6 text-center md:text-left">
-                    <div className="flex flex-col items-center md:items-start gap-4">
-                        <div className="flex items-center gap-2">
-                            <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm" />
-                            <span className="font-black italic tracking-tighter text-xl text-foreground">WageX</span>
-                        </div>
-                        <p className="text-muted-foreground text-xs font-medium max-w-[240px]">
-                            Simplifying payroll and workforce management for the modern era.
-                        </p>
-                    </div>
+            <footer className="relative border-t border-neutral-200/70 dark:border-neutral-800/70 bg-neutral-50/80 dark:bg-neutral-950/80">
+                {/* Top accent line */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-                    <div className="flex flex-col items-center md:items-end gap-6">
-                        <nav className="flex items-center gap-8">
-                            <Link href="/privacy" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Privacy</Link>
-                            <Link href="/terms" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">Terms</Link>
-                        </nav>
-                        <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                            &copy; {new Date().getFullYear()} WageX. {t("landing.footer.rights")}
-                        </p>
+                <div className="container mx-auto max-w-6xl px-6 py-12 md:py-16">
+                    <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-10">
+
+                        {/* Brand column */}
+                        <div className="flex flex-col items-center md:items-start gap-4">
+                            <Link href="/">
+                                <Image
+                                    src="/images/wagex_logo_transparent.png"
+                                    alt="WageX"
+                                    width={130}
+                                    height={56}
+                                    className="object-contain dark:invert"
+                                />
+                            </Link>
+                            <p className="text-muted-foreground text-sm leading-relaxed max-w-[220px] text-center md:text-left">
+                                Simplifying payroll and workforce management for the modern era.
+                            </p>
+                        </div>
+
+                        {/* Links + copyright column */}
+                        <div className="flex flex-col items-center md:items-end gap-5">
+                            <nav className="flex items-center gap-8">
+                                <Link href="/privacy" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest">
+                                    Privacy
+                                </Link>
+                                <Link href="/terms" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest">
+                                    Terms
+                                </Link>
+                            </nav>
+                            <p className="text-neutral-400 dark:text-neutral-600 text-[11px] font-bold uppercase tracking-[0.18em]">
+                                &copy; {new Date().getFullYear()} WageX. {t("landing.footer.rights")}
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             </footer>

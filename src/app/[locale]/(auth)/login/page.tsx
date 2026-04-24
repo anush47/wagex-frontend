@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconLoader2, IconCheck } from "@tabler/icons-react";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { Link } from "@/i18n/routing";
 import { Role } from "@/types/user";
@@ -94,18 +95,21 @@ export default function LoginPage() {
                     {/* Header */}
                     <div className="space-y-6 text-center">
                         <div className="flex justify-center">
-                            <Link
-                                href="/"
-                                className="font-normal flex space-x-3 items-center text-2xl text-black py-1 relative z-20 group"
-                            >
-                                <div className="h-8 w-10 bg-black dark:bg-white rounded-br-2xl rounded-tr-md rounded-tl-2xl rounded-bl-md flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-500" />
-                                <motion.span
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="font-black text-black dark:text-white whitespace-pre tracking-tighter italic"
+                            <Link href="/" className="relative z-20">
+                                <motion.div
+                                    initial={{ opacity: 0, y: -6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4 }}
                                 >
-                                    WageX
-                                </motion.span>
+                                    <Image
+                                        src="/images/wagex_logo_transparent.png"
+                                        alt="WageX"
+                                        width={160}
+                                        height={68}
+                                        className="object-contain dark:invert"
+                                        priority
+                                    />
+                                </motion.div>
                             </Link>
                         </div>
                         <div className="space-y-2">

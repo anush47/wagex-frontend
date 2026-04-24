@@ -21,13 +21,16 @@ export function getGeneralPrintCss(): string {
   right: 16mm;
   font-size: 7px;
   color: #888;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-top: 1px solid #ccc;
   padding-top: 4px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
+.footer-wagex-logo { height: 9px; opacity: 0.35; flex-shrink: 0; }
 @media print {
   @page { size: auto; margin: 0; }
   body { margin: 0; padding: 0; }
@@ -150,6 +153,10 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #111; b
 
 /* Footer note */
 .slip-note { font-size: 5.5pt; color: #888; text-align: center; border-top: 1px dashed #ccc; padding-top: 2px; }
+
+/* WageX brand mark */
+.slip-brand { display: flex; justify-content: flex-end; align-items: center; padding-top: 3px; }
+.slip-wagex-logo { height: 11px; opacity: 0.30; }
 `;
 }
 
@@ -289,7 +296,8 @@ export function getEpfFormCss(): string {
 /* Certification and signature */
 .certification { font-size: 8.5px; margin-top: 24px; margin-bottom: 40px; }
 .sig-dotted { font-size: 10px; letter-spacing: 3px; color: #000; }
-.page-num { text-align: right; font-size: 7.5px; color: #555; margin-top: 6px; position: absolute; bottom: 10mm; right: 14mm; }
+.page-num { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 7.5px; color: #555; margin-top: 6px; position: absolute; bottom: 10mm; right: 14mm; }
+.page-num-wagex-logo { height: 9px; opacity: 0.30; }
 `;
 }
 
