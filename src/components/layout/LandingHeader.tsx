@@ -25,6 +25,9 @@ export function LandingHeader() {
                         <Link href="#features" className="text-sm font-bold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors uppercase tracking-wider">
                             Features
                         </Link>
+                        <a href="#contact" className="text-sm font-bold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors uppercase tracking-wider">
+                            Let&apos;s Talk
+                        </a>
                     </nav>
                 </div>
 
@@ -41,7 +44,7 @@ export function LandingHeader() {
                             </Button>
                         </Link>
                     ) : (
-                        <Link href="/login">
+                        <Link href="/register">
                             <Button className="rounded-full px-3 md:px-6 h-9 md:h-11 text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
                                 {t("landing.hero.cta_login")}
                             </Button>

@@ -4,7 +4,17 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Providers } from '@/providers';
 import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 import './globals.css';
+
+export const metadata: Metadata = {
+    title: 'WageX',
+    description: 'Elevate Your Workforce Management',
+    icons: {
+        icon: '/images/wagex_logo.png',
+        apple: '/images/wagex_logo.png',
+    },
+};
 
 const inter = Inter({ subsets: ['latin'] });
 

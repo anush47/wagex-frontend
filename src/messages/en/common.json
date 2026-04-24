@@ -23,24 +23,53 @@
     "landing": {
         "hero": {
             "title": "Elevate Your Workforce Management",
-            "subtitle": "The all-in-one payroll and employee management platform designed for modern businesses. Simplify your operations and focus on growth.",
+            "subtitle": "Payroll, attendance, compliance, and employee self-service — all in one platform built for Sri Lankan businesses.",
             "cta_portal": "Go to Portal",
-            "cta_login": "Sign In"
+            "cta_login": "Get Started"
+        },
+        "problems": {
+            "title": "Sound familiar?",
+            "subtitle": "Every growing business hits these walls. WageX was built to break through them.",
+            "p1": "Spending days every month calculating salaries on spreadsheets?",
+            "p2": "Biometric or fingerprint machines with data going absolutely nowhere?",
+            "p3": "Employees calling HR for every payslip, leave balance, or attendance record?",
+            "p4": "EPF and ETF forms filled out by hand every single month?",
+            "p5": "Salary advances tracked on sticky notes, deducted manually each month?",
+            "p6": "Leave requests buried in WhatsApp chats and email threads?"
         },
         "features": {
-            "title": "Everything you need to scale",
+            "title": "One platform. Every answer.",
+            "subtitle": "From the first clock-in to the final statutory submission — WageX handles it all, so you don't have to.",
             "payroll": {
-                "title": "Automated Payroll",
-                "desc": "Calculate salaries, taxes, and deductions automatically with precision."
-            },
-            "employees": {
-                "title": "Employee Self-Service",
-                "desc": "Empower your team with a portal for payslips, leaves, and profile management."
+                "title": "Payroll That Runs Itself",
+                "desc": "Generate salaries for your entire team in one click. EPF, ETF, overtime, no-pay, and deductions calculated automatically — with zero errors."
             },
             "attendance": {
-                "title": "Real-time Attendance",
-                "desc": "Track attendance and leaves seamlessly with integrated workflows."
+                "title": "WageX Biometric Device",
+                "desc": "The most affordable fingerprint device built for WageX. Set it up in minutes, syncs instantly — no IT knowledge, no complexity, just works."
+            },
+            "selfservice": {
+                "title": "Employees Handle Their Own",
+                "desc": "Your team can download payslips, apply for leave, check their attendance, and update their profile — without calling HR once."
+            },
+            "statutory": {
+                "title": "Compliance Without the Paperwork",
+                "desc": "EPF and ETF contribution forms generated automatically every month. Correct figures, correct format — ready to submit."
+            },
+            "advances": {
+                "title": "Advances, Without the Chaos",
+                "desc": "Issue salary advances and set a repayment schedule. WageX automatically deducts the right amount each payroll cycle — no chasing."
+            },
+            "leaves": {
+                "title": "Leaves That Flow Into Payroll",
+                "desc": "Employees apply online. Managers approve in one click. Leave balances, no-pay deductions, and accruals automatically reflect in the next payslip."
             }
+        },
+        "contact": {
+            "title": "Let's Talk",
+            "subtitle": "Ready to stop doing payroll by hand? We'd love to show you what WageX can do for your business.",
+            "email_label": "Email us",
+            "phone_label": "Call us"
         },
         "footer": {
             "rights": "All rights reserved."

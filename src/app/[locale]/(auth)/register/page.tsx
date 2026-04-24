@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { IconLoader2, IconCheck } from "@tabler/icons-react";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -16,6 +19,8 @@ import { logger } from "@/lib/utils/logger";
 import { Link } from "@/i18n/routing";
 import { Role } from "@/types/user";
 import { toast } from "sonner";
+import { TermsContent } from "@/app/[locale]/terms/page";
+import { PrivacyContent } from "@/app/[locale]/privacy/page";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -25,6 +30,10 @@ export default function RegisterPage() {
 
     const [loading, setLoading] = useState(false);
     const [checkingSession, setCheckingSession] = useState(true);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
+    const [termsOpen, setTermsOpen] = useState(false);
+    const [privacyOpen, setPrivacyOpen] = useState(false);
 
     const [authData, setAuthData] = useState({
         email: "",
@@ -173,8 +182,8 @@ export default function RegisterPage() {
                             </h1>
                             <p className="text-neutral-500 font-medium text-sm">
                                 {currentStep === "auth"
-                                    ? "Get started by creating your account credentials."
-                                    : "Tell us a bit more about yourself to complete registration."}
+                                    ? "Stop doing payroll by hand. Get your team paid accurately, on time, every time."
+                                    : "Almost there — fill in your details to activate your account."}
                             </p>
                         </div>
                     </div>
@@ -231,9 +240,48 @@ export default function RegisterPage() {
                                 </div>
                             </div>
 
+                            <div className="space-y-3 pt-1">
+                                <div className="flex items-start gap-3">
+                                    <Checkbox
+                                        id="terms"
+                                        checked={agreedToTerms}
+                                        onCheckedChange={(v) => setAgreedToTerms(!!v)}
+                                        className="mt-0.5"
+                                    />
+                                    <label htmlFor="terms" className="text-sm text-neutral-600 dark:text-neutral-400 leading-snug cursor-pointer">
+                                        I have read and agree to the{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => setTermsOpen(true)}
+                                            className="font-bold text-primary underline underline-offset-2 hover:text-primary/80"
+                                        >
+                                            Terms of Service
+                                        </button>
+                                    </label>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Checkbox
+                                        id="privacy"
+                                        checked={agreedToPrivacy}
+                                        onCheckedChange={(v) => setAgreedToPrivacy(!!v)}
+                                        className="mt-0.5"
+                                    />
+                                    <label htmlFor="privacy" className="text-sm text-neutral-600 dark:text-neutral-400 leading-snug cursor-pointer">
+                                        I have read and agree to the{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => setPrivacyOpen(true)}
+                                            className="font-bold text-primary underline underline-offset-2 hover:text-primary/80"
+                                        >
+                                            Privacy Policy
+                                        </button>
+                                    </label>
+                                </div>
+                            </div>
+
                             <Button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || !agreedToTerms || !agreedToPrivacy}
                                 className="w-full rounded-2xl h-14 font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
                             >
                                 {loading ? (
@@ -247,6 +295,42 @@ export default function RegisterPage() {
                             </Button>
                         </form>
                     )}
+
+                    {/* Terms of Service Dialog */}
+                    <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-black uppercase tracking-tight">Terms of Service</DialogTitle>
+                                <DialogDescription className="text-xs text-muted-foreground">Last updated: April 24, 2026</DialogDescription>
+                            </DialogHeader>
+                            <ScrollArea className="h-[60vh] pr-4">
+                                <TermsContent />
+                            </ScrollArea>
+                            <div className="pt-2">
+                                <Button className="w-full rounded-xl font-black uppercase tracking-widest text-xs" onClick={() => { setAgreedToTerms(true); setTermsOpen(false); }}>
+                                    I Agree to Terms of Service
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Privacy Policy Dialog */}
+                    <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-black uppercase tracking-tight">Privacy Policy</DialogTitle>
+                                <DialogDescription className="text-xs text-muted-foreground">Last updated: April 24, 2026</DialogDescription>
+                            </DialogHeader>
+                            <ScrollArea className="h-[60vh] pr-4">
+                                <PrivacyContent />
+                            </ScrollArea>
+                            <div className="pt-2">
+                                <Button className="w-full rounded-xl font-black uppercase tracking-widest text-xs" onClick={() => { setAgreedToPrivacy(true); setPrivacyOpen(false); }}>
+                                    I Agree to Privacy Policy
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
 
                     {/* Step 2: Profile */}
                     {currentStep === "profile" && (
@@ -334,13 +418,17 @@ export default function RegisterPage() {
 
                     {/* Footer */}
                     {currentStep === "auth" && (
-                        <div className="text-center space-y-3">
-                            <p className="text-sm text-neutral-500">
-                                Already have an account?{" "}
-                                <Link href="/login" className="font-bold text-primary hover:underline">
-                                    Sign In
-                                </Link>
-                            </p>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-800" />
+                                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">or</span>
+                                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-800" />
+                            </div>
+                            <Link href="/login" className="block">
+                                <Button className="w-full rounded-2xl h-12 font-black text-sm uppercase tracking-widest hover:scale-[1.01] active:scale-[0.99] transition-all">
+                                    Sign In to Existing Account
+                                </Button>
+                            </Link>
                         </div>
                     )}
                 </CardContent>
