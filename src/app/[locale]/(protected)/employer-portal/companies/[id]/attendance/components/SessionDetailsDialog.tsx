@@ -207,10 +207,10 @@ export function SessionDetailsDialog({
 
 
     const getApprovalBadge = (status: ApprovalStatus, type: "IN" | "OUT") => {
-        const styles: Record<string, string> = {
-            PENDING: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-            APPROVED: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
-            REJECTED: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+        const styles: Record<ApprovalStatus, string> = {
+            [ApprovalStatus.PENDING]: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+            [ApprovalStatus.APPROVED]: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            [ApprovalStatus.REJECTED]: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
         };
 
         return (
@@ -218,13 +218,13 @@ export function SessionDetailsDialog({
                 <Badge variant="outline" className={`font-bold text-[10px] w-fit ${styles[status]}`}>
                     {status}
                 </Badge>
-                {!editing && status === "PENDING" && (
+                {!editing && status === ApprovalStatus.PENDING && (
                     <div className="flex gap-2 w-full">
                         <Button
                             variant="default"
                             size="sm"
                             className="flex-1 h-9 rounded-lg shadow-md hover:shadow-lg transition-all"
-                            onClick={() => handleApproval(type, "APPROVED" as ApprovalStatus)}
+                            onClick={() => handleApproval(type, ApprovalStatus.APPROVED)}
                             disabled={processing}
                             title="Approve"
                         >
@@ -235,7 +235,7 @@ export function SessionDetailsDialog({
                             variant="destructive"
                             size="sm"
                             className="flex-1 h-9 rounded-lg shadow-md hover:shadow-lg transition-all"
-                            onClick={() => handleApproval(type, "REJECTED" as ApprovalStatus)}
+                            onClick={() => handleApproval(type, ApprovalStatus.REJECTED)}
                             disabled={processing}
                             title="Reject"
                         >
@@ -244,12 +244,12 @@ export function SessionDetailsDialog({
                         </Button>
                     </div>
                 )}
-                {editing && status !== "PENDING" && (
+                {editing && status !== ApprovalStatus.PENDING && (
                     <Button
                         variant="outline"
                         size="sm"
                         className="w-full h-9 rounded-lg shadow-sm hover:shadow-md transition-all"
-                        onClick={() => handleApproval(type, "PENDING" as ApprovalStatus)}
+                        onClick={() => handleApproval(type, ApprovalStatus.PENDING)}
                         disabled={processing}
                         title="Reset to Pending"
                     >

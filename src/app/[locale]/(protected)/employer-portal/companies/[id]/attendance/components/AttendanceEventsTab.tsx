@@ -22,7 +22,8 @@ import {
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { IconRefresh, IconX, IconChevronLeft, IconChevronRight, IconArrowRight, IconArrowLeft, IconExternalLink, IconCalendarStats, IconFilter, IconEye } from "@tabler/icons-react";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
-import type { AttendanceEvent, AttendanceSession, EventType, EventSource, EventStatus } from "@/types/attendance";
+import type { AttendanceEvent, AttendanceSession } from "@/types/attendance";
+import { EventType, EventStatus, EventSource } from "@/types/attendance";
 import { useAttendanceEvents, useAttendanceSessions } from "@/hooks/use-attendance";
 import { format, subDays, addDays } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
@@ -120,14 +121,14 @@ export function AttendanceEventsTab({
     const { linkEventToSession, unlinkEventFromSession, updateEventType } = useAttendanceMutations();
 
     const getEventTypeBadge = (type: EventType, eventId?: string) => {
-        const styles = {
-            IN: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 hover:bg-green-500/20",
-            OUT: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20",
+        const styles: Record<EventType, string> = {
+            [EventType.IN]: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 hover:bg-green-500/20",
+            [EventType.OUT]: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20",
         };
 
-        const icons = {
-            IN: <IconArrowRight className="h-3 w-3 mr-1" />,
-            OUT: <IconArrowLeft className="h-3 w-3 mr-1" />,
+        const icons: Record<EventType, React.ReactNode> = {
+            [EventType.IN]: <IconArrowRight className="h-3 w-3 mr-1" />,
+            [EventType.OUT]: <IconArrowLeft className="h-3 w-3 mr-1" />,
         };
 
         const isUpdating = updateEventType.isPending && updateEventType.variables?.id === eventId;
@@ -141,7 +142,7 @@ export function AttendanceEventsTab({
                         e.stopPropagation();
                         updateEventType.mutate({
                             id: eventId,
-                            eventType: type === "IN" ? "OUT" : "IN"
+                            eventType: type === EventType.IN ? EventType.OUT : EventType.IN
                         });
                     }
                 }}
@@ -158,12 +159,12 @@ export function AttendanceEventsTab({
     };
 
     const getSourceBadge = (source: EventSource) => {
-        const styles = {
-            WEB: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-            API_KEY: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
-            MANUAL: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-            PORTAL: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-            SYSTEM: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+        const styles: Record<EventSource, string> = {
+            [EventSource.WEB]: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+            [EventSource.API_KEY]: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+            [EventSource.MANUAL]: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+            [EventSource.PORTAL]: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+            [EventSource.SYSTEM]: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
         };
 
         return (
@@ -187,10 +188,10 @@ export function AttendanceEventsTab({
     };
 
     const getStatusBadge = (status: EventStatus) => {
-        const styles = {
-            ACTIVE: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
-            REJECTED: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
-            IGNORED: "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20",
+        const styles: Record<EventStatus, string> = {
+            [EventStatus.ACTIVE]: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            [EventStatus.REJECTED]: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+            [EventStatus.IGNORED]: "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20",
         };
 
         return (

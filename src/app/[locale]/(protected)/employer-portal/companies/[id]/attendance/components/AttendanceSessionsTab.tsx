@@ -22,7 +22,8 @@ import {
 import { SearchableEmployeeSelect } from "@/components/ui/searchable-employee-select";
 import { IconRefresh, IconX, IconEdit, IconChevronLeft, IconChevronRight, IconCalendarStats, IconCheck, IconFilter } from "@tabler/icons-react";
 import { EmployeeAvatar } from "@/components/ui/employee-avatar";
-import type { AttendanceSession, ApprovalStatus } from "@/types/attendance";
+import type { AttendanceSession } from "@/types/attendance";
+import { ApprovalStatus } from "@/types/attendance";
 import { useAttendanceSessions, useAttendanceMutations } from "@/hooks/use-attendance";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { format } from "date-fns";
@@ -91,10 +92,10 @@ export function AttendanceSessionsTab({
 
 
     const getApprovalBadge = (status: ApprovalStatus) => {
-        const styles: Record<string, string> = {
-            PENDING: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-            APPROVED: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
-            REJECTED: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+        const styles: Record<ApprovalStatus, string> = {
+            [ApprovalStatus.PENDING]: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+            [ApprovalStatus.APPROVED]: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+            [ApprovalStatus.REJECTED]: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
         };
 
         return (
@@ -146,12 +147,12 @@ export function AttendanceSessionsTab({
         const updates: any = {};
         const approvedItems: string[] = [];
 
-        if (session.inApprovalStatus === 'PENDING') {
-            updates.inApprovalStatus = 'APPROVED';
+        if (session.inApprovalStatus === ApprovalStatus.PENDING) {
+            updates.inApprovalStatus = ApprovalStatus.APPROVED;
             approvedItems.push('check-in');
         }
-        if (session.outApprovalStatus === 'PENDING') {
-            updates.outApprovalStatus = 'APPROVED';
+        if (session.outApprovalStatus === ApprovalStatus.PENDING) {
+            updates.outApprovalStatus = ApprovalStatus.APPROVED;
             approvedItems.push('check-out');
         }
 
@@ -168,7 +169,7 @@ export function AttendanceSessionsTab({
     };
 
     const hasPendingApproval = (session: AttendanceSession) => {
-        return session.inApprovalStatus === 'PENDING' || session.outApprovalStatus === 'PENDING';
+        return session.inApprovalStatus === ApprovalStatus.PENDING || session.outApprovalStatus === ApprovalStatus.PENDING;
     };
 
     return (
@@ -341,10 +342,10 @@ export function AttendanceSessionsTab({
                                             .filter((session: AttendanceSession) => {
                                                 if (approvalFilter === "ALL") return true;
                                                 if (approvalFilter === "PENDING") {
-                                                    return session.inApprovalStatus === 'PENDING' || session.outApprovalStatus === 'PENDING';
+                                                    return session.inApprovalStatus === ApprovalStatus.PENDING || session.outApprovalStatus === ApprovalStatus.PENDING;
                                                 }
                                                 if (approvalFilter === "APPROVED") {
-                                                    return session.inApprovalStatus === 'APPROVED' && session.outApprovalStatus === 'APPROVED';
+                                                    return session.inApprovalStatus === ApprovalStatus.APPROVED && session.outApprovalStatus === ApprovalStatus.APPROVED;
                                                 }
                                                 return true;
                                             })
@@ -384,7 +385,7 @@ export function AttendanceSessionsTab({
                                                             <span className="font-semibold text-sm">
                                                                 {formatTime(session.checkInTime)}
                                                             </span>
-                                                            {session.inApprovalStatus !== 'APPROVED' && (
+                                                            {session.inApprovalStatus !== ApprovalStatus.APPROVED && (
                                                                 <div className="mt-1">
                                                                     {getApprovalBadge(session.inApprovalStatus)}
                                                                 </div>
@@ -396,7 +397,7 @@ export function AttendanceSessionsTab({
                                                             <span className="font-semibold text-sm">
                                                                 {formatTime(session.checkOutTime)}
                                                             </span>
-                                                            {session.outApprovalStatus !== 'APPROVED' && (
+                                                            {session.outApprovalStatus !== ApprovalStatus.APPROVED && (
                                                                 <div className="mt-1">
                                                                     {getApprovalBadge(session.outApprovalStatus)}
                                                                 </div>

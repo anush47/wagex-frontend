@@ -36,7 +36,7 @@ import { useLeaveRequests } from "@/hooks/use-leaves";
 import { useEmployees } from "@/hooks/use-employees";
 import { Link } from "@/i18n/routing";
 import { LeaveRequest, LeaveStatus } from "@/types/leave";
-import { AttendanceSession } from "@/types/attendance";
+import { AttendanceSession, ApprovalStatus } from "@/types/attendance";
 import { startOfDay, endOfDay, format, differenceInMinutes, isSameDay } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { motion, AnimatePresence } from "framer-motion";
@@ -111,7 +111,7 @@ export default function CompanyOverviewPage({ params }: { params: Promise<{ id: 
         const absentCount = Math.max(0, totalCount - presentTodayIds.size - leaveIds.size);
 
         const pendingAttendance = sessions.filter((s: AttendanceSession) =>
-            s.inApprovalStatus === 'PENDING' || s.outApprovalStatus === 'PENDING'
+            s.inApprovalStatus === ApprovalStatus.PENDING || s.outApprovalStatus === ApprovalStatus.PENDING
         ).length;
 
         return {
