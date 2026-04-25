@@ -8,7 +8,8 @@ export enum EventSource {
     WEB = 'WEB',
     API_KEY = 'API_KEY',
     MANUAL = 'MANUAL',
-    PORTAL = 'PORTAL'
+    PORTAL = 'PORTAL',
+    SYSTEM = 'SYSTEM'
 }
 
 export enum EventStatus {

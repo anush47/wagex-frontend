@@ -163,11 +163,12 @@ export function AttendanceEventsTab({
             API_KEY: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
             MANUAL: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
             PORTAL: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+            SYSTEM: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
         };
 
         return (
             <Badge variant="outline" className={`text-[10px] ${styles[source]}`}>
-                {source}
+                {source === EventSource.SYSTEM ? 'AUTO' : source}
             </Badge>
         );
     };
